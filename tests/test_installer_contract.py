@@ -45,3 +45,14 @@ class RollbackIsolationContractTests(unittest.TestCase):
   self.assertIn('systemd-run --unit="rackmarshal-rollback-', s)
   self.assertIn('systemctl is-active --quiet homelabops-status-api.service', s)
   self.assertIn('systemctl is-active --quiet rackmarshal-rollback-homelabops-status-api.service', s)
+
+class DomainRuntimeLockContractTests(unittest.TestCase):
+ def test_domain_unit_provides_private_runtime_directory(self):
+  s=(ROOT/'packaging/systemd/rackmarshal-domain@.service').read_text()
+  self.assertIn('RuntimeDirectory=rackmarshal',s)
+  self.assertIn('RuntimeDirectoryMode=0750',s)
+ def test_locking_domains_use_runtime_directory(self):
+  for d in ('ha','hardware','zfs'):
+   s=(ROOT/f'rackmarshal/domains/{d}/cycle.py').read_text()
+   self.assertIn('/run/rackmarshal/',s,d)
+   self.assertNotIn('/run/lock/',s,d)

@@ -34,7 +34,7 @@ DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
 INCIDENT_EXPLAINER = str(incident_explainer_executable())
 
-LOCK_FILE = Path("/run/lock/rackmarshal-zfs-cycle.lock")
+LOCK_FILE = Path("/run/rackmarshal/zfs-cycle.lock")
 
 
 class CycleError(Exception):

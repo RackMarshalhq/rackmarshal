@@ -6,6 +6,8 @@ After=network.target
 Type=oneshot
 User=rackmarshal
 Group=rackmarshal
+RuntimeDirectory=rackmarshal
+RuntimeDirectoryMode=0750
 Environment=RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf
 Environment=RACKMARSHAL_STATE_DB=/var/lib/rackmarshal/state.db
 ExecStart=/opt/rackmarshal/venv/bin/python -m rackmarshal.domains.%i.cycle

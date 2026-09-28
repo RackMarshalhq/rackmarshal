@@ -37,7 +37,7 @@ DB = str(state_db())
 HA_CREDENTIAL = str(ha_credential_file())
 INCIDENT_EXPLAINER = str(incident_explainer_executable())
 
-LOCK_FILE = Path("/run/lock/rackmarshal-ha-cycle.lock")
+LOCK_FILE = Path("/run/rackmarshal/ha-cycle.lock")
 
 SCHEMA_VERSION = 1
 RUNNER = "ha_cycle"
