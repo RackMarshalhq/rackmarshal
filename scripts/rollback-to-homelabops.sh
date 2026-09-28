@@ -44,10 +44,14 @@ done < "$MIGRATION_DIR/active-units.txt"
 
 if systemctl list-unit-files homelabops-status-api.service --no-legend 2>/dev/null | grep -q homelabops-status-api; then
   for _ in {1..20}; do
-    systemctl is-active --quiet homelabops-status-api.service && break
+    if systemctl is-active --quiet homelabops-status-api.service ||
+       systemctl is-active --quiet rackmarshal-rollback-homelabops-status-api.service; then
+      break
+    fi
     sleep 0.25
   done
-  systemctl is-active --quiet homelabops-status-api.service
+  systemctl is-active --quiet homelabops-status-api.service ||
+    systemctl is-active --quiet rackmarshal-rollback-homelabops-status-api.service
 fi
 
 if [[ -f /var/lib/homelab-ops/state.db ]]; then

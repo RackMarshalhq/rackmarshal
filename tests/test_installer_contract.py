@@ -44,3 +44,4 @@ class RollbackIsolationContractTests(unittest.TestCase):
   self.assertIn('systemctl cancel "$unit"', s)
   self.assertIn('systemd-run --unit="rackmarshal-rollback-', s)
   self.assertIn('systemctl is-active --quiet homelabops-status-api.service', s)
+  self.assertIn('systemctl is-active --quiet rackmarshal-rollback-homelabops-status-api.service', s)
