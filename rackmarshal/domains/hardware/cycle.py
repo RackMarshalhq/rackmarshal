@@ -113,11 +113,10 @@ def run_json(command, *, stdin_text=None):
 
 def process_hardware_incidents_ledger():
     """Step D: mirror temperature events into hardware_events/incidents."""
-    script = Path(PROCESS_HARDWARE_INCIDENTS)
-    if not script.is_file():
-        return {"status": "SKIP", "note": "processor_missing"}
+    # PROCESS_HARDWARE_INCIDENTS is an argv command produced by module_cmd().
+    # Execute it directly; treating it as a filesystem path breaks packaged installs.
     result = subprocess.run(
-        [PYTHON, str(script)],
+        PROCESS_HARDWARE_INCIDENTS,
         text=True,
         cwd=str(_ROOT),
         check=False,

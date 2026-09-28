@@ -2,6 +2,8 @@
 
 ## Unreleased (1.1.0)
 
+- Fixed packaged HA incident comparator default command and hardware incident-processor command execution discovered by the second production acceptance rollback.
+- Expanded regression coverage for all six domain command-boundary contracts.
 - Fixed notification-delivery command construction across all six monitoring domains so the Local-AI explainer is passed as one executable path rather than a nested argv list.
 - Moved HA/ZFS/hardware cycle lock files into a systemd-managed RackMarshal runtime directory so hardened domain services can acquire locks under `ProtectSystem=strict`.
 - Generalized the Local-AI/Ollama incident explainer and asynchronous explanation worker.
