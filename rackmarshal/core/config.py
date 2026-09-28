@@ -31,7 +31,9 @@ class ConfigError(RuntimeError):
     pass
 
 
-def load_config(path=DEFAULT_CONFIG_FILE):
+def load_config(path=None):
+    if path is None:
+        path = Path(os.environ.get("RACKMARSHAL_CONFIG", str(DEFAULT_CONFIG_FILE)))
     config = {}
 
     try:

@@ -24,3 +24,18 @@ STATUS_API_LISTEN_PORT=9110
 
 # Comma-separated domains to schedule. Empty is a safe base install.
 # ENABLED_DOMAINS=pve,zfs,backup,ha,hardware,mount
+
+# Examples of required domain keys (fictional placeholders only):
+# PVE_NODE=pve-node-name
+# ZFS_SSH_HOST=zfs-observer.example.invalid
+# ZFS_SSH_USER=rackmarshal-observer
+# ZFS_SSH_KEY=/etc/rackmarshal/ssh/zfs_ed25519
+# ZFS_KNOWN_HOSTS=/etc/rackmarshal/ssh/known_hosts
+# HARDWARE_NVME_SERIALS=EXAMPLE001
+# HARDWARE_NVME_EXAMPLE001_MODEL=Example NVMe
+# HARDWARE_NVME_EXAMPLE001_ROLE=example-role
+# HARDWARE_HOT_THRESHOLD_C=60
+# HARDWARE_HOT_REQUIRED_SAMPLES=2
+# HARDWARE_URGENT_THRESHOLD_C=75
+# HARDWARE_RECOVERY_THRESHOLD_C=55
+# HARDWARE_RECOVERY_REQUIRED_SAMPLES=2

@@ -21,17 +21,24 @@ def validate(path):
     bad=sorted(set(enabled)-set(DOMAINS))
     if bad: errors.append("unknown enabled domains: "+", ".join(bad))
     requirements={
-      "pve":("PVE_API_ENV",), "backup":("PBS_API_ENV",), "ha":("HA_CREDENTIAL_FILE",),
-      "zfs":("ZFS_SSH_HOST","ZFS_SSH_USER","ZFS_SSH_KEY","ZFS_KNOWN_HOSTS"),
-      "hardware":("HARDWARE_SSH_HOST","HARDWARE_SSH_USER","HARDWARE_SSH_KEY","HARDWARE_KNOWN_HOSTS"),
-      "mount":("MOUNT_CATALOG_FILE","MOUNT_SSH_HOST","MOUNT_SSH_USER","MOUNT_SSH_KEY","MOUNT_KNOWN_HOSTS")}
+      "pve":("PVE_API_ENV","PVE_CA_FILE"),
+      "backup":("PVE_API_ENV","PVE_CA_FILE","PBS_API_ENV","PBS_CA_FILE","PVE_NODE"),
+      "ha":("HA_CREDENTIAL_FILE",),
+      "zfs":("SITE_NAME","ZFS_SSH_HOST","ZFS_SSH_USER","ZFS_SSH_KEY","ZFS_KNOWN_HOSTS"),
+      "hardware":("SITE_NAME","HARDWARE_SSH_HOST","HARDWARE_SSH_USER","HARDWARE_SSH_KEY","HARDWARE_KNOWN_HOSTS","HARDWARE_NVME_SERIALS","HARDWARE_HOT_THRESHOLD_C","HARDWARE_HOT_REQUIRED_SAMPLES","HARDWARE_URGENT_THRESHOLD_C","HARDWARE_RECOVERY_THRESHOLD_C","HARDWARE_RECOVERY_REQUIRED_SAMPLES"),
+      "mount":("PVE_API_ENV","PVE_CA_FILE","PVE_NODE","MOUNT_CATALOG_FILE","MOUNT_SSH_HOST","MOUNT_SSH_USER","MOUNT_SSH_KEY","MOUNT_KNOWN_HOSTS")}
     for d in enabled:
       for k in requirements.get(d,()):
         if not c.get(k,"").strip(): errors.append(f"{d}: missing {k}")
-    for k in ("PVE_API_ENV","PBS_API_ENV","HA_CREDENTIAL_FILE","ZFS_SSH_KEY","HARDWARE_SSH_KEY","MOUNT_SSH_KEY"):
+    for k in ("PVE_API_ENV","PBS_API_ENV","HA_CREDENTIAL_FILE","ZFS_SSH_KEY","HARDWARE_SSH_KEY","MOUNT_SSH_KEY","PVE_CA_FILE","PBS_CA_FILE","ZFS_KNOWN_HOSTS","HARDWARE_KNOWN_HOSTS","MOUNT_KNOWN_HOSTS","MOUNT_CATALOG_FILE"):
       v=c.get(k,"").strip()
       if v and Path(v).exists() and (Path(v).stat().st_mode & (stat.S_IRWXG|stat.S_IRWXO)):
         errors.append(f"{k}: credential/key file permissions are too broad")
+    if "hardware" in enabled and c.get("HARDWARE_NVME_SERIALS", "").strip():
+      for serial in [x.strip() for x in c["HARDWARE_NVME_SERIALS"].split(",") if x.strip()]:
+        for suffix in ("MODEL","ROLE"):
+          key=f"HARDWARE_NVME_{serial}_{suffix}"
+          if not c.get(key, "").strip(): errors.append(f"hardware: missing {key}")
     for d in DOMAINS:
       if importlib.util.find_spec(f"rackmarshal.domains.{d}.cycle") is None: errors.append(f"{d}: cycle module unavailable")
       manifest = ROOT / "domains" / d / "plugin.toml"

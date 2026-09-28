@@ -54,6 +54,8 @@ PVE_TOKEN_ID=...
 PVE_TOKEN_SECRET=...
 ```
 
+PVE-backed backup and mount collection also require `PVE_NODE` in `rackmarshal.conf`.
+
 The backup collector additionally expects the PBS environment file to contain:
 
 ```text
@@ -88,7 +90,7 @@ The current hardware incident logic requires site-defined values for:
 - `HARDWARE_RECOVERY_THRESHOLD_C`
 - `HARDWARE_RECOVERY_REQUIRED_SAMPLES`
 
-Hardware inventory may also use `HARDWARE_NVME_SERIALS` and `HARDWARE_KNOWN_HOSTS`.
+Hardware inventory requires `HARDWARE_NVME_SERIALS`; for each serial, define `HARDWARE_NVME_<SERIAL>_MODEL` and `HARDWARE_NVME_<SERIAL>_ROLE`. It also requires `HARDWARE_SSH_HOST`, `HARDWARE_SSH_USER`, `HARDWARE_SSH_KEY`, and `HARDWARE_KNOWN_HOSTS`.
 
 ## Backup and mount policy settings
 
