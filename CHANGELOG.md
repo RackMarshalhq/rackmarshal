@@ -2,6 +2,7 @@
 
 ## Unreleased (1.1.0)
 
+- Recovery delivery now dismisses the corresponding Home Assistant persistent OPENED notification instead of creating a second persistent RECOVERED notification, allowing recovered incidents to clear naturally.
 - Added exact `PVE_IGNORE_RESOURCES` filtering for disposable/unmanaged PVE guests, corrected mount-domain PVE node resolution, and reconciled self-watch to current packaged systemd unit names so stale migration notifications can recover naturally.
 - Fixed packaged HA incident comparator default command and hardware incident-processor command execution discovered by the second production acceptance rollback.
 - Expanded regression coverage for all six domain command-boundary contracts.

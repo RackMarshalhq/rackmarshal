@@ -347,6 +347,58 @@ def send_ha(
         )
 
 
+def dismiss_ha(base_url, token, notification_id):
+    """Dismiss one previously-created Home Assistant persistent notification."""
+    url = base_url + "/api/services/persistent_notification/dismiss"
+    payload = {"notification_id": notification_id}
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            response.read()
+            status = response.status
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise DeliveryError(
+            f"Home Assistant dismiss HTTP {exc.code}: {body[:300]}"
+        ) from exc
+    except Exception as exc:
+        raise DeliveryError(
+            f"Home Assistant dismiss failed: {type(exc).__name__}: {exc}"
+        ) from exc
+    if status != 200:
+        raise DeliveryError(f"Home Assistant dismiss returned HTTP {status}")
+
+
+def opened_notification_id(conn, row, notification_prefix):
+    opened = conn.execute(
+        """
+        SELECT id
+        FROM incident_notifications
+        WHERE source_domain = ?
+          AND incident_id = ?
+          AND notification_type = 'OPENED'
+          AND delivery_state = 'SENT'
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (row["source_domain"], row["incident_id"]),
+    ).fetchone()
+    if opened is None:
+        return None
+    return (
+        f"{notification_prefix}_{row['source_domain'].lower()}_"
+        f"{row['incident_id']}_opened_{opened['id']}"
+    )
+
+
 def validate_packet(packet, row):
     if not isinstance(packet, dict):
         raise DeliveryError(
@@ -465,13 +517,20 @@ def deliver_one(
             f"{row['id']}"
         )
 
-        send_ha(
-            base_url,
-            token,
-            notification_id,
-            title,
-            message,
-        )
+        if row["notification_type"] == "RECOVERED":
+            opened_id = opened_notification_id(
+                conn, row, notification_prefix
+            )
+            if opened_id is not None:
+                dismiss_ha(base_url, token, opened_id)
+        else:
+            send_ha(
+                base_url,
+                token,
+                notification_id,
+                title,
+                message,
+            )
 
         delivered_at = utc_now()
 
