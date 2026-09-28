@@ -41,5 +41,6 @@ class ProductionParityTimerContractTests(unittest.TestCase):
 class RollbackIsolationContractTests(unittest.TestCase):
  def test_enabled_legacy_services_start_without_dependencies(self):
   s=(ROOT/'scripts/rollback-to-homelabops.sh').read_text()
-  self.assertIn('systemctl start --no-block --no-deps "$unit"', s)
+  self.assertIn('systemctl cancel "$unit"', s)
+  self.assertIn('systemd-run --unit="rackmarshal-rollback-', s)
   self.assertIn('systemctl is-active --quiet homelabops-status-api.service', s)

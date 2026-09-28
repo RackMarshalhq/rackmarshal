@@ -23,11 +23,17 @@ if [[ -f "$MIGRATION_DIR/enabled-services.txt" ]]; then
   while IFS= read -r unit; do
     [[ -n "$unit" ]] || continue
     systemctl enable "$unit" 2>/dev/null || true
-    # Start the service itself without pulling its Wants/After dependency graph into
-    # the rollback transaction. This preserves the installed production unit and its
-    # normal boot semantics, while allowing rollback verification on an intentionally
-    # network-isolated recovery host where network-online.target cannot be reached.
-    systemctl start --no-block --no-deps "$unit" 2>/dev/null || true
+    # Start normally first. On an intentionally network-isolated recovery host, an
+    # enabled legacy service can remain queued behind network-online.target forever.
+    # If so, cancel only that queued job and launch its recorded ExecStart transiently.
+    # The installed unit is not edited, so normal production boot semantics remain.
+    systemctl start --no-block "$unit" 2>/dev/null || true
+    sleep 0.25
+    if ! systemctl is-active --quiet "$unit"; then
+      systemctl cancel "$unit" 2>/dev/null || true
+      cmd="$(systemctl show "$unit" -p ExecStart --value | sed -n 's/.*argv\[\]=\([^;]*\) ;.*/\1/p')"
+      [[ -n "$cmd" ]] && systemd-run --unit="rackmarshal-rollback-${unit%.service}" --collect /bin/sh -c "exec $cmd" >/dev/null
+    fi
   done < "$MIGRATION_DIR/enabled-services.txt"
 fi
 
