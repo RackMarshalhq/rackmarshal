@@ -227,6 +227,3 @@ def local_ai_timeout_seconds(config=None):
 def local_ai_attach_to_notify(config=None):
     """If true, OPENED notify body may include AI text when already explained."""
     return optional_bool(config, "LOCAL_AI_ATTACH_TO_NOTIFY", False)
-
-
-CONFIG = load_config()

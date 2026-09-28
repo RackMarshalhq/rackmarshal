@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m unittest discover -s tests -v
+      - run: python -m compileall -q rackmarshal
+      - run: python -m pip install build
+      - run: python -m build
+      - run: python -m pip install dist/*.whl
+      - run: rackmarshal --version
+      - name: Validate generic configuration
+        run: |
+          tmp=$(mktemp)
+          printf 'STATE_DB=/tmp/rackmarshal-ci.db\n' > "$tmp"
+          rackmarshal validate-config --config "$tmp"
+      - name: Build database from migrations
+        run: |
+          tmp=$(mktemp -d)
+          printf 'STATE_DB=%s/state.db\n' "$tmp" > "$tmp/config"
+          RACKMARSHAL_CONFIG="$tmp/config" python -m rackmarshal.db.migrations.migrate --db "$tmp/state.db" --apply --yes
+      - name: Publication and smoke gates
+        run: ./scripts/publication-gate.sh
+      - name: Installer shell validation
+        run: bash -n scripts/install.sh scripts/uninstall.sh scripts/build-installer-bundle.sh scripts/publication-gate.sh

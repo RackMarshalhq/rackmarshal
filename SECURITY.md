@@ -24,4 +24,4 @@ The SQLite state database contains operational history. Depending on configured 
 
 ## Reporting vulnerabilities
 
-Until a dedicated private security-reporting channel is published, do not post credentials, exploit details affecting a live installation, private infrastructure data, or other sensitive material in a public issue. Use the repository's private security-reporting facility when available.
+Report vulnerabilities through GitHub Private Vulnerability Reporting for the RackMarshal repository. Do not post credentials, exploit details affecting a live installation, private infrastructure data, or other sensitive material in a public issue.

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Added the supported `rackmarshal` CLI with version, domain listing, configuration validation, migration, and diagnostic commands.
+- Added explicit enabled-domain scheduling with generic hardened systemd service/timer templates.
+- Added automated unit, comparator, notification failure, installer-contract, migration, smoke, and publication gates.
+- Added GitHub Actions CI, CodeQL, Dependabot, and reproducible release-build workflow.
+- Added deterministic installer-bundle construction and strengthened preflight validation.
+
+
 All notable RackMarshal changes intended for public releases will be documented here.
 
 RackMarshal has not yet published a stable release.

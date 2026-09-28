@@ -33,3 +33,7 @@ Do not manually edit the migration ledger or alter an existing migration file in
 ## After upgrading
 
 Verify the status service and notification timer, then check the health endpoint. Review the changelog and configuration documentation for any newly introduced site settings before enabling affected collectors.
+
+## Upgrade validation
+
+Before an upgrade, run `rackmarshal validate-config`. The installer preserves site configuration, applies only pending migrations, and refreshes systemd units. After upgrading, run `rackmarshal diagnostic` and verify `/health`. If an upgrade fails before completion, retain the pre-upgrade configuration/database backup and do not manually edit the migration ledger.

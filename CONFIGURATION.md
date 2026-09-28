@@ -23,6 +23,12 @@ STATUS_API_LISTEN_PORT=9110
 
 `STATE_DB` is required by the shared configuration layer. The status API address and port control the local status service. Keep the status API bound to loopback unless you deliberately provide appropriate network access controls.
 
+## Enabling monitoring domains
+
+A base install is intentionally safe and schedules no infrastructure collectors. Set `ENABLED_DOMAINS` to a comma-separated subset of `pve,zfs,backup,ha,hardware,mount`, provide that domain's required site configuration, then rerun the installer. The installer validates configuration before database changes and enables a dedicated systemd timer for each selected domain.
+
+Run `rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf` before enabling a domain. Use `rackmarshal domains` to list supported domain identifiers and `rackmarshal diagnostic` for a non-secret operational summary.
+
 ## Optional path overrides
 
 The shared configuration layer also supports:

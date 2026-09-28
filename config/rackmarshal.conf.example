@@ -21,3 +21,6 @@ STATUS_API_LISTEN_PORT=9110
 
 # Domain-specific host, SSH, threshold, and policy values are site-specific.
 # See CONFIGURATION.md before enabling collectors.
+
+# Comma-separated domains to schedule. Empty is a safe base install.
+# ENABLED_DOMAINS=pve,zfs,backup,ha,hardware,mount
