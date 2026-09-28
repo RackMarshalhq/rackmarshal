@@ -32,7 +32,7 @@ def validate(path):
         if not c.get(k,"").strip(): errors.append(f"{d}: missing {k}")
     for k in ("PVE_API_ENV","PBS_API_ENV","HA_CREDENTIAL_FILE","ZFS_SSH_KEY","HARDWARE_SSH_KEY","MOUNT_SSH_KEY","PVE_CA_FILE","PBS_CA_FILE","ZFS_KNOWN_HOSTS","HARDWARE_KNOWN_HOSTS","MOUNT_KNOWN_HOSTS","MOUNT_CATALOG_FILE"):
       v=c.get(k,"").strip()
-      if v and Path(v).exists() and (Path(v).stat().st_mode & (stat.S_IRWXG|stat.S_IRWXO)):
+      if v and Path(v).exists() and (Path(v).stat().st_mode & (stat.S_IWGRP | stat.S_IXGRP | stat.S_IRWXO)):
         errors.append(f"{k}: credential/key file permissions are too broad")
     if c.get("LOCAL_AI_ENABLED", "false").strip().lower() in {"1","true","yes","on"}:
       for k in ("OLLAMA_URL","OLLAMA_MODEL"):
