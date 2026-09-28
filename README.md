@@ -4,7 +4,7 @@ Local-first infrastructure operations and incident management for self-hosted sy
 
 RackMarshal observes infrastructure, records durable operational state, detects and tracks incidents, and verifies recovery. It grew from a working homelab operations system and is being prepared for broader use across homelabs, self-hosted infrastructure, edge systems, and small infrastructure environments.
 
-> **Project status:** active development. The current package is a development build (`0.1.0rc1`), not a stable production release.
+> **Project status:** 1.0 release-candidate validation. `1.0.0rc1` is a prerelease candidate and is not yet the stable 1.0 release.
 
 ## What exists today
 

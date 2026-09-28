@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0rc1 — release candidate
 
 - Added the supported `rackmarshal` CLI with version, domain listing, configuration validation, migration, and diagnostic commands.
 - Added explicit enabled-domain scheduling with generic hardened systemd service/timer templates.
