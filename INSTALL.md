@@ -26,7 +26,7 @@ Run the installer as root and point it at the wheel shipped in the same release 
 
 ```bash
 sudo ./scripts/install.sh \
-  --wheel ./rackmarshal-0.1.0rc1-py3-none-any.whl
+  --wheel ./rackmarshal-1.0.0rc1-py3-none-any.whl
 ```
 
 A custom initial configuration file may be supplied with `--config`. Existing RackMarshal configuration is never replaced by that option.
@@ -35,7 +35,7 @@ To install without starting RackMarshal immediately:
 
 ```bash
 sudo ./scripts/install.sh \
-  --wheel ./rackmarshal-0.1.0rc1-py3-none-any.whl \
+  --wheel ./rackmarshal-1.0.0rc1-py3-none-any.whl \
   --no-start
 ```
 
