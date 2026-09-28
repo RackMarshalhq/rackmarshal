@@ -56,3 +56,10 @@ class DomainRuntimeLockContractTests(unittest.TestCase):
    s=(ROOT/f'rackmarshal/domains/{d}/cycle.py').read_text()
    self.assertIn('/run/rackmarshal/',s,d)
    self.assertNotIn('/run/lock/',s,d)
+
+class MigratedSSHKeyPermissionContractTests(unittest.TestCase):
+ def test_migration_sets_private_observer_keys_owner_only(self):
+  s=(ROOT/'scripts/migrate-from-homelabops.sh').read_text()
+  self.assertIn("! -name '*.pub' ! -name 'known_hosts'",s)
+  self.assertIn('chown rackmarshal:rackmarshal',s)
+  self.assertIn('chmod 0600',s)

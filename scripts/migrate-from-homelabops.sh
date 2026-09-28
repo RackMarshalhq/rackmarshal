@@ -89,6 +89,14 @@ sed -i   -e 's#/etc/homelab-ops#/etc/rackmarshal#g'   -e 's#/var/lib/homelab-ops
 chown -R root:rackmarshal /etc/rackmarshal
 find /etc/rackmarshal -type d -exec chmod 0750 {} +
 find /etc/rackmarshal -type f -exec chmod 0640 {} +
+# OpenSSH rejects private keys readable by group/other. RackMarshal collectors run
+# as the rackmarshal service account, so migrated observer private keys must be
+# owned by that account and mode 0600. Public keys/known_hosts remain non-secret.
+if [[ -d /etc/rackmarshal/ssh ]]; then
+  find /etc/rackmarshal/ssh -type f ! -name '*.pub' ! -name 'known_hosts' -exec chown rackmarshal:rackmarshal {} + -exec chmod 0600 {} +
+  find /etc/rackmarshal/ssh -type f -name '*.pub' -exec chmod 0644 {} +
+  [[ -f /etc/rackmarshal/ssh/known_hosts ]] && chmod 0640 /etc/rackmarshal/ssh/known_hosts
+fi
 install -o rackmarshal -g rackmarshal -m 0640 "$SOURCE_STATE" /var/lib/rackmarshal/state.db
 
 export RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf
