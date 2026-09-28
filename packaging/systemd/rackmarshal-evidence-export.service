@@ -1,7 +1,6 @@
 [Unit]
 Description=RackMarshal evidence export
-After=network-online.target rackmarshal-status.service
-Wants=network-online.target
+After=rackmarshal-status.service
 
 [Service]
 Type=oneshot
