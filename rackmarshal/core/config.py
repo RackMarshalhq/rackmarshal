@@ -218,8 +218,8 @@ def optional_int(config, key, default):
 
 
 def local_ai_enabled(config=None):
-    """Phase 5.4: gate Ollama explain on OPENED deliver. Default True preserves CT 110 behavior."""
-    return optional_bool(config, "LOCAL_AI_ENABLED", True)
+    """Phase 5.4: gate Ollama explain on OPENED deliver. Default False keeps a base installation network-safe."""
+    return optional_bool(config, "LOCAL_AI_ENABLED", False)
 
 
 def local_ai_timeout_seconds(config=None):

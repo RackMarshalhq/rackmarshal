@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased (1.1.0)
+
+- Generalized the Local-AI/Ollama incident explainer and asynchronous explanation worker.
+- Added conditional Local-AI systemd scheduling, configuration validation, and tests.
+- Added explicit HomelabOps-to-RackMarshal migration and rollback tools for controlled production adoption.
+
 ## 1.0.0
 
 - Added the supported `rackmarshal` CLI with version, domain listing, configuration validation, migration, and diagnostic commands.

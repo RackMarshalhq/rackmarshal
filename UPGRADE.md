@@ -37,3 +37,9 @@ Verify the status service and notification timer, then check the health endpoint
 ## Upgrade validation
 
 Before an upgrade, run `rackmarshal validate-config`. The installer preserves site configuration, applies only pending migrations, and refreshes systemd units. After upgrading, run `rackmarshal diagnostic` and verify `/health`. If an upgrade fails before completion, retain the pre-upgrade configuration/database backup and do not manually edit the migration ledger.
+
+## Migration from HomelabOps
+
+The installer bundle includes `migrate-from-homelabops.sh` and `rollback-to-homelabops.sh`. The migration tool records the previously enabled/active HomelabOps units, copies configuration and state into RackMarshal-owned locations, applies only pending RackMarshal migrations, validates the resulting configuration, and starts only the corresponding RackMarshal domains. The legacy installation is left in place so rollback remains possible.
+
+Before migrating a production instance, prove both migration and rollback against a disposable restored copy of that instance. Do not use the production instance as the first migration target.

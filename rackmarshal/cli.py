@@ -34,6 +34,9 @@ def validate(path):
       v=c.get(k,"").strip()
       if v and Path(v).exists() and (Path(v).stat().st_mode & (stat.S_IRWXG|stat.S_IRWXO)):
         errors.append(f"{k}: credential/key file permissions are too broad")
+    if c.get("LOCAL_AI_ENABLED", "false").strip().lower() in {"1","true","yes","on"}:
+      for k in ("OLLAMA_URL","OLLAMA_MODEL"):
+        if not c.get(k, "").strip(): errors.append(f"local-ai: missing {k}")
     if "hardware" in enabled and c.get("HARDWARE_NVME_SERIALS", "").strip():
       for serial in [x.strip() for x in c["HARDWARE_NVME_SERIALS"].split(",") if x.strip()]:
         for suffix in ("MODEL","ROLE"):

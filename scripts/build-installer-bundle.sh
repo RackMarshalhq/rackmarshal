@@ -10,7 +10,7 @@ WHEEL="$(find dist -maxdepth 1 -name "rackmarshal-${VERSION}-py3-none-any.whl" -
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 B="$TMP/rackmarshal-installer-$LABEL"; mkdir -p "$B/scripts" "$B/packaging/systemd" "$B/config"
 cp "$WHEEL" "$B/"
-cp scripts/install.sh scripts/uninstall.sh "$B/scripts/"
+cp scripts/install.sh scripts/uninstall.sh scripts/migrate-from-homelabops.sh scripts/rollback-to-homelabops.sh "$B/scripts/"
 cp packaging/systemd/* "$B/packaging/systemd/"
 cp config/*.example* "$B/config/" 2>/dev/null || true
 cp LICENSE README.md INSTALL.md CONFIGURATION.md UPGRADE.md UNINSTALL.md SECURITY.md CHANGELOG.md "$B/"

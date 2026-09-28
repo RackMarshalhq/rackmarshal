@@ -1,0 +1,19 @@
+[Unit]
+Description=RackMarshal Local-AI asynchronous incident explainer
+After=local-fs.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=rackmarshal
+Group=rackmarshal
+Environment=RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf
+Environment=RACKMARSHAL_STATE_DB=/var/lib/rackmarshal/state.db
+ExecStart=/opt/rackmarshal/venv/bin/python -m rackmarshal.notifications.explain_worker --limit 5
+Nice=10
+TimeoutStartSec=300
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rackmarshal /var/log/rackmarshal

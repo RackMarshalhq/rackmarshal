@@ -1,0 +1,12 @@
+[Unit]
+Description=Run RackMarshal Local-AI incident explainer periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+RandomizedDelaySec=10s
+Persistent=true
+Unit=rackmarshal-local-ai-explain.service
+
+[Install]
+WantedBy=timers.target

@@ -100,9 +100,9 @@ Mount collection can use `MOUNT_CATALOG_FILE`, `MOUNT_SSH_HOST`, `MOUNT_SSH_USER
 
 ## Local AI and evidence options
 
-The shared configuration layer currently recognizes `LOCAL_AI_ENABLED`, `LOCAL_AI_TIMEOUT_SECONDS`, and `LOCAL_AI_ATTACH_TO_NOTIFY`. Evidence export recognizes the `RACKMARSHAL_STATUS_URL`, `RACKMARSHAL_EVIDENCE_RETAIN_DAYS`, and `RACKMARSHAL_EVIDENCE_RETENTION_CLASS` environment variables.
+The Local-AI explanation subsystem is disabled by default. Set `LOCAL_AI_ENABLED=true`, `OLLAMA_URL`, and `OLLAMA_MODEL` to enable the asynchronous explainer. `LOCAL_AI_TIMEOUT_SECONDS` controls worker timeout and `LOCAL_AI_ATTACH_TO_NOTIFY` allows a completed advisory explanation to be attached to an OPENED notification. The AI explanation is advisory only and never changes incident state.
 
-These capabilities are development-stage components. Do not assume a default base installation has configured an AI service or an evidence-retention policy.
+When enabled, the installer activates `rackmarshal-local-ai-explain.timer`; when disabled, that timer remains off. Evidence export also recognizes `RACKMARSHAL_STATUS_URL`, `RACKMARSHAL_EVIDENCE_RETAIN_DAYS`, and `RACKMARSHAL_EVIDENCE_RETENTION_CLASS`.
 
 ## Configuration ownership
 
