@@ -23,6 +23,12 @@ STATUS_API_LISTEN_PORT=9110
 
 `STATE_DB` is required by the shared configuration layer. The status API address and port control the local status service. Keep the status API bound to loopback unless you deliberately provide appropriate network access controls.
 
+## Enabling monitoring domains
+
+A base install is intentionally safe and schedules no infrastructure collectors. Set `ENABLED_DOMAINS` to a comma-separated subset of `pve,zfs,backup,ha,hardware,mount`, provide that domain's required site configuration, then rerun the installer. The installer validates configuration before database changes and enables a dedicated systemd timer for each selected domain.
+
+Run `rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf` before enabling a domain. Use `rackmarshal domains` to list supported domain identifiers and `rackmarshal diagnostic` for a non-secret operational summary.
+
 ## Optional path overrides
 
 The shared configuration layer also supports:
@@ -47,6 +53,8 @@ PVE_API_URL=...
 PVE_TOKEN_ID=...
 PVE_TOKEN_SECRET=...
 ```
+
+PVE-backed backup and mount collection also require `PVE_NODE` in `rackmarshal.conf`.
 
 The backup collector additionally expects the PBS environment file to contain:
 
@@ -82,7 +90,7 @@ The current hardware incident logic requires site-defined values for:
 - `HARDWARE_RECOVERY_THRESHOLD_C`
 - `HARDWARE_RECOVERY_REQUIRED_SAMPLES`
 
-Hardware inventory may also use `HARDWARE_NVME_SERIALS` and `HARDWARE_KNOWN_HOSTS`.
+Hardware inventory requires `HARDWARE_NVME_SERIALS`; for each serial, define `HARDWARE_NVME_<SERIAL>_MODEL` and `HARDWARE_NVME_<SERIAL>_ROLE`. It also requires `HARDWARE_SSH_HOST`, `HARDWARE_SSH_USER`, `HARDWARE_SSH_KEY`, and `HARDWARE_KNOWN_HOSTS`.
 
 ## Backup and mount policy settings
 

@@ -1,0 +1,12 @@
+[Unit]
+Description=Run RackMarshal %i domain cycle periodically
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+RandomizedDelaySec=30
+Persistent=true
+Unit=rackmarshal-domain@%i.service
+
+[Install]
+WantedBy=timers.target

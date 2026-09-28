@@ -31,7 +31,9 @@ class ConfigError(RuntimeError):
     pass
 
 
-def load_config(path=DEFAULT_CONFIG_FILE):
+def load_config(path=None):
+    if path is None:
+        path = Path(os.environ.get("RACKMARSHAL_CONFIG", str(DEFAULT_CONFIG_FILE)))
     config = {}
 
     try:
@@ -227,6 +229,3 @@ def local_ai_timeout_seconds(config=None):
 def local_ai_attach_to_notify(config=None):
     """If true, OPENED notify body may include AI text when already explained."""
     return optional_bool(config, "LOCAL_AI_ATTACH_TO_NOTIFY", False)
-
-
-CONFIG = load_config()

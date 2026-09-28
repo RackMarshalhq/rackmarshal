@@ -6,10 +6,12 @@ PURGE=0
 [[ $EUID -eq 0 ]] || { echo "ERROR: run as root" >&2; exit 1; }
 
 systemctl disable --now rackmarshal-status.service rackmarshal-notify.timer 2>/dev/null || true
+for d in pve zfs backup ha hardware mount; do systemctl disable --now "rackmarshal-domain@${d}.timer" 2>/dev/null || true; systemctl stop "rackmarshal-domain@${d}.service" 2>/dev/null || true; done
 systemctl stop rackmarshal-notify.service 2>/dev/null || true
 rm -f /etc/systemd/system/rackmarshal-status.service
 rm -f /etc/systemd/system/rackmarshal-notify.service
 rm -f /etc/systemd/system/rackmarshal-notify.timer
+rm -f /etc/systemd/system/rackmarshal-domain@.service /etc/systemd/system/rackmarshal-domain@.timer
 systemctl daemon-reload
 rm -rf /opt/rackmarshal
 
