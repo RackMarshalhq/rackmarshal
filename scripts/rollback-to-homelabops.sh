@@ -19,6 +19,14 @@ while IFS= read -r unit; do
   systemctl enable "$unit" 2>/dev/null || true
 done < "$MIGRATION_DIR/enabled-units.txt"
 
+if [[ -f "$MIGRATION_DIR/enabled-services.txt" ]]; then
+  while IFS= read -r unit; do
+    [[ -n "$unit" ]] || continue
+    systemctl enable "$unit" 2>/dev/null || true
+    systemctl start --no-block "$unit" 2>/dev/null || true
+  done < "$MIGRATION_DIR/enabled-services.txt"
+fi
+
 while IFS= read -r unit; do
   [[ -n "$unit" ]] || continue
   systemctl start --no-block "$unit" 2>/dev/null || true

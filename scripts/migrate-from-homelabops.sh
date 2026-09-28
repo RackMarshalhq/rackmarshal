@@ -31,6 +31,8 @@ systemctl list-unit-files 'homelabops-*' --no-legend 2>/dev/null |
   awk '$2=="enabled"{print $1}' > "$MIGRATION_DIR/enabled-units.txt" || true
 systemctl list-units 'homelabops-*' --state=active --no-legend 2>/dev/null |
   awk '{print $1}' > "$MIGRATION_DIR/active-units.txt" || true
+systemctl list-unit-files 'homelabops-*' --no-legend 2>/dev/null |
+  awk '$1 ~ /\.service$/ && $2=="enabled" {print $1}' > "$MIGRATION_DIR/enabled-services.txt" || true
 cp -a "$SOURCE_ETC" "$MIGRATION_DIR/source-etc"
 cp -a "$SOURCE_STATE" "$MIGRATION_DIR/source-state.db"
 sha256sum "$SOURCE_STATE" > "$MIGRATION_DIR/source-state.sha256"
