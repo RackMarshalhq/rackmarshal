@@ -820,6 +820,7 @@ def build_status():
                 "last_exit_status": row["last_exit_status"],
             }
             for row in cycle_health_rows
+            if str(row["unit_name"]).startswith("rackmarshal-")
         }
 
         open_mount_incidents = conn.execute(

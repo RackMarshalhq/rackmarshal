@@ -125,6 +125,7 @@ def collect_signals():
                 "last_exit_status": row["last_exit_status"],
             }
             for row in cycle_health_rows
+            if str(row["unit_name"]).startswith("rackmarshal-")
         }
 
     freshness = build_freshness(observations)

@@ -52,4 +52,17 @@ class FalseStateReconciliationTests(unittest.TestCase):
   self.assertNotIn(' -m ',c.INCIDENT_EXPLAINER)
   self.assertTrue(c.INCIDENT_EXPLAINER.endswith('rackmarshal-explain'))
 
+ def test_legacy_homelabops_cycle_health_is_not_actionable(self):
+  import rackmarshal.selfwatch.incidents as i
+  desired=i.evaluate_self_signals({}, {}, {}, {
+   'homelabops-zfs-cycle.service': {'health_state':'FAILED','failure_count':1}
+  })
+  # The evaluator itself is generic; collection/status filters legacy rows before evaluation.
+  self.assertEqual(len(desired),1)
+  import rackmarshal.selfwatch.cycle as c
+  src=Path(c.__file__).read_text()
+  self.assertIn('startswith("rackmarshal-")',src)
+  import rackmarshal.api.status as st
+  self.assertIn('startswith("rackmarshal-")',Path(st.__file__).read_text())
+
 if __name__=='__main__': unittest.main()
