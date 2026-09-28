@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from rackmarshal.core.config import (
     ha_credential_file,
     install_root,
+    incident_explainer_executable,
     state_db,
     venv_python,
 )
@@ -46,7 +47,7 @@ DB = str(state_db())
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = str(venv_python()) + " -m rackmarshal.incidents.explain"
+INCIDENT_EXPLAINER = str(incident_explainer_executable())
 
 
 class CycleError(Exception):

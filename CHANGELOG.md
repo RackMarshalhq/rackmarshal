@@ -2,6 +2,7 @@
 
 ## Unreleased (1.1.0)
 
+- Added exact `PVE_IGNORE_RESOURCES` filtering for disposable/unmanaged PVE guests, corrected mount-domain PVE node resolution, and reconciled self-watch to current packaged systemd unit names so stale migration notifications can recover naturally.
 - Fixed packaged HA incident comparator default command and hardware incident-processor command execution discovered by the second production acceptance rollback.
 - Expanded regression coverage for all six domain command-boundary contracts.
 - Fixed notification-delivery command construction across all six monitoring domains so the Local-AI explainer is passed as one executable path rather than a nested argv list.

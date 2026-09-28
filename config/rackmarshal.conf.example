@@ -27,6 +27,8 @@ STATUS_API_LISTEN_PORT=9110
 
 # Examples of required domain keys (fictional placeholders only):
 # PVE_NODE=pve-node-name
+# Optional exact PVE resource identities to ignore (comma-separated type:key).
+# PVE_IGNORE_RESOURCES=lxc:9001,lxc:9002
 # ZFS_SSH_HOST=zfs-observer.example.invalid
 # ZFS_SSH_USER=rackmarshal-observer
 # ZFS_SSH_KEY=/etc/rackmarshal/ssh/zfs_ed25519

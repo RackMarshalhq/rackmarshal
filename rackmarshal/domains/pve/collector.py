@@ -7,7 +7,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-from rackmarshal.core.config import pve_api_env, pve_ca_file
+from rackmarshal.core.config import pve_api_env, pve_ca_file, load_config as load_site_config
 
 # Phase 2 Step 8: credential/CA paths from config helpers (defaults = today's layout).
 CONFIG_FILE = pve_api_env()
@@ -99,6 +99,32 @@ def api_get(config, endpoint):
     return payload['data']
 
 
+
+def ignored_resource_identities():
+    """Exact PVE resource identities excluded from monitoring, e.g. lxc:117."""
+    raw = (load_site_config().get("PVE_IGNORE_RESOURCES") or "").strip()
+    out = set()
+    for item in raw.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        if ":" not in item:
+            raise RuntimeError(f"invalid PVE_IGNORE_RESOURCES entry: {item!r}")
+        kind, key = item.split(":", 1)
+        kind, key = kind.strip(), key.strip()
+        if not kind or not key:
+            raise RuntimeError(f"invalid PVE_IGNORE_RESOURCES entry: {item!r}")
+        out.add((kind, key))
+    return out
+
+
+def resource_identity(resource):
+    kind = str(resource.get("type") or "")
+    key = resource.get("vmid")
+    if key is None:
+        key = resource.get("storage") or resource.get("node") or ""
+    return kind, str(key)
+
 def normalized_resource(resource):
     output = {
         'type': resource.get('type'),
@@ -155,9 +181,11 @@ def main():
         '/cluster/resources',
     )
 
+    ignored = ignored_resource_identities()
     resources = [
         normalized_resource(resource)
         for resource in raw_resources
+        if resource_identity(resource) not in ignored
     ]
 
     resources.sort(key=sort_key)

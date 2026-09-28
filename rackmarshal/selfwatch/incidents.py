@@ -74,7 +74,7 @@ def evaluate_self_signals(
                     "detail": {"unit": name, "active_state": state},
                 }
             )
-        elif name == "rackmarshal-status-api.service" and state != "active":
+        elif name == "rackmarshal-status.service" and state != "active":
             desired.append(
                 {
                     "signal_key": unit_signal_key(name),
@@ -163,13 +163,13 @@ if __name__ == "__main__":
     # Tiny self-check (no DB).
     sample = evaluate_self_signals(
         {"PVE": {"state": "STALE", "age_seconds": 1200, "stale_after_seconds": 900}},
-        {"rackmarshal-status-api.service": "active"},
+        {"rackmarshal-status.service": "active"},
         {"pending": 0, "failed": 0, "pending_older_than_seconds": 0},
     )
     assert any(i["signal_key"] == "freshness:PVE" for i in sample)
     assert list_desired_open_keys(
         {"PVE": {"state": "OK"}},
-        {"rackmarshal-status-api.service": "active"},
+        {"rackmarshal-status.service": "active"},
         {},
     ) == []
     print("SELF_INCIDENTS_STUB_OK", sample)

@@ -107,3 +107,7 @@ When enabled, the installer activates `rackmarshal-local-ai-explain.timer`; when
 ## Configuration ownership
 
 The installer preserves an existing `/etc/rackmarshal/rackmarshal.conf` on subsequent installs. Upgrade procedures therefore do not silently replace site configuration. Review release notes for new keys before enabling new domains.
+
+### Ignoring unmanaged PVE resources
+
+`PVE_IGNORE_RESOURCES` is an optional comma-separated list of exact PVE identities in `type:key` form, for example `lxc:9001,lxc:9002`. Ignored resources are omitted from PVE observations and therefore do not open NEW incidents. If an ignored resource already has an OPEN NEW incident, the next PVE incident-processing cycle recovers it naturally because it is no longer present in the abnormal comparison set. Use this only for intentionally unmanaged/disposable resources; do not use it to hide production guests.

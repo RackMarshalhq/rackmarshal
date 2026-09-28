@@ -556,20 +556,20 @@ def build_freshness(observations, now=None):
 NOTIFY_PENDING_MAX_AGE_SECONDS = 900
 
 SELF_WATCH_UNITS = (
-    "rackmarshal-status-api.service",
-    "rackmarshal-pve-cycle.timer",
-    "rackmarshal-pve-cycle.service",
-    "rackmarshal-zfs-cycle.timer",
-    "rackmarshal-zfs-cycle.service",
-    "rackmarshal-ha-cycle.timer",
-    "rackmarshal-ha-cycle.service",
-    "rackmarshal-backup-cycle.timer",
-    "rackmarshal-backup-cycle.service",
-    "rackmarshal-hardware-cycle.timer",
-    "rackmarshal-hardware-cycle.service",
-    "rackmarshal-self-watch-cycle.timer",
-    "rackmarshal-mount-cycle.timer",
-    "rackmarshal-mount-cycle.service",
+    "rackmarshal-status.service",
+    "rackmarshal-domain@pve.timer",
+    "rackmarshal-domain@pve.service",
+    "rackmarshal-domain@zfs.timer",
+    "rackmarshal-domain@zfs.service",
+    "rackmarshal-domain@ha.timer",
+    "rackmarshal-domain@ha.service",
+    "rackmarshal-domain@backup.timer",
+    "rackmarshal-domain@backup.service",
+    "rackmarshal-domain@hardware.timer",
+    "rackmarshal-domain@hardware.service",
+    "rackmarshal-domain@mount.timer",
+    "rackmarshal-domain@mount.service",
+    "rackmarshal-self-watch.timer",
 )
 
 
@@ -660,7 +660,7 @@ def self_watch_status_from_parts(freshness, units, notifications):
     if "MISSING" in states or "STALE" in states:
         return "DEGRADED"
 
-    status_api = units.get("rackmarshal-status-api.service")
+    status_api = units.get("rackmarshal-status.service")
     if status_api not in (None, "active"):
         return "CRITICAL"
 
