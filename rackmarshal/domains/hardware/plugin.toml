@@ -1,0 +1,20 @@
+# RackMarshal domain plugin manifest
+
+id = "HARDWARE"
+schema_version = 1
+display_name = "Hardware"
+
+[entrypoints]
+collect = "rackmarshal.domains.hardware.collector"
+process_incidents = "rackmarshal.domains.hardware.incidents"
+run_cycle = "rackmarshal.domains.hardware.cycle"
+
+[status]
+include_in_api = true
+stale_after_seconds = 900
+
+[notify]
+use_shared_pipeline = true
+
+[pipeline]
+mode = "integrated"

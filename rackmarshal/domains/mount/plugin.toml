@@ -1,0 +1,23 @@
+# RackMarshal domain plugin manifest
+
+id = "MOUNT"
+schema_version = 1
+display_name = "Mounts (CT / VM / host)"
+
+[entrypoints]
+collect = "rackmarshal.domains.mount.collector"
+process_incidents = "rackmarshal.domains.mount.incidents"
+run_cycle = "rackmarshal.domains.mount.cycle"
+
+[status]
+include_in_api = true
+stale_after_seconds = 900
+
+[notify]
+use_shared_pipeline = true
+
+[pipeline]
+mode = "integrated"
+
+[catalog]
+config_key = "MOUNT_CATALOG"

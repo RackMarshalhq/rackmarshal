@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rackmarshal"
+version = "0.1.0rc1"
+description = "Local-first infrastructure operations and incident management for self-hosted systems."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{name = "RackMarshal"}]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: POSIX :: Linux"]
+
+[project.urls]
+Homepage = "https://rackmarshal.com"
+Repository = "https://github.com/RackMarshalhq/rackmarshal"
+
+[tool.setuptools.packages.find]
+include = ["rackmarshal*"]
+
+[tool.setuptools.package-data]
+"rackmarshal.db.migrations" = ["*.sql"]
+"rackmarshal.domains" = ["*/plugin.toml"]

@@ -1,0 +1,20 @@
+# RackMarshal domain plugin manifest
+
+id = "BACKUP"
+schema_version = 1
+display_name = "Backup / PBS"
+
+[entrypoints]
+collect = "rackmarshal.domains.backup.collector"
+write_observation = "rackmarshal.domains.backup.observation"
+compare = "rackmarshal.domains.backup.comparator"
+record_events = "rackmarshal.domains.backup.events"
+process_incidents = "rackmarshal.domains.backup.incidents"
+run_cycle = "rackmarshal.domains.backup.cycle"
+
+[status]
+include_in_api = true
+stale_after_seconds = 7200
+
+[notify]
+use_shared_pipeline = true

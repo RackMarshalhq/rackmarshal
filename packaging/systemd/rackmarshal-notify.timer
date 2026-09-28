@@ -1,0 +1,11 @@
+[Unit]
+Description=Run RackMarshal notification queue periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=rackmarshal-notify.service
+
+[Install]
+WantedBy=timers.target

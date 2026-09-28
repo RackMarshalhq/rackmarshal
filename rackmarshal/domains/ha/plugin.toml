@@ -1,0 +1,20 @@
+# RackMarshal domain plugin manifest
+
+id = "HA"
+schema_version = 1
+display_name = "Home Assistant"
+
+[entrypoints]
+collect = "rackmarshal.domains.ha.collector"
+write_observation = "rackmarshal.domains.ha.observation"
+compare = "rackmarshal.domains.ha.comparator"
+record_events = "rackmarshal.domains.ha.events"
+process_incidents = "rackmarshal.domains.ha.incidents"
+run_cycle = "rackmarshal.domains.ha.cycle"
+
+[status]
+include_in_api = true
+stale_after_seconds = 900
+
+[notify]
+use_shared_pipeline = true

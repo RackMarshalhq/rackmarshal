@@ -1,0 +1,20 @@
+# RackMarshal domain plugin manifest
+
+id = "ZFS"
+schema_version = 1
+display_name = "ZFS"
+
+[entrypoints]
+collect = "rackmarshal.domains.zfs.collector"
+write_observation = "rackmarshal.domains.zfs.observation"
+compare = "rackmarshal.domains.zfs.comparator"
+record_events = "rackmarshal.domains.zfs.events"
+process_incidents = "rackmarshal.domains.zfs.incidents"
+run_cycle = "rackmarshal.domains.zfs.cycle"
+
+[status]
+include_in_api = true
+stale_after_seconds = 900
+
+[notify]
+use_shared_pipeline = true

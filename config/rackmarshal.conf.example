@@ -1,0 +1,23 @@
+# RackMarshal generic configuration example.
+# Copy site values deliberately; never commit real credentials.
+
+SITE_NAME=rackmarshal
+STATE_DB=/var/lib/rackmarshal/state.db
+INSTALL_ROOT=/opt/rackmarshal
+CONFIG_DIR=/etc/rackmarshal
+STATE_DIR=/var/lib/rackmarshal
+VENV_PYTHON=/opt/rackmarshal/venv/bin/python
+
+# Status API defaults to loopback.
+STATUS_API_LISTEN_ADDRESS=127.0.0.1
+STATUS_API_LISTEN_PORT=9110
+
+# Optional credential/certificate path overrides.
+# HA_CREDENTIAL_FILE=/etc/rackmarshal/home-assistant-api.env
+# PVE_API_ENV=/etc/rackmarshal/pve-api.env
+# PBS_API_ENV=/etc/rackmarshal/pbs-api.env
+# PVE_CA_FILE=/etc/rackmarshal/pve-root-ca.pem
+# PBS_CA_FILE=/etc/rackmarshal/pbs-proxy.pem
+
+# Domain-specific host, SSH, threshold, and policy values are site-specific.
+# See CONFIGURATION.md before enabling collectors.

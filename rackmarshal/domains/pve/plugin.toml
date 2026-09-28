@@ -1,0 +1,20 @@
+# RackMarshal domain plugin manifest
+
+id = "PVE"
+schema_version = 1
+display_name = "Proxmox VE"
+
+[entrypoints]
+collect = "rackmarshal.domains.pve.collector"
+write_observation = "rackmarshal.domains.pve.observation"
+compare = "rackmarshal.domains.pve.comparator"
+record_events = "rackmarshal.domains.pve.events"
+process_incidents = "rackmarshal.domains.pve.incidents"
+run_cycle = "rackmarshal.domains.pve.cycle"
+
+[status]
+include_in_api = true
+stale_after_seconds = 900
+
+[notify]
+use_shared_pipeline = true
