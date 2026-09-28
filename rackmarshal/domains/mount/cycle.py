@@ -11,11 +11,14 @@ from pathlib import Path
 
 from rackmarshal.core.config import (
     ha_credential_file,
+    incident_explainer_executable,
     install_root,
     load_config,
     state_db,
     venv_python,
 )
+
+from rackmarshal.notifications.command import build_delivery_command
 
 CONFIG = load_config()
 DB = str(state_db(CONFIG))
@@ -30,7 +33,7 @@ PROCESSOR = module_cmd("rackmarshal.domains.mount.incidents")
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
+INCIDENT_EXPLAINER = str(incident_explainer_executable())
 
 # Deliver can hang on HA even with 0 pending rows; keep the cycle moving.
 DELIVER_TIMEOUT_S = float(
@@ -115,16 +118,9 @@ def main() -> int:
         raise SystemExit(f"enqueue failed rc={e.returncode}")
 
     d = run(
-        DELIVERY_WORKER + [
-            "--db",
-            DB,
-            "--credential",
-            HA_CREDENTIAL,
-            "--explainer",
-            INCIDENT_EXPLAINER,
-            "--notification-prefix",
-            "rackmarshal",
-        ],
+        build_delivery_command(
+            DELIVERY_WORKER, DB, HA_CREDENTIAL, INCIDENT_EXPLAINER
+        ),
         timeout=DELIVER_TIMEOUT_S,
     )
     emit(d)

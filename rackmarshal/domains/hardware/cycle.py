@@ -15,7 +15,10 @@ from rackmarshal.core.config import (
     install_root,
     venv_python,
     ha_credential_file,
+    incident_explainer_executable,
 )
+
+from rackmarshal.notifications.command import build_delivery_command
 
 
 CONFIG = load_config()
@@ -38,7 +41,7 @@ PROCESS_HARDWARE_INCIDENTS = module_cmd("rackmarshal.domains.hardware.incidents"
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
+INCIDENT_EXPLAINER = str(incident_explainer_executable())
 LOCK_FILE = Path("/run/lock/rackmarshal-hardware-cycle.lock")
 
 # Production thresholds.
@@ -171,16 +174,9 @@ def enqueue_notifications():
 def deliver_notifications():
     """Shared path: deliver PENDING incident_notifications via HA."""
     result = run_json(
-        DELIVERY_WORKER + [
-            "--db",
-            DB,
-            "--credential",
-            HA_CREDENTIAL,
-            "--explainer",
-            INCIDENT_EXPLAINER,
-            "--notification-prefix",
-            "rackmarshal",
-        ]
+        build_delivery_command(
+            DELIVERY_WORKER, DB, HA_CREDENTIAL, INCIDENT_EXPLAINER
+        )
     )
 
     if result.get("schema_version") != 1:

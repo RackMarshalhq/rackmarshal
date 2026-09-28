@@ -10,7 +10,10 @@ from rackmarshal.core.config import (
     state_db,
     install_root,
     ha_credential_file,
+    incident_explainer_executable,
 )
+
+from rackmarshal.notifications.command import build_delivery_command
 
 # Phase 2 Step 4: derive paths from config helpers (defaults = today's layout).
 _ROOT = install_root()
@@ -29,7 +32,7 @@ PROCESSOR = module_cmd("rackmarshal.domains.zfs.incidents")
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
+INCIDENT_EXPLAINER = str(incident_explainer_executable())
 
 LOCK_FILE = Path("/run/lock/rackmarshal-zfs-cycle.lock")
 
@@ -312,16 +315,9 @@ def main():
         #
         delivery_text = run(
             
-                DELIVERY_WORKER + [
-                "--db",
-                DB,
-                "--credential",
-                HA_CREDENTIAL,
-                "--explainer",
-                INCIDENT_EXPLAINER,
-                "--notification-prefix",
-                "rackmarshal",
-            ]
+                build_delivery_command(
+                DELIVERY_WORKER, DB, HA_CREDENTIAL, INCIDENT_EXPLAINER
+            )
         )
 
         delivery = parse_json(

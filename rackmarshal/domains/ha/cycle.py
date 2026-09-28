@@ -12,7 +12,10 @@ from rackmarshal.core.config import (
     install_root,
     venv_python,
     ha_credential_file,
+    incident_explainer_executable,
 )
+
+from rackmarshal.notifications.command import build_delivery_command
 
 # Phase 2 Step 5: derive paths from config helpers (defaults = today's layout).
 BASE = install_root()
@@ -32,7 +35,7 @@ DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 
 DB = str(state_db())
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
+INCIDENT_EXPLAINER = str(incident_explainer_executable())
 
 LOCK_FILE = Path("/run/lock/rackmarshal-ha-cycle.lock")
 
@@ -460,16 +463,9 @@ def main():
         #
         # 7. DELIVER PENDING/RETRYABLE NOTIFICATIONS
         #
-        delivery_text = run(DELIVERY_WORKER + [
-            "--db",
-            DB,
-            "--credential",
-            HA_CREDENTIAL,
-            "--explainer",
-            INCIDENT_EXPLAINER,
-            "--notification-prefix",
-            "rackmarshal",
-        ])
+        delivery_text = run(build_delivery_command(
+            DELIVERY_WORKER, DB, HA_CREDENTIAL, INCIDENT_EXPLAINER
+        ))
 
         delivery = parse_json(
             delivery_text,

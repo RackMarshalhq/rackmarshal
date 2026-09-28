@@ -2,6 +2,7 @@
 
 ## Unreleased (1.1.0)
 
+- Fixed notification-delivery command construction across all six monitoring domains so the Local-AI explainer is passed as one executable path rather than a nested argv list.
 - Generalized the Local-AI/Ollama incident explainer and asynchronous explanation worker.
 - Added conditional Local-AI systemd scheduling, configuration validation, and tests.
 - Added explicit HomelabOps-to-RackMarshal migration and rollback tools for controlled production adoption.

@@ -10,7 +10,10 @@ from rackmarshal.core.config import (
     install_root,
     venv_python,
     ha_credential_file,
+    incident_explainer_executable,
 )
+
+from rackmarshal.notifications.command import build_delivery_command
 
 # Phase 2 Step 6: derive paths from config helpers (defaults = today's layout).
 BASE = install_root()
@@ -30,7 +33,7 @@ DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 
 DB = str(state_db())
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
+INCIDENT_EXPLAINER = str(incident_explainer_executable())
 
 
 def run(command, input_text=None):
@@ -113,16 +116,9 @@ def enqueue_notifications():
 
 
 def deliver_notifications():
-    text = run(DELIVERY_WORKER + [
-        "--db",
-        DB,
-        "--credential",
-        HA_CREDENTIAL,
-        "--explainer",
-        INCIDENT_EXPLAINER,
-        "--notification-prefix",
-        "rackmarshal",
-    ])
+    text = run(build_delivery_command(
+        DELIVERY_WORKER, DB, HA_CREDENTIAL, INCIDENT_EXPLAINER
+    ))
 
     result = parse_json(
         text,

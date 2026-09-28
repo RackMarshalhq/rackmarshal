@@ -141,6 +141,11 @@ def venv_python(config=None):
     return install_root(config) / "venv" / "bin" / "python"
 
 
+def incident_explainer_executable(config=None):
+    """Return the single executable path expected by notification delivery."""
+    return venv_python(config).parent / "rackmarshal-explain"
+
+
 def ha_credential_file(config=None):
     config = _ensure_config(config)
     return _optional_path(
