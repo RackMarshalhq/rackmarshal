@@ -16,12 +16,12 @@ systemctl stop rackmarshal-notify.service rackmarshal-local-ai-explain.service r
 
 while IFS= read -r unit; do
   [[ -n "$unit" ]] || continue
-  systemctl enable --now "$unit" 2>/dev/null || true
+  systemctl enable "$unit" 2>/dev/null || true
 done < "$MIGRATION_DIR/enabled-units.txt"
 
 while IFS= read -r unit; do
   [[ -n "$unit" ]] || continue
-  systemctl start "$unit" 2>/dev/null || true
+  systemctl start --no-block "$unit" 2>/dev/null || true
 done < "$MIGRATION_DIR/active-units.txt"
 
 sleep 1
