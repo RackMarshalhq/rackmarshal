@@ -37,3 +37,9 @@ class ProductionParityTimerContractTests(unittest.TestCase):
   s=(ROOT/'scripts/uninstall.sh').read_text()
   for name in ('rackmarshal-self-watch.timer','rackmarshal-db-snapshot.timer','rackmarshal-evidence-export.timer','rackmarshal-observation-prune.timer'):
    self.assertIn(name,s)
+
+class RollbackIsolationContractTests(unittest.TestCase):
+ def test_enabled_legacy_services_start_without_dependencies(self):
+  s=(ROOT/'scripts/rollback-to-homelabops.sh').read_text()
+  self.assertIn('systemctl start --no-block --no-deps "$unit"', s)
+  self.assertIn('systemctl is-active --quiet homelabops-status-api.service', s)

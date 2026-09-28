@@ -23,7 +23,11 @@ if [[ -f "$MIGRATION_DIR/enabled-services.txt" ]]; then
   while IFS= read -r unit; do
     [[ -n "$unit" ]] || continue
     systemctl enable "$unit" 2>/dev/null || true
-    systemctl start --no-block "$unit" 2>/dev/null || true
+    # Start the service itself without pulling its Wants/After dependency graph into
+    # the rollback transaction. This preserves the installed production unit and its
+    # normal boot semantics, while allowing rollback verification on an intentionally
+    # network-isolated recovery host where network-online.target cannot be reached.
+    systemctl start --no-block --no-deps "$unit" 2>/dev/null || true
   done < "$MIGRATION_DIR/enabled-services.txt"
 fi
 
@@ -32,8 +36,11 @@ while IFS= read -r unit; do
   systemctl start --no-block "$unit" 2>/dev/null || true
 done < "$MIGRATION_DIR/active-units.txt"
 
-sleep 1
 if systemctl list-unit-files homelabops-status-api.service --no-legend 2>/dev/null | grep -q homelabops-status-api; then
+  for _ in {1..20}; do
+    systemctl is-active --quiet homelabops-status-api.service && break
+    sleep 0.25
+  done
   systemctl is-active --quiet homelabops-status-api.service
 fi
 
