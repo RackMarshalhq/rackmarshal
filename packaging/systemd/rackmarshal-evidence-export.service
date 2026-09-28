@@ -1,0 +1,19 @@
+[Unit]
+Description=RackMarshal evidence export
+After=network-online.target rackmarshal-status.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=rackmarshal
+Group=rackmarshal
+Environment=RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf
+Environment=RACKMARSHAL_STATE_DB=/var/lib/rackmarshal/state.db
+Environment=RACKMARSHAL_EVIDENCE_RETAIN_DAYS=35
+Environment=RACKMARSHAL_EVIDENCE_RETENTION_CLASS=daily
+ExecStart=/opt/rackmarshal/venv/bin/python -m rackmarshal.evidence.export --retention-class daily --retain-days 35
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rackmarshal

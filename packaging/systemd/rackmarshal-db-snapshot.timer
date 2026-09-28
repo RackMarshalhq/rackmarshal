@@ -1,0 +1,11 @@
+[Unit]
+Description=Run RackMarshal state database snapshot daily
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 UTC
+Persistent=true
+RandomizedDelaySec=60s
+Unit=rackmarshal-db-snapshot.service
+
+[Install]
+WantedBy=timers.target

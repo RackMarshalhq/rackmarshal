@@ -77,7 +77,7 @@ chmod 0640 /var/lib/rackmarshal/state.db
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIT_DIR="${SCRIPT_DIR%/scripts}/packaging/systemd"
-for unit in rackmarshal-status.service rackmarshal-notify.service rackmarshal-notify.timer rackmarshal-domain@.service rackmarshal-domain@.timer rackmarshal-local-ai-explain.service rackmarshal-local-ai-explain.timer; do
+for unit in rackmarshal-status.service rackmarshal-notify.service rackmarshal-notify.timer rackmarshal-domain@.service rackmarshal-domain@.timer rackmarshal-local-ai-explain.service rackmarshal-local-ai-explain.timer rackmarshal-self-watch.service rackmarshal-self-watch.timer rackmarshal-db-snapshot.service rackmarshal-db-snapshot.timer rackmarshal-evidence-export.service rackmarshal-evidence-export.timer rackmarshal-observation-prune.service rackmarshal-observation-prune.timer; do
   [[ -f "$UNIT_DIR/$unit" ]] || { echo "ERROR: missing unit template $UNIT_DIR/$unit" >&2; exit 4; }
   install -o root -g root -m 0644 "$UNIT_DIR/$unit" "/etc/systemd/system/$unit"
 done
@@ -86,7 +86,7 @@ systemctl daemon-reload
 systemd-analyze verify /etc/systemd/system/rackmarshal-status.service /etc/systemd/system/rackmarshal-notify.service /etc/systemd/system/rackmarshal-notify.timer /etc/systemd/system/rackmarshal-domain@.service /etc/systemd/system/rackmarshal-domain@.timer /etc/systemd/system/rackmarshal-local-ai-explain.service /etc/systemd/system/rackmarshal-local-ai-explain.timer
 
 if [[ "$NO_START" -eq 0 ]]; then
-  systemctl enable --now rackmarshal-status.service rackmarshal-notify.timer
+  systemctl enable --now rackmarshal-status.service rackmarshal-notify.timer rackmarshal-self-watch.timer rackmarshal-db-snapshot.timer rackmarshal-evidence-export.timer rackmarshal-observation-prune.timer
   ENABLED_DOMAINS="$(sed -n 's/^ENABLED_DOMAINS=//p' /etc/rackmarshal/rackmarshal.conf | tail -1 | tr ',' ' ')"
   for domain in $ENABLED_DOMAINS; do
     case "$domain" in pve|zfs|backup|ha|hardware|mount) systemctl enable --now "rackmarshal-domain@${domain}.timer" ;; *) echo "ERROR: unknown ENABLED_DOMAINS entry: $domain" >&2; exit 5 ;; esac

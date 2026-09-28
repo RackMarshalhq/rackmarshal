@@ -27,3 +27,13 @@ class HomelabOpsMigrationContractTests(unittest.TestCase):
   s=(ROOT/'scripts/rollback-to-homelabops.sh').read_text()
   self.assertIn('enabled-units.txt',s); self.assertIn('active-units.txt',s)
   self.assertIn('RACKMARSHAL_HOMELABOPS_ROLLBACK_OK',s)
+
+class ProductionParityTimerContractTests(unittest.TestCase):
+ def test_maintenance_and_selfwatch_units_installed(self):
+  s=(ROOT/'scripts/install.sh').read_text()
+  for name in ('rackmarshal-self-watch.timer','rackmarshal-db-snapshot.timer','rackmarshal-evidence-export.timer','rackmarshal-observation-prune.timer'):
+   self.assertIn(name,s)
+ def test_maintenance_and_selfwatch_units_removed(self):
+  s=(ROOT/'scripts/uninstall.sh').read_text()
+  for name in ('rackmarshal-self-watch.timer','rackmarshal-db-snapshot.timer','rackmarshal-evidence-export.timer','rackmarshal-observation-prune.timer'):
+   self.assertIn(name,s)

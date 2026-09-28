@@ -1,0 +1,11 @@
+[Unit]
+Description=Run RackMarshal observation retention prune weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 04:05:00 UTC
+Persistent=true
+RandomizedDelaySec=300s
+Unit=rackmarshal-observation-prune.service
+
+[Install]
+WantedBy=timers.target

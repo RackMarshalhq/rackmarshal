@@ -106,7 +106,7 @@ while IFS= read -r unit; do
 done < "$MIGRATION_DIR/active-units.txt"
 
 systemctl daemon-reload
-systemctl enable --now rackmarshal-status.service rackmarshal-notify.timer
+systemctl enable --now rackmarshal-status.service rackmarshal-notify.timer rackmarshal-self-watch.timer rackmarshal-db-snapshot.timer rackmarshal-evidence-export.timer rackmarshal-observation-prune.timer
 for d in "${domains[@]}"; do systemctl enable --now "rackmarshal-domain@$d.timer"; done
 ai="$(sed -n 's/^LOCAL_AI_ENABLED=//p' /etc/rackmarshal/rackmarshal.conf | tail -1 | tr '[:upper:]' '[:lower:]')"
 case "$ai" in 1|true|yes|on) systemctl enable --now rackmarshal-local-ai-explain.timer ;; esac
