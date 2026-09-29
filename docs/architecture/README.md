@@ -7,6 +7,7 @@ This directory contains the frozen architecture baseline for RackMarshal's API, 
 - [Core Principles](CORE_PRINCIPLES.md)
 - [API Architecture](API_ARCHITECTURE.md)
 - [API v1 Schema](API_V1_SCHEMA.md)
+- [API v1 Contract Review](API_V1_CONTRACT_REVIEW.md)
 - [Agent Architecture](AGENT_ARCHITECTURE.md)
 - [Agent Contract](AGENT_CONTRACT.md)
 - [MCP Architecture](MCP_ARCHITECTURE.md)

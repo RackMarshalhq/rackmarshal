@@ -30,7 +30,8 @@ Operational facts exposed through v1 SHALL carry one of:
 
 ```json
 {
-  "id": 47,
+  "id": "ZFS:47",
+  "local_id": 47,
   "domain": "ZFS",
   "resource_type": "pool",
   "resource_key": "data",
@@ -62,7 +63,8 @@ Operational facts exposed through v1 SHALL carry one of:
 
 ```json
 {
-  "id": 9912,
+  "id": "ZFS:9912",
+  "local_id": 9912,
   "domain": "ZFS",
   "collector": "zfs",
   "observed_at": "2026-09-29T21:15:00Z",
@@ -75,11 +77,11 @@ Operational facts exposed through v1 SHALL carry one of:
 
 ```json
 {
-  "id": "evidence:9912",
+  "id": "observation:ZFS:9912",
   "kind": "observation",
   "authority": "OBSERVED",
   "observed_at": "2026-09-29T21:15:00Z",
-  "source_ref": "observation:9912",
+  "source_ref": "observation:ZFS:9912",
   "summary": "Recorded operational evidence"
 }
 ```
@@ -88,12 +90,12 @@ Operational facts exposed through v1 SHALL carry one of:
 
 ```json
 {
-  "incident_id": 47,
+  "incident_id": "ZFS:47",
   "state": "VERIFIED",
   "verified_at": "2026-09-29T22:40:00Z",
   "verification_source": "rackmarshal",
   "authority": "OBSERVED",
-  "evidence_refs": ["evidence:10004"]
+  "evidence_refs": ["observation:ZFS:10004"]
 }
 ```
 
@@ -101,13 +103,14 @@ Operational facts exposed through v1 SHALL carry one of:
 
 ```json
 {
-  "id": 314,
+  "id": "ZFS:314",
+  "local_id": 314,
   "domain": "ZFS",
   "resource_key": "data",
   "change_type": "state_change",
   "observed_at": "2026-09-29T21:15:00Z",
   "authority": "DERIVED",
-  "evidence_refs": ["evidence:9912"]
+  "evidence_refs": ["observation:ZFS:9912"]
 }
 ```
 

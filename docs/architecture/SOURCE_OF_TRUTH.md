@@ -32,3 +32,13 @@ The first-class post-1.1 development track is: public API v1 → read-only MCP �
 ## IMPLEMENTATION GATE
 
 No MCP implementation or autonomous-action implementation is authorized by this architecture freeze alone. The next implementation gate is API v1 schema review against the current RackMarshal data model, followed by read-only API implementation and contract tests. Existing RackMarshal 1.1 work remains independent and must not be destabilized by the agent track.
+
+
+## API V1 SCHEMA REVIEW — 2026-09-29
+
+- **VERIFIED:** The proposed read-only v1 surface can be normalized over the current six domain ledgers without changing their authoritative schemas.
+- **FROZEN:** Public observation, event, and incident IDs are domain-qualified because local numeric IDs are not globally unique.
+- **FROZEN:** API v1 does not invent severity where a domain ledger does not record it; unavailable severity is `null`/`UNKNOWN`.
+- **FROZEN:** Recoveries are a normalized view over recovered incidents and their `recovered_observation_id`; no duplicate recovery authority is introduced.
+- **FROZEN:** Raw collector payloads are not default public responses and require sanitization when exposed as typed evidence.
+- **NEXT:** Implement the read-only service/adapters and contract tests. MCP remains gated until API v1 passes those tests.
