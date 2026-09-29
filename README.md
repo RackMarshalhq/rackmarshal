@@ -51,6 +51,7 @@ The installer does not copy production credentials or discover your infrastructu
 
 ## Documentation
 
+- [Architecture and agent roadmap](docs/architecture/README.md)
 - [Installation](INSTALL.md)
 - [Configuration](CONFIGURATION.md)
 - [Upgrade](UPGRADE.md)
