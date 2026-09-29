@@ -6,7 +6,7 @@ The reference installer has been exercised on a fresh Debian 12 system. It is wr
 
 RackMarshal requires Python 3.11 or newer. On systems with `apt-get`, the installer can bootstrap `python3` and `python3-venv` when needed.
 
-The current development package is not a stable production release.
+RackMarshal 1.0.0 is the first stable public release. The reference installation path was qualified on a disposable Debian 12 host; other Debian/Ubuntu-compatible environments should be treated as additional validation targets.
 
 ## Release bundle
 

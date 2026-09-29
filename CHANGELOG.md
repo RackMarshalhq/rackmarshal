@@ -11,7 +11,7 @@
 
 All notable RackMarshal changes intended for public releases will be documented here.
 
-RackMarshal has not yet published a stable release.
+RackMarshal 1.0.0 is the first stable public release.
 
 ## [Unreleased]
 
@@ -41,4 +41,4 @@ RackMarshal has not yet published a stable release.
 ### Changed
 - remaining legacy project identifiers in staged Python and migration content were renamed for RackMarshal.
 
-No GitHub release has been declared by this changelog entry.
+The pre-release engineering record above documents the qualification work that led to the 1.0.0 release.
