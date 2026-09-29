@@ -1,11 +1,11 @@
 # RackMarshal API v1 Schema
 
-Status: **CONTRACT DRAFT — FROZEN FOR IMPLEMENTATION**
+Status: **FROZEN CONTRACT BASELINE — IMPLEMENTATION MAY BEGIN AFTER SCHEMA REVIEW GATE**
 Date: 2026-09-29
 
 ## Common envelope
 
-Every v1 response SHOULD use this envelope where practical:
+Every successful v1 JSON response SHALL use this envelope unless an endpoint is explicitly documented otherwise:
 
 ```json
 {
@@ -113,7 +113,7 @@ Operational facts exposed through v1 SHALL carry one of:
 
 ## Pagination
 
-Collection responses SHOULD expose `limit`, `next_cursor`, and an optional `total` when efficiently available. Cursors are opaque to clients.
+Collection responses SHALL expose `limit` and `next_cursor`; `total` MAY be included when efficiently available. Cursors are opaque to clients.
 
 ## Error object
 
@@ -130,3 +130,7 @@ Collection responses SHOULD expose `limit`, `next_cursor`, and an optional `tota
 ## Compatibility
 
 Fields may be added within v1. Existing field meaning SHALL NOT change within v1. Breaking semantic changes require a new API version.
+
+## Schema review gate
+
+Before API v1 implementation is considered contract-complete, each endpoint SHALL have a documented response shape, filter/query parameters, pagination behavior, error cases, authority/provenance semantics, and at least one representative example derived from the existing RackMarshal data model. Implementation MAY prototype behind this contract, but no endpoint is declared stable until this gate passes.

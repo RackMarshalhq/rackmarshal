@@ -28,3 +28,7 @@ Status: **AUTHORITATIVE PROJECT SOT**
 ## ACTIVE DEVELOPMENT DIRECTION
 
 The first-class post-1.1 development track is: public API v1 → read-only MCP → provenance/agent contract → investigative agent → controlled actions → agent audit ledger.
+
+## IMPLEMENTATION GATE
+
+No MCP implementation or autonomous-action implementation is authorized by this architecture freeze alone. The next implementation gate is API v1 schema review against the current RackMarshal data model, followed by read-only API implementation and contract tests. Existing RackMarshal 1.1 work remains independent and must not be destabilized by the agent track.
