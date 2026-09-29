@@ -1,128 +1,28 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RackMarshal™ — Infrastructure Operations</title>
-  <meta name="description" content="Local-first infrastructure operations and incident management for self-hosted systems.">
-
-  <style>
-    :root {
-      color-scheme: light dark;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                   Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0d1117;
-      color: #e6edf3;
-    }
-
-    main {
-      width: min(760px, calc(100% - 48px));
-      padding: 72px 0;
-    }
-
-    h1 {
-      margin: 0 0 12px;
-      font-size: clamp(2.7rem, 8vw, 5rem);
-      letter-spacing: -0.05em;
-    }
-
-    .tagline {
-      font-size: 1.35rem;
-      line-height: 1.5;
-      color: #b7c0ca;
-      margin-bottom: 42px;
-    }
-
-    p {
-      font-size: 1.05rem;
-      line-height: 1.7;
-      color: #b7c0ca;
-    }
-
-    h2 {
-      margin-top: 42px;
-      font-size: 1.25rem;
-    }
-
-    ul {
-      padding-left: 22px;
-      color: #b7c0ca;
-      line-height: 1.8;
-    }
-
-    a {
-      color: #a78bfa;
-    }
-
-    footer {
-      margin-top: 56px;
-      padding-top: 24px;
-      border-top: 1px solid #30363d;
-      color: #7d8590;
-      font-size: .9rem;
-    }
-  </style>
-</head>
-
-<body>
-  <main>
-    <h1>RackMarshal™</h1>
-
-    <div class="tagline">
-      Local-first infrastructure operations and incident management
-      for self-hosted systems.
-    </div>
-
-    <p>
-      RackMarshal is an infrastructure operations platform designed to
-      observe self-hosted systems, maintain durable operational state,
-      detect and track incidents, and verify recovery.
-    </p>
-
-    <p>
-      The project grew from a working homelab operations system and is
-      being prepared for broader use across homelabs, self-hosted
-      infrastructure, edge systems, and small infrastructure environments.
-    </p>
-
-    <h2>Design principles</h2>
-
-    <ul>
-      <li>Local-first operation</li>
-      <li>Durable operational history</li>
-      <li>Evidence-based incident detection and recovery</li>
-      <li>Configuration-driven monitoring</li>
-      <li>Reproducible installation and migration</li>
-      <li>Minimal dependence on external services</li>
-    </ul>
-
-    <h2>Project status</h2>
-
-    <p>
-      RackMarshal is currently under active development. Initial development
-      centers on Linux and Proxmox environments, including virtualization,
-      storage, backups, hardware health, and service availability.
-    </p>
-
-    <p>
-      Source code and development:
-      <a href="https://github.com/RackMarshalhq/rackmarshal">
-        GitHub
-      </a>
-    </p>
-
-    <footer>
-      RackMarshal™ is an independent project and is not affiliated with
-      Proxmox Server Solutions GmbH.
-    </footer>
-  </main>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RackMarshal™ — Local-First Infrastructure Operations</title>
+<meta name="description" content="RackMarshal is an open-source, local-first infrastructure operations and incident-management platform for self-hosted systems.">
+<link rel="canonical" href="https://rackmarshal.com/"><meta name="theme-color" content="#07101d">
+<meta property="og:type" content="website"><meta property="og:title" content="RackMarshal™ — Local-First Infrastructure Operations">
+<meta property="og:description" content="Know what changed. Know what failed. Know when it recovered."><meta property="og:url" content="https://rackmarshal.com/">
+<style>
+:root{--bg:#07101d;--panel:#0e1d31;--text:#f5f8fc;--muted:#a9b7ca;--line:#223650;--blue:#36a7ff;--max:1160px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--text);background:radial-gradient(circle at 80% 5%,#12375b 0,transparent 28rem),linear-gradient(#07101d,#091522 45%,#07101d);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:inherit}.wrap{width:min(calc(100% - 40px),var(--max));margin:auto}nav{position:sticky;top:0;z-index:5;background:#07101ddd;backdrop-filter:blur(14px);border-bottom:1px solid #ffffff10}.nav{height:70px;display:flex;align-items:center;justify-content:space-between}.brand{font-size:20px;font-weight:850;text-decoration:none}.links{display:flex;gap:20px;align-items:center}.links>a:not(.btn){color:var(--muted);text-decoration:none;font-size:14px}
+.btn{display:inline-flex;padding:11px 17px;border-radius:10px;border:1px solid var(--line);text-decoration:none;font-weight:750;background:#0e1b2c}.btn.primary{background:linear-gradient(135deg,#168ee8,#55bdff);color:#04101c;border:0}.hero{padding:105px 0 90px}.eyebrow,.kicker{color:#7cc8ff;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}h1{font-size:clamp(48px,7vw,84px);line-height:1.01;letter-spacing:-.05em;margin:16px 0 24px;max-width:1000px}.lead{font-size:21px;color:#c5d1df;max-width:780px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.release{margin-top:20px;color:var(--muted);font-size:14px}.release:before{content:'●';color:#6fd4a6;margin-right:8px}
+section{padding:76px 0;border-top:1px solid #ffffff0e}h2{font-size:clamp(32px,4vw,50px);line-height:1.1;letter-spacing:-.03em;margin:10px 0 18px}.intro{color:var(--muted);font-size:18px;max-width:800px}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:34px}.flow div,.card{border:1px solid var(--line);background:linear-gradient(#11243c,#0e1d31);border-radius:14px}.flow div{padding:18px 10px;text-align:center;font-weight:750}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}.card{padding:24px}.card small{color:#7cc8ff;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.card h3{margin:8px 0 6px}.card p{margin:0;color:var(--muted)}
+.principles{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:32px}.principle{padding:20px 22px;border-left:2px solid var(--blue);background:#ffffff06}.principle strong{display:block}.principle span{color:var(--muted)}.story{display:grid;grid-template-columns:1fr 1fr;gap:44px}.quote{font-size:30px;line-height:1.3;font-weight:750;margin:0}.story p{color:var(--muted);margin-top:0}.cta{padding:34px;border-radius:20px;background:linear-gradient(135deg,#167eca33,#0d1f33);border:1px solid #28527a}.chips{display:flex;flex-wrap:wrap;gap:9px;margin:22px 0}.chip{border:1px solid #2a4563;border-radius:999px;padding:7px 11px;color:#c7d8ea;font-size:13px}.boundary{border:1px solid #57492a;background:#73571a1a;border-radius:16px;padding:26px}.boundary strong{color:#ffd27a}footer{padding:44px 0 58px;border-top:1px solid #ffffff10;color:var(--muted);font-size:14px}.foot{display:flex;justify-content:space-between;gap:28px}.foot a{color:#d9e8f7}
+@media(max-width:800px){.links>a:not(.btn){display:none}.flow{grid-template-columns:1fr}.grid,.principles,.story{grid-template-columns:1fr}.hero{padding:72px 0 62px}.foot{display:block}.foot>div{margin-bottom:16px}}
+</style></head><body>
+<nav><div class="wrap nav"><a class="brand" href="#">RackMarshal™</a><div class="links"><a href="#today">What exists</a><a href="#principles">Principles</a><a href="#test">Test RackMarshal</a><a class="btn" href="https://github.com/RackMarshalhq/rackmarshal">GitHub</a></div></div></nav>
+<header class="hero"><div class="wrap"><div class="eyebrow">RackMarshal 1.0 · Open Source · Local First</div><h1>Know what changed.<br>Know what failed.<br>Know when it recovered.</h1><p class="lead">Local-first infrastructure operations and incident management for self-hosted systems. RackMarshal records durable operational state, detects and tracks incidents, and verifies recovery.</p><div class="actions"><a class="btn primary" href="https://github.com/RackMarshalhq/rackmarshal">Get RackMarshal 1.0</a><a class="btn" href="https://github.com/RackMarshalhq/rackmarshal">View on GitHub</a></div><div class="release">RackMarshal 1.0 is the first stable release.</div></div></header>
+<main><section><div class="wrap"><div class="kicker">Beyond dashboards</div><h2>Monitoring tells you what is happening now. RackMarshal remembers what happened.</h2><p class="intro">RackMarshal maintains operational state across time: observations become evidence, meaningful changes become events, failures become incidents, and recovery is tracked instead of assumed.</p><div class="flow"><div>Observe State</div><div>Detect Divergence</div><div>Manage Incidents</div><div>Track Recovery</div><div>Preserve Evidence</div></div></div></section>
+<section id="today"><div class="wrap"><div class="kicker">What exists today</div><h2>Operational domains in RackMarshal 1.0</h2><p class="intro">The current codebase contains operational domains for the following infrastructure. RackMarshal stores observations, events, incidents, cycle health and related state locally in SQLite.</p><div class="grid">
+<div class="card"><small>Virtualization</small><h3>Proxmox VE</h3><p>Resource and infrastructure observations.</p></div><div class="card"><small>Storage</small><h3>ZFS</h3><p>Storage and pool health observations.</p></div><div class="card"><small>Backup</small><h3>Backup / PBS</h3><p>Backup observations and operational state.</p></div><div class="card"><small>Automation</small><h3>Home Assistant</h3><p>Home Assistant observations.</p></div><div class="card"><small>Systems</small><h3>Hardware health</h3><p>Infrastructure hardware health observations.</p></div><div class="card"><small>Availability</small><h3>Mounts</h3><p>Mount availability and state.</p></div></div></div></section>
+<section id="principles"><div class="wrap"><div class="kicker">Designed for infrastructure you control</div><h2>Local first by design.</h2><p class="intro">RackMarshal is designed to operate without turning your infrastructure telemetry into a dependency on somebody else's hosted service.</p><div class="principles">
+<div class="principle"><strong>Local operation</strong><span>Run RackMarshal on infrastructure you control.</span></div><div class="principle"><strong>Durable operational history</strong><span>Preserve state instead of relying only on transient alerts.</span></div><div class="principle"><strong>Evidence-based incidents</strong><span>Track observations and events associated with failure and recovery.</span></div><div class="principle"><strong>Configuration-driven monitoring</strong><span>Define how RackMarshal interacts with your environment.</span></div><div class="principle"><strong>Reproducible deployment</strong><span>Installation, configuration and database migrations are designed to be repeatable.</span></div><div class="principle"><strong>Minimal external dependencies</strong><span>Core operation does not depend on a hosted monitoring service.</span></div></div></div></section>
+<section><div class="wrap story"><div><p class="quote">Built in a real environment, not just designed on paper.</p></div><div><p>RackMarshal grew from a working homelab operations system and the need to understand Proxmox, ZFS, backups, Linux infrastructure, hardware and other systems as a whole.</p><p>RackMarshal 1.0 turns that system into a reproducible open-source platform for homelabs, self-hosted infrastructure, edge systems and small infrastructure environments.</p></div></div></section>
+<section id="test"><div class="wrap"><div class="cta"><div class="kicker">Early adopters wanted</div><h2>Put RackMarshal into infrastructure we did not build.</h2><p class="intro">We are looking for technically experienced users willing to install RackMarshal, configure it against real systems, challenge its assumptions and find the environments we did not anticipate.</p><div class="chips"><span class="chip">Proxmox</span><span class="chip">ZFS</span><span class="chip">Linux</span><span class="chip">PBS</span><span class="chip">Home Assistant</span><span class="chip">Self-hosted infrastructure</span></div><div class="actions"><a class="btn primary" href="https://github.com/RackMarshalhq/rackmarshal/blob/main/INSTALL.md">Installation Guide</a><a class="btn" href="https://github.com/RackMarshalhq/rackmarshal">GitHub</a><a class="btn" href="https://github.com/RackMarshalhq/rackmarshal/issues">Report an Issue</a></div></div></div></section>
+<section><div class="wrap"><div class="boundary"><strong>Important current boundary</strong><p>A successful base installation proves the RackMarshal runtime, database, status API and notification queue can run. It does not automatically configure access to Proxmox, PBS, Home Assistant, ZFS, hardware or mount targets.</p><p style="margin-bottom:0">Those integrations require site-specific configuration and credentials. The installer does not copy production credentials or discover your infrastructure automatically.</p></div></div></section></main>
+<footer><div class="wrap foot"><div><strong style="color:white">RackMarshal™</strong><br>Open source. Local first. Built for infrastructure you control.</div><div><a href="https://github.com/RackMarshalhq/rackmarshal">Source & documentation</a><br>Apache License 2.0</div><div>RackMarshal™ is an independent project and is not affiliated with Proxmox Server Solutions GmbH.</div></div></footer>
+</body></html>
