@@ -2,7 +2,7 @@ import json
 import unittest
 from unittest.mock import patch
 from rackmarshal.api.v1 import incident_summary
-from rackmarshal.ui.dashboard import dashboard_data, render_incident_index
+from rackmarshal.ui.dashboard import dashboard_data, render_incident_index, collection_data, render_collection_coverage
 from rackmarshal.ui.incidents import render_incident_page
 from tests import test_api_v11_timeline as fixtures
 
@@ -42,6 +42,60 @@ class IncidentNarrative(unittest.TestCase):
         page = render_incident_index(self.db)
         self.assertIn("Incident ledgers unavailable: ZFS, HA, MOUNT", page)
         self.assertIn("Counts cover available ledgers only", page)
+
+    def test_collection_freshness_uses_existing_policy_callback_and_latest_ids(self):
+        def build(observations, now=None):
+            self.assertEqual(observations["BACKUP"]["id"], "BACKUP:3")
+            self.assertEqual(observations["PVE"]["id"], "PVE:20")
+            self.assertIsNone(observations["MOUNT"])
+            self.assertIsNotNone(now.tzinfo)
+            return {"BACKUP": {"state": "STALE", "stale_after_seconds": 77}, "PVE": {"state": "OK", "stale_after_seconds": 900}}
+        page=render_incident_index(self.db,freshness_builder=build)
+        self.assertIn('data-domain="BACKUP" data-observation-id="BACKUP:3" data-freshness="STALE"',page)
+        self.assertIn("Stale after 77 seconds",page)
+        self.assertIn("Fresh observations do not prove a cycle completed successfully or an incident recovered",page)
+        self.assertIn("/v1/evidence/observation:BACKUP:3",page)
+        self.assertNotIn("DO-NOT-EXPOSE",page)
+
+    def test_unavailable_collection_metadata_is_explicit(self):
+        page=render_incident_index(self.db)
+        self.assertIn("Freshness unavailable",page)
+        self.assertIn("Observation not recorded",page)
+        self.assertIn('data-cycle-state="NOT_RECORDED"',page)
+        self.assertNotIn("Recorded success",page)
+
+    def test_historical_cycle_name_is_not_a_current_unit_result(self):
+        self.db.execute("CREATE TABLE cycle_health(unit_name TEXT,health_state TEXT,last_result_at TEXT,last_success_at TEXT,last_failure_at TEXT,failure_count INTEGER)")
+        self.db.execute("INSERT INTO cycle_health VALUES('fixture-old-backup.service','SUCCESS','2026-09-01T00:00:00Z','2026-09-01T00:00:00Z',NULL,7)")
+        data=collection_data(self.db)
+        backup=next(row for row in data["domains"] if row["domain"]=="BACKUP")
+        self.assertIsNone(backup["cycle"])
+        page=render_incident_index(self.db)
+        self.assertIn("Other recorded cycle units (historical records)",page)
+        self.assertIn("fixture-old-backup.service",page)
+        self.assertIn("Cumulative recorded failures: 7",page)
+        self.assertIn('data-domain="BACKUP" data-observation-id="BACKUP:3" data-freshness="UNKNOWN" data-cycle-state="NOT_RECORDED"',page)
+
+    def test_current_cycle_failure_and_old_success_remain_distinct(self):
+        self.db.execute("CREATE TABLE cycle_health(unit_name TEXT,health_state TEXT,last_result_at TEXT,last_success_at TEXT,last_failure_at TEXT,failure_count INTEGER)")
+        self.db.execute("INSERT INTO cycle_health VALUES('rackmarshal-domain@backup.service','FAILED','2026-09-30T01:00:00Z','2026-09-29T01:00:00Z','2026-09-30T01:00:00Z',2)")
+        page=render_incident_page(self.db,"BACKUP:1")
+        self.assertIn('data-cycle-state="FAILED"',page)
+        self.assertIn("Recorded failure",page)
+        self.assertIn("Last success:",page)
+        self.assertIn("Recovery recorded. Historical incident.",page)
+        self.assertEqual(page.count('data-domain='),1)
+
+    def test_collection_values_are_escaped_and_no_detail_payload_is_read(self):
+        self.db.execute("CREATE TABLE cycle_health(unit_name TEXT,health_state TEXT,last_result_at TEXT,detail_json TEXT)")
+        self.db.execute("INSERT INTO cycle_health VALUES('rackmarshal-domain@backup.service','FAILED',?,?)", ('<script>bad</script>', '{"secret":"DO-NOT-EXPOSE"}'))
+        self.db.execute("UPDATE observations SET observed_at=? WHERE id=3", ('<img src=x>',))
+        page=render_collection_coverage(self.db,domain="BACKUP")
+        self.assertIn("&lt;script&gt;bad&lt;/script&gt;",page)
+        self.assertIn("&lt;img src=x&gt;",page)
+        for forbidden in ("<script>","<img", "detail_json", "DO-NOT-EXPOSE", "payload_json"):
+            self.assertNotIn(forbidden,page)
+
 
     def test_summary_additive_fields_match_record(self):
         summary = incident_summary(self.db, "BACKUP:1")

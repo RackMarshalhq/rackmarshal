@@ -15,9 +15,12 @@ class Links(HTMLParser):
         super().__init__()
         self.links = []
         self.tags = []
+        self.coverage = []
 
     def handle_starttag(self, tag, attrs):
         self.tags.append(tag)
+        if tag == "tr" and "data-domain" in dict(attrs):
+            self.coverage.append(dict(attrs))
         if tag == "a":
             self.links.append(dict(attrs).get("href", ""))
 
@@ -60,7 +63,8 @@ def main():
     recovered = sorted((item for item in incidents if item["state"] == "RECOVERED" and item["recovered_at"]),
                        key=lambda item: (item["recovered_at"], item["id"]), reverse=True)
     dashboard = get("/incidents", True)
-    assert get("/", True) == dashboard
+    root_page = get("/", True)
+    assert "Observation freshness and recorded cycle results" in root_page
     links = Links()
     links.feed(dashboard)
     expected = {"/incidents/" + item["id"] for item in opened + recovered[:20]}
@@ -69,6 +73,26 @@ def main():
     assert "not a live probe" in dashboard
     assert not {"script", "form", "button", "input"} & set(links.tags)
     assert "payload_json" not in dashboard
+
+    domains = get("/v1/domains")
+    with urlopen(base + "/status", timeout=15) as response:
+        stored_cycles = json.load(response)["self_watch"]["cycle_health"]
+    checks += 1
+    coverage = {row["data-domain"]: row for row in links.coverage}
+    assert len(coverage) == 6
+    for domain in domains:
+        code = domain["domain"]
+        row = coverage[code]
+        observation = domain.get("last_observation") or {}
+        assert row["data-observation-id"] == (code + ":" + str(observation["id"]) if observation else "")
+        assert row["data-freshness"] == (domain.get("freshness") or {}).get("state", "UNKNOWN")
+        unit = "rackmarshal-domain@" + code.lower() + ".service"
+        assert row["data-cycle-state"] == stored_cycles.get(unit, {}).get("health_state", "NOT_RECORDED")
+        if observation:
+            ref = "observation:" + code + ":" + str(observation["id"])
+            assert "/v1/evidence/" + ref in links.links
+            assert get("/v1/evidence/" + ref)["id"] == ref
+    assert "absent current-unit results are not inferred from older unit names" in dashboard
 
     selected = [
         next(item for item in opened if item["domain"] == "BACKUP"),
@@ -101,6 +125,7 @@ def main():
         assert "payload_json" not in page
         parsed = Links()
         parsed.feed(page)
+        assert [row["data-domain"] for row in parsed.coverage] == [item["domain"]]
         assert not {"script", "form", "button", "input"} & set(parsed.tags)
         for ref in summary["evidence_refs"]:
             path = "/v1/evidence/" + quote(ref, safe=":")
@@ -117,7 +142,8 @@ def main():
               "open_incident_count": len(opened), "recent_recoveries_shown": min(20, len(recovered)),
               "open_by_domain": {domain: sum(item["domain"] == domain for item in opened)
                                  for domain in sorted({item["domain"] for item in incidents})},
-              "representative_incidents": verified}
+              "representative_incidents": verified,
+              "collection_coverage": [{"domain": domain, "observation_id": row["data-observation-id"], "freshness": row["data-freshness"], "cycle_state": row["data-cycle-state"]} for domain, row in sorted(coverage.items())]}
     Path(args.output).write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))
 
