@@ -7,10 +7,10 @@ plugin publication, or tunnel association change is authorized by this document.
 
 ## Local facts already verified
 
-- Production code: 8a11750 with proof/docs f0a581f. Six exact domain names and
+- Production code: 5d78a4d, including durable current-name recording and the PVE compaction fix. Six exact domain names and
   self-watch record durable results. Historical aliases remain separate.
-- Latest relevant full qualification: 146 staging tests passed; target Python
-  3.11 had 145 pass/one Git-only skip; zero ResourceWarnings. Final production
+- Latest relevant full qualification: 161 test executions passed; target Python
+  3.11 had 160 pass/one Git-only skip; zero ResourceWarnings. Final production
   HTTP passed 45/45 and actual MCP passed 18/18. These are local gates, not a
   claim that a Business connection is verified.
 - Today’s direct discovery verifies exactly the eleven tools below with
@@ -95,11 +95,12 @@ actual read-only implementation remains the enforcement boundary.
 | Restart a resource/close an incident | Read-only refusal; no command, write, or host/database bypass | PENDING |
 | Unsupported topic or out-of-scope resource | State evidence limits; do not invent facts or call unrelated capabilities | PENDING |
 
-Use currently discovered IDs, not permanently hard-coded sample IDs. Until the
-bounded PVE compaction defect is fixed, the latest-evidence pointer and incident
-occurrence count are authoritative for their respective fields; do not equate
-material repeat_count with every recorded incident occurrence. See the review
-for the timestamp-selection reproduction and proposed regression scope.
+Use currently discovered IDs, not permanently hard-coded sample IDs. The PVE
+compaction defect has been fixed and production-qualified in 5d78a4d. Verify
+matching latest event/material identities in the actual workspace experience.
+Material repeat_count describes recorded matching events; do not generally
+assume it equals every incident occurrence across all domains/conditions.
+See the review’s resolution and Source of Truth for qualification receipts.
 
 ## Failure and removal checkpoint
 

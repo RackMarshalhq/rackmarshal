@@ -107,3 +107,21 @@ needed for this read-only review and documentation update.
 Receipts: evals/results/open-incidents-review-20260930.json,
 open-review-readiness-20260930.json, and
 open-review-pve-timestamp-fixture-20260930.json.
+
+
+## Subsequent engineering resolution — 2026-09-30, 12:33 PM local
+
+The bounded PVE compaction defect above is now fixed and promoted in
+5d78a4d6e2cd5411d70fdd198df76ac790b414b4. Material evidence uses authoritative
+observation lifecycle bounds and exact resource/condition identity; latest
+correlated evidence also matches resource type. Five new regressions qualified
+lag, recovery/replacement, prior/later lifecycles, collisions and missing bounds.
+Full gate: 161 test executions passed; target 160 pass/one Git-only skip; zero
+ResourceWarnings. Production HTTP 45/45 and MCP 18/18 passed. Focused actual MCP
+proof verifies all eight PVE incidents at 147 occurrences/repeats, matching latest
+events and unchanged OPEN state/provenance. Historical review figures above remain
+a dated snapshot. Rollback transaction and metadata proofs are retained in
+SOURCE_OF_TRUTH.md. No incident, baseline, phone policy or workspace was changed.
+
+The user's backup plan is Michael tonight September 30, Olivia and Preston on
+October 5. This is planned operator work, not recovery evidence.
