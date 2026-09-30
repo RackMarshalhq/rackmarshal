@@ -19,3 +19,7 @@ For hosted ChatGPT, RackMarshal remains private and SHALL use Secure MCP Tunnel 
 ## Investigator v1 freeze — 2026-09-29
 
 Investigator v1 is frozen around the nine read-only MCP tools, evidence/advisory authority boundary, Secure MCP Tunnel deployment, material-change compaction, permanent evaluation suite, and optional OpenAI Responses API edge client. RackMarshal Core remains fully usable without AI. Future write/action capability requires a separately versioned authority contract and does not modify Investigator v1.
+
+## Investigator 1.1 read-only expansion — 2026-09-29
+
+RackMarshal 1.1 promotes two additional goal-oriented read-only tools after isolated protocol/security proof: `get_incident_timeline` and `get_incident_evidence_bundle`. The Investigator now prefers these for known-incident work because RackMarshal deterministically assembles lifecycle and evidence context before advisory interpretation. The original nine tools remain available and behaviorally intact. The authority boundary is unchanged: all 11 tools are read-only; RackMarshal Core remains authoritative and fully usable without AI.

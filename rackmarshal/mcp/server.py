@@ -17,6 +17,14 @@ def create_server():
  reg("get_backup_status","Check backup status","Use when the user asks whether backups are healthy or wants the current deterministic BACKUP domain summary.",api.get_backup_status)
  reg("get_evidence","Inspect recorded evidence","Use when an evidence reference from another RackMarshal result is known and the user needs the underlying sanitized recorded evidence.",api.get_evidence)
  reg("get_recovery_history","Review recovery history","Use when the user asks what recovered, when recovery was independently observed, or wants historical recoveries, optionally by domain or since-time.",api.get_recovery_history)
+ reg("get_incident_timeline","Review an incident timeline","Use when a canonical RackMarshal incident ID is known and the user needs its ordered lifecycle: opening, material transitions, latest abnormal state, and independently recorded recovery when present. Returns deterministic RackMarshal state; do not infer cause, severity, or recovery.",api.get_incident_timeline)
+ reg("get_incident_evidence_bundle","Get an incident evidence bundle","Use when a canonical RackMarshal incident ID is known and the user needs one compact, bounded, sanitized evidence package for investigation. Prefer this over many separate evidence calls when the whole incident context is needed.",api.get_incident_evidence_bundle)
+ for name in ("get_incident_timeline","get_incident_evidence_bundle"):
+  tool=mcp._tool_manager._tools[name]
+  model=tool.fn_metadata.arg_model
+  model.model_config["extra"]="forbid"
+  model.model_rebuild(force=True)
+  tool.parameters=model.model_json_schema()
  return mcp
 
 def main(): create_server().run(transport="streamable-http")

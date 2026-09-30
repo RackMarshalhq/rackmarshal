@@ -11,7 +11,7 @@ class McpTools(unittest.TestCase):
   # clone fixture because the tool owns/closes each connection
   c=sqlite3.connect(':memory:'); c.row_factory=sqlite3.Row; self.db.backup(c); return c
  def tearDown(self): self.db.close()
- def test_surface_is_exactly_nine_read_tools(self): self.assertEqual(len(TOOL_NAMES),9); self.assertNotIn('explain_state',TOOL_NAMES)
+ def test_surface_is_exactly_eleven_read_tools(self): self.assertEqual(len(TOOL_NAMES),11); self.assertIn('get_incident_timeline',TOOL_NAMES); self.assertIn('get_incident_evidence_bundle',TOOL_NAMES); self.assertNotIn('explain_state',TOOL_NAMES)
  def test_list_incidents_is_goal_oriented(self):
   p=self.api.list_incidents(domain='PVE',state='OPEN',limit=5); self.assertEqual(p['data'][0]['id'],'PVE:1')
  def test_get_incident_uses_stable_id(self): self.assertEqual(self.api.get_incident('PVE:1')['data']['resource_key'],'100')

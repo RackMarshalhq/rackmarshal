@@ -3,7 +3,9 @@ from urllib.parse import urlencode
 from rackmarshal.api.v1 import route
 
 DOMAINS=("PVE","ZFS","BACKUP","HA","HARDWARE","MOUNT")
-TOOL_NAMES=("get_health","get_status","list_incidents","get_incident","get_recent_changes","get_domain_status","get_backup_status","get_evidence","get_recovery_history")
+V10_TOOL_NAMES=("get_health","get_status","list_incidents","get_incident","get_recent_changes","get_domain_status","get_backup_status","get_evidence","get_recovery_history")
+TOOL_NAMES=V10_TOOL_NAMES+("get_incident_timeline","get_incident_evidence_bundle")
+V11_CANDIDATE_TOOL_NAMES=TOOL_NAMES
 
 class ToolError(RuntimeError): pass
 
@@ -20,6 +22,8 @@ class RackMarshalTools:
  def list_incidents(self,domain: str|None=None,state: str|None=None,resource_type: str|None=None,resource_key: str|None=None,limit: int=20,cursor: str|None=None):
   p={k:v for k,v in locals().items() if k not in ('self',) and v is not None}; return self._call('/v1/incidents',p)
  def get_incident(self,incident_id: str): return self._call('/v1/incidents/'+incident_id)
+ def get_incident_timeline(self,incident_id: str): return self._call('/v1/incidents/'+incident_id+'/timeline')
+ def get_incident_evidence_bundle(self,incident_id: str,limit: int=50): return self._call('/v1/incidents/'+incident_id+'/evidence-bundle',{'limit':limit})
  def get_recent_changes(self,domain: str|None=None,resource_type: str|None=None,resource_key: str|None=None,since: str|None=None,until: str|None=None,limit: int=20,cursor: str|None=None):
   p={'domain':domain,'resource_type':resource_type,'resource_key':resource_key,'observed_after':since,'observed_before':until,'limit':limit,'cursor':cursor}; return self._call('/v1/changes',{k:v for k,v in p.items() if v is not None})
  def get_domain_status(self,domain: str): return self._call('/v1/domains/'+domain)

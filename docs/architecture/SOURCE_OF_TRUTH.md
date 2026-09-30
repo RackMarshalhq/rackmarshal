@@ -174,3 +174,16 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **FROZEN:** Invalid IDs/limits and missing incidents fail as tool errors; no fallback search or synthesized incident data is permitted.
 - **GATE HELD:** Public MCP remains exactly 9 tools. The two additions are not registered until an isolated candidate MCP server passes protocol discovery/schema/annotation/call/error/sanitization tests against the real RackMarshal database.
 - **PROMOTION TARGET:** After that proof, public MCP discovery must expose exactly 11 tools and no additional capability.
+
+
+## RACKMARSHAL 1.1A MCP 9→11 PROMOTION — 2026-09-29
+
+- **VERIFIED:** An isolated candidate MCP server ran on CT 110 loopback `127.0.0.1:18001` against the real RackMarshal database and advertised exactly 11 tools: the original nine plus `get_incident_timeline` and `get_incident_evidence_bundle`.
+- **VERIFIED:** Both new tools advertised the frozen descriptions and minimal schemas. Their schemas explicitly set `additionalProperties=false`; all 11 tools advertised `readOnlyHint=true`, `destructiveHint=false`, and `openWorldHint=false`.
+- **VERIFIED:** Real MCP-client calls succeeded for open `BACKUP:29`, recovered `BACKUP:33`, and legacy-linkage `PVE:35`. Open incidents did not synthesize recovery; recovered incidents returned recorded recovery; PVE retained `LEGACY_RESOURCE_TIME_CORRELATION`.
+- **VERIFIED:** Evidence/timeline responses contained no raw `payload_json` or detected secret markers. Evidence bundles remained bounded.
+- **VERIFIED:** Nine deliberate boundary attacks were rejected: malformed/numeric IDs, invalid domain, missing incident, non-integer/high/zero limits, and arbitrary SQL/path/URL arguments. Extra arguments are explicitly forbidden rather than silently ignored.
+- **VERIFIED:** Existing representative tools (`get_health`, `get_status`, `get_incident`, `get_recent_changes`) continued to succeed on the candidate server. Candidate promotion gate result: `PASS` with zero failures.
+- **PROMOTED:** Production RackMarshal MCP on CT 110 was upgraded from 9 to exactly 11 read-only tools. The same promotion acceptance suite passed against production with zero failures.
+- **VERIFIED:** Secure MCP Tunnel remained `ready`; production MCP remained `active`. The isolated candidate listener was stopped and its temporary files removed after promotion.
+- **VERIFIED:** RackMarshal Investigator allowlist/evals now include the two promoted tools and prefer timeline/evidence-bundle workflows for known incidents.

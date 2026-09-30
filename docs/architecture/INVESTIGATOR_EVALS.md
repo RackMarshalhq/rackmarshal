@@ -5,7 +5,7 @@ Date: 2026-09-29
 
 The permanent evaluation set is `evals/investigator_v1.json`. It covers ten representative investigation goals: overnight failures, current failures, recoveries, incident analysis, precursor changes, backup health, RackMarshal health, incident evidence, recovery proof, and PVE-domain history.
 
-Each case declares the minimum RackMarshal tools required to answer responsibly. Automated tests reject unknown/non-RackMarshal capabilities and verify that the declared plans stay inside the nine-tool read-only MCP surface.
+Each case declares the minimum RackMarshal tools required to answer responsibly. Automated tests reject unknown/non-RackMarshal capabilities and verify that the declared plans stay inside the current read-only MCP surface.
 
 ## Evaluation principles
 
