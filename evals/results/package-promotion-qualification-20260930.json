@@ -1,0 +1,35 @@
+{
+  "checked_at": "2026-09-30T15:24:11.608278+00:00",
+  "result": "PASS",
+  "production_source_revision": "28534ba293a4aece9b67410c797aaae03a2d1008",
+  "source_sha256": {
+    "scripts/promote-package-files.py": "af1dc9f96c6ab1ccb7b723c85b97f827ac2bda5527d1504bb41b8b56e84b061c",
+    "tests/test_package_promotion.py": "e17551291d002f5f5636b5cf5d3f2f4a037a1e60dc5629190abf1f5d8ec91f97"
+  },
+  "staging": {
+    "python": "3.13",
+    "tests_passed": 134,
+    "publication_gate": "PASS",
+    "resource_warnings": 0
+  },
+  "target": {
+    "python": "3.11",
+    "tests_run": 134,
+    "tests_passed": 133,
+    "tests_skipped": 1,
+    "skip_reason": "Git-based bundle preparation runs on staging; CT installation runtime does not require Git.",
+    "resource_warnings": 0
+  },
+  "production_plan": {
+    "revision": "28534ba293a4aece9b67410c797aaae03a2d1008",
+    "changed_files": 0,
+    "entries": []
+  },
+  "readiness": "PASS",
+  "systemd_snapshot_units": 26,
+  "http_checks_passed": 37,
+  "mcp_cases_passed": 18,
+  "production_mutation": false,
+  "production_stop_start_exercised": false,
+  "new_dependencies_installed": false
+}
