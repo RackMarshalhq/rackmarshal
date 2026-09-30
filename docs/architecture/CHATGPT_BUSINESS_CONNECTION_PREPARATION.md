@@ -110,3 +110,12 @@ No workspace setup, credential creation, rollout, or API model run was performed
 - Current OpenAI Business guidance confirms custom MCP apps and developer mode are available to Business workspaces on ChatGPT web; Business Admins/Owners create and publish apps.
 - Current Secure MCP Tunnel guidance confirms a private/on-prem MCP should use the existing tunnel and that the tunnel must be associated with the target ChatGPT workspace with Tunnels Read + Use permission.
 - **Remaining external gate:** the target Business workspace association and app creation must be completed in the authenticated ChatGPT/Platform admin UI. No repository or CT-side credential change is required for that step.
+
+
+## Preparation update — 2026-09-30
+
+The local Investigator plugin is now version 0.1.1. Its skill has valid YAML metadata and carries the exact verified Investigator v1.1 policy, eleven-tool inventory, and concise entry workflows. Skill-creator validation passes. A portable skills-only review bundle has been prepared separately, with no cloud MCP identifier or endpoint. The repository loopback .mcp.json remains local-only.
+
+Production cycle defects have been repaired under the user's engineering authorization. Final local acceptance is 121 tests on Python 3.13 and 3.11 with zero ResourceWarnings, publication gate PASS, 37 production HTTP checks PASS, and 18/18 real MCP Investigator evaluations PASS. Current service health and metadata proof are recorded in SOURCE_OF_TRUTH.md and evals/results/health-restoration-production-20260930.json.
+
+The next integration step requires the explicitly requested Business workspace connection and an authenticated admin context: associate the existing private tunnel, register the eleven-tool MCP connection, bind the actual returned app identifier, and run workspace acceptance before publication. No workspace registration, permission change, credential creation, public ingress, or publication has occurred.

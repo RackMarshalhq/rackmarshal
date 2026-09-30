@@ -26,15 +26,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rackmarshal.domains.pve.collector import api_get, load_config
-from rackmarshal.core.config import pve_api_env, pve_ca_file
+from rackmarshal.core.config import pve_api_env, pve_ca_file, load_config as load_site_config, require
 
 COLLECTOR_SCHEMA = 1
 
 def apply_conf_env() -> None:
     """Populate MOUNT_SSH_* from rackmarshal.conf when not already in environ."""
-    conf = Path("/etc/rackmarshal/rackmarshal.conf")
-    if not conf.is_file():
-        return
+    config = load_site_config()
     keys = (
         "MOUNT_SSH_HOST",
         "MOUNT_SSH_USER",
@@ -42,20 +40,24 @@ def apply_conf_env() -> None:
         "MOUNT_KNOWN_HOSTS",
         "MOUNT_CATALOG_FILE",
     )
-    for line in conf.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        k, v = line.split("=", 1)
-        k, v = k.strip(), v.strip()
-        if k in keys and k not in os.environ:
-            os.environ[k] = v
+    for key in keys:
+        if key in config and key not in os.environ:
+            os.environ[key] = config[key]
+
 
 
 DEFAULT_CATALOG = Path("/opt/rackmarshal/packaging/mounts.catalog.toml")
 LIVE_CATALOG = Path("/etc/rackmarshal/mounts.catalog.toml")
 DEFAULT_DB = Path("/var/lib/rackmarshal/state.db")
-PVE_NODE = os.environ.get("PVE_NODE", "")
+def pve_node() -> str:
+    """Resolve the configured node; never issue requests with an empty node path."""
+    configured = os.environ.get("PVE_NODE")
+    if configured is not None:
+        node = require({"PVE_NODE": configured}, "PVE_NODE")
+    else:
+        node = require(load_site_config(), "PVE_NODE")
+    return urllib.parse.quote(node, safe="")
+
 
 
 def utc_now() -> str:
@@ -98,7 +100,7 @@ def parse_mp_value(raw: str) -> dict:
 
 
 def fetch_lxc_mps(config: dict, vmid: str) -> dict[str, dict]:
-    data = api_get(config, f"/nodes/{PVE_NODE}/lxc/{vmid}/config")
+    data = api_get(config, f"/nodes/{pve_node()}/lxc/{vmid}/config")
     out = {}
     for key, val in data.items():
         if not str(key).startswith("mp"):
@@ -165,7 +167,7 @@ def fetch_qemu_findmnt(config: dict, vmid: str, timeout_s: float = 25.0) -> dict
         started = api_request(
             config,
             "POST",
-            f"/nodes/{PVE_NODE}/qemu/{vmid}/agent/exec",
+            f"/nodes/{pve_node()}/qemu/{vmid}/agent/exec",
             form=[("command", "findmnt"), ("command", "-J")],
         )
     except Exception as exc:  # noqa: BLE001
@@ -180,7 +182,7 @@ def fetch_qemu_findmnt(config: dict, vmid: str, timeout_s: float = 25.0) -> dict
             last = api_request(
                 config,
                 "GET",
-                f"/nodes/{PVE_NODE}/qemu/{vmid}/agent/exec-status?pid={pid}",
+                f"/nodes/{pve_node()}/qemu/{vmid}/agent/exec-status?pid={pid}",
             )
         except Exception as exc:  # noqa: BLE001
             return {"_error": str(exc)}

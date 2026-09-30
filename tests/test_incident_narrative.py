@@ -45,7 +45,7 @@ class IncidentNarrative(unittest.TestCase):
 
     def test_summary_additive_fields_match_record(self):
         summary = incident_summary(self.db, "BACKUP:1")
-        self.assertEqual(summary["display_name"], "Olivia phone")
+        self.assertEqual(summary["display_name"], "Fictional phone")
         self.assertEqual(summary["occurrence_count"], 2)
         self.assertEqual(summary["opened_at"], "2026-09-29T01:00:00Z")
         self.assertEqual(summary["recovered_at"], "2026-09-29T03:00:00Z")

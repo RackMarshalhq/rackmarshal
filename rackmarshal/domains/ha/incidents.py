@@ -110,7 +110,7 @@ def main():
 
     parser.add_argument(
         "--comparator",
-        default=None,
+        default=COMPARATOR_DEFAULT,
     )
 
     parser.add_argument(

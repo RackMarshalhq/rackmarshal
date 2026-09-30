@@ -74,7 +74,7 @@ def main():
         next(item for item in opened if item["domain"] == "BACKUP"),
         next(item for item in recovered if item["domain"] == "BACKUP"),
         next(item for item in incidents if item["domain"] == "PVE"),
-        next(item for item in opened if item["domain"] == "MOUNT"),
+        next(item for item in incidents if item["domain"] == "MOUNT"),
     ]
     verified = []
     for item in selected:

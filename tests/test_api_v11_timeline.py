@@ -15,15 +15,15 @@ CREATE TABLE hardware_incidents(id INTEGER PRIMARY KEY,serial TEXT,role TEXT,mod
 class ApiV11Timeline(unittest.TestCase):
  def setUp(self):
   self.db=sqlite3.connect(":memory:"); self.db.row_factory=sqlite3.Row; self.db.executescript(SCHEMA)
-  obs=[(1,"backup_domain","2026-09-29T01:00:00Z","ms01",1,"2026-09-29T01:00:01Z",'{"secret":"DO-NOT-EXPOSE"}'),(2,"backup_domain","2026-09-29T02:00:00Z","ms01",1,"2026-09-29T02:00:01Z",'{}'),(3,"backup_domain","2026-09-29T03:00:00Z","ms01",1,"2026-09-29T03:00:01Z",'{}')]
+  obs=[(1,"backup_domain","2026-09-29T01:00:00Z","fixture-host",1,"2026-09-29T01:00:01Z",'{"secret":"DO-NOT-EXPOSE"}'),(2,"backup_domain","2026-09-29T02:00:00Z","fixture-host",1,"2026-09-29T02:00:01Z",'{}'),(3,"backup_domain","2026-09-29T03:00:00Z","fixture-host",1,"2026-09-29T03:00:01Z",'{}')]
   self.db.executemany("INSERT INTO observations VALUES(?,?,?,?,?,?,?)",obs)
-  events=[(10,1,"backup_phone","olivia","STATUS-CHANGED","VERIFIED",'[{"field":"age","actual":170,"expected":"<=168"}]',"2026-09-29T01:00:00Z","2026-09-29T01:00:01Z"),(11,2,"backup_phone","olivia","STATUS-CHANGED","VERIFIED",'[{"field":"age","actual":171,"expected":"<=168"}]',"2026-09-29T02:00:00Z","2026-09-29T02:00:01Z")]
+  events=[(10,1,"backup_phone","fictional-user","STATUS-CHANGED","VERIFIED",'[{"field":"age","actual":170,"expected":"<=168"}]',"2026-09-29T01:00:00Z","2026-09-29T01:00:01Z"),(11,2,"backup_phone","fictional-user","STATUS-CHANGED","VERIFIED",'[{"field":"age","actual":171,"expected":"<=168"}]',"2026-09-29T02:00:00Z","2026-09-29T02:00:01Z")]
   self.db.executemany("INSERT INTO backup_events VALUES(?,?,?,?,?,?,?,?,?)",events)
-  self.db.execute("INSERT INTO backup_incidents VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(1,'backup_phone','olivia','Olivia phone','STATUS-CHANGED','RECOVERED','VERIFIED',10,11,1,2,3,'2026-09-29T01:00:00Z','2026-09-29T02:00:00Z','2026-09-29T03:00:00Z',2,'[{"field":"age","actual":170,"expected":"<=168"}]','[{"field":"age","actual":171,"expected":"<=168"}]',None,'2026-09-29T01:00:00Z','2026-09-29T03:00:00Z'))
-  self.db.execute("INSERT INTO observations VALUES(20,'pve_cluster_resources','2026-09-29T04:00:00Z','ms01',1,'2026-09-29T04:00:01Z','{}')")
+  self.db.execute("INSERT INTO backup_incidents VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(1,'backup_phone','fictional-user','Fictional phone','STATUS-CHANGED','RECOVERED','VERIFIED',10,11,1,2,3,'2026-09-29T01:00:00Z','2026-09-29T02:00:00Z','2026-09-29T03:00:00Z',2,'[{"field":"age","actual":170,"expected":"<=168"}]','[{"field":"age","actual":171,"expected":"<=168"}]',None,'2026-09-29T01:00:00Z','2026-09-29T03:00:00Z'))
+  self.db.execute("INSERT INTO observations VALUES(20,'pve_cluster_resources','2026-09-29T04:00:00Z','fixture-host',1,'2026-09-29T04:00:01Z','{}')")
   self.db.execute("INSERT INTO resource_events VALUES(7,20,'STATUS-CHANGED','qemu','100','HA','VERIFIED','running','stopped',NULL,'2026-09-29T04:00:00Z')")
   self.db.execute("INSERT INTO resource_incidents VALUES(2,'qemu','100','HA','STATUS-CHANGED','OPEN','VERIFIED','running','stopped',20,20,NULL,'2026-09-29T04:00:00Z','2026-09-29T04:00:00Z',NULL,1,NULL,'2026-09-29T04:00:00Z','2026-09-29T04:00:00Z')")
-  self.db.execute("INSERT INTO hardware_observations VALUES(30,'2026-09-29T05:00:00Z','ms01','2026-09-29T05:00:01Z')")
+  self.db.execute("INSERT INTO hardware_observations VALUES(30,'2026-09-29T05:00:00Z','fixture-host','2026-09-29T05:00:01Z')")
   self.db.execute("INSERT INTO hardware_events VALUES(?,?,?,?,?,?,?,?,?,?,?)",(40,30,'SER123','data-disk','X24','OPENED','HOT',58.0,'[{"field":"temperature_c","actual":58.0,"expected":"<55"}]','2026-09-29T05:00:00Z','2026-09-29T05:00:01Z'))
   self.db.execute("INSERT INTO hardware_incidents VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(3,'SER123','data-disk','X24','HARDWARE_TEMP_HOT','HOT','OPEN',40,40,30,30,None,'2026-09-29T05:00:00Z','2026-09-29T05:00:00Z',None,1,'[{"field":"temperature_c","actual":58.0,"expected":"<55"}]','[{"field":"temperature_c","actual":58.0,"expected":"<55"}]',None,'2026-09-29T05:00:00Z','2026-09-29T05:00:00Z'))
   self.db.commit()
@@ -32,8 +32,10 @@ class ApiV11Timeline(unittest.TestCase):
  def test_direct_timeline_has_authoritative_lifecycle(self):
   t=incident_timeline(self.db,"BACKUP:1")
   self.assertEqual(t["provenance"]["linkage_mode"],"DIRECT_EVENT_IDS")
-  self.assertEqual([x["kind"] for x in t["items"]],["INCIDENT_OPENED","LAST_ABNORMAL","INCIDENT_RECOVERED"])
+  self.assertEqual([x["kind"] for x in t["items"]],["INCIDENT_OPENED","MATERIAL_CHANGE","LAST_ABNORMAL","INCIDENT_RECOVERED"])
   self.assertEqual(t["items"][0]["event_id"],"BACKUP:10")
+  run=next(x for x in t["items"] if x["kind"]=="MATERIAL_CHANGE")
+  self.assertEqual(run["repeat_count"],2)
   self.assertEqual(t["items"][-1]["observation_id"],"BACKUP:3")
  def test_bundle_is_sanitized_and_recovery_can_be_observation_only(self):
   b=incident_evidence_bundle(self.db,"BACKUP:1")
@@ -56,6 +58,31 @@ class ApiV11Timeline(unittest.TestCase):
   self.assertEqual(t["items"][0]["event_id"],"HARDWARE:40")
   b=incident_evidence_bundle(self.db,"HARDWARE:3")
   self.assertEqual(b["opening_evidence"]["observation"]["id"],"observation:HARDWARE:30")
+
+ def test_recovery_pointer_does_not_replace_last_abnormal_evidence(self):
+  self.db.execute("INSERT INTO backup_events VALUES(12,3,'backup_phone','fictional-user','MATCH','VERIFIED','[]','2026-09-29T03:00:00Z','2026-09-29T03:00:01Z')")
+  self.db.execute("UPDATE backup_incidents SET last_event_id=12,latest_changes_json='[]' WHERE id=1")
+  timeline=incident_timeline(self.db,"BACKUP:1")
+  last=next(x for x in timeline["items"] if x["kind"]=="LAST_ABNORMAL")
+  recovery=next(x for x in timeline["items"] if x["kind"]=="INCIDENT_RECOVERED")
+  self.assertEqual(last["event_id"],"BACKUP:11")
+  self.assertEqual(last["observation_id"],"BACKUP:2")
+  self.assertEqual(last["changes"][0]["actual"],171)
+  self.assertEqual(recovery["event_id"],"BACKUP:12")
+  bundle=incident_evidence_bundle(self.db,"BACKUP:1")
+  self.assertEqual(bundle["latest_abnormal_evidence"]["event"]["id"],"event:BACKUP:11")
+  self.assertEqual(bundle["recovery_evidence"]["event"]["id"],"event:BACKUP:12")
+
+ def test_absent_abnormal_event_never_borrows_recovery_changes(self):
+  self.db.execute("DELETE FROM backup_events WHERE id=11")
+  self.db.execute("INSERT INTO backup_events VALUES(12,3,'backup_phone','fictional-user','MATCH','VERIFIED','[]','2026-09-29T03:00:00Z','2026-09-29T03:00:01Z')")
+  self.db.execute("UPDATE backup_incidents SET last_event_id=12,latest_changes_json='[]' WHERE id=1")
+  timeline=incident_timeline(self.db,"BACKUP:1")
+  last=next(x for x in timeline["items"] if x["kind"]=="LAST_ABNORMAL")
+  self.assertIsNone(last["event_id"])
+  self.assertIsNone(last["changes"])
+  self.assertEqual(last["evidence_refs"],["observation:BACKUP:2"])
+  self.assertIsNone(incident_evidence_bundle(self.db,"BACKUP:1")["latest_abnormal_evidence"]["event"])
 
  def test_nested_routes_and_bad_ids(self):
   code,p=route(self.db,"/v1/incidents/BACKUP:1/timeline",{})

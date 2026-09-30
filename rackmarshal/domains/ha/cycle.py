@@ -32,9 +32,8 @@ DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 
 DB = str(state_db())
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
 
-LOCK_FILE = Path("/run/lock/rackmarshal-ha-cycle.lock")
+LOCK_FILE = state_db().parent / "locks" / "rackmarshal-ha-cycle.lock"
 
 SCHEMA_VERSION = 1
 RUNNER = "ha_cycle"
@@ -97,6 +96,26 @@ def require_nonnegative_int(obj, key, stage):
         )
 
     return value
+
+
+
+def process_through_observation(observation_id, max_observations=1000):
+    """Consume recorded observations in order, preserving backlog lifecycle events."""
+    totals = {key: 0 for key in ("incidents_opened", "incidents_ongoing", "incidents_recovered")}
+    previous = -1
+    for processed in range(1, max_observations + 1):
+        result = parse_json(run(PROCESSOR), "HA incident processor")
+        if result.get("status") == "NO-NEW-OBSERVATION":
+            raise CycleError("HA processor stopped before the newly written observation")
+        current = require_nonnegative_int(result, "observation_id", "HA incident processor")
+        if current <= previous or current > observation_id:
+            raise CycleError("HA incident processor did not advance in order to the target observation")
+        for key in totals:
+            totals[key] += require_nonnegative_int(result, key, "HA incident processor")
+        if current == observation_id:
+            return dict(result, **totals, observations_processed=processed)
+        previous = current
+    raise CycleError("HA processing backlog exceeds the per-cycle observation limit")
 
 
 def database_state():
@@ -359,28 +378,7 @@ def main():
         #
         # 5. ADVANCE INCIDENT PROCESSING CHECKPOINT
         #
-        processor_text = run(PROCESSOR)
-
-        processor = parse_json(
-            processor_text,
-            "HA incident processor",
-        )
-
-        if processor.get("status") == \
-                "NO-NEW-OBSERVATION":
-            raise CycleError(
-                "HA processor did not consume "
-                "the newly written observation"
-            )
-
-        if processor.get("observation_id") != \
-                observation_id:
-            raise CycleError(
-                "HA incident processor consumed "
-                "unexpected observation "
-                f"{processor.get('observation_id')!r}; "
-                f"expected {observation_id}"
-            )
+        processor = process_through_observation(observation_id)
 
         processed_differences = require_nonnegative_int(
             processor,
@@ -465,8 +463,6 @@ def main():
             DB,
             "--credential",
             HA_CREDENTIAL,
-            "--explainer",
-            INCIDENT_EXPLAINER,
             "--notification-prefix",
             "rackmarshal",
         ])
@@ -555,6 +551,7 @@ def main():
                 "delivery":
                     delivery_counts,
             },
+            "observations_processed": processor["observations_processed"],
             "database_before":
                 before,
             "database_after":

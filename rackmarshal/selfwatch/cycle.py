@@ -46,7 +46,6 @@ DB = str(state_db())
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
 
 
 class CycleError(Exception):
@@ -271,8 +270,6 @@ def deliver_notifications():
             DB,
             "--credential",
             HA_CREDENTIAL,
-            "--explainer",
-            INCIDENT_EXPLAINER,
             "--notification-prefix",
             "rackmarshal",
         ]

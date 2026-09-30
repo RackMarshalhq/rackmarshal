@@ -201,6 +201,17 @@ def _obs_evidence(conn,domain,observation_id):
 def _event_evidence(conn,domain,event_item):
     return get_evidence(conn,evidence("event",domain,event_item["local_id"])) if event_item else None
 
+
+def _last_abnormal_event(conn, domain, row, resource_key):
+    observation_id = row.get("last_abnormal_observation_id")
+    linked = _event_by_id(conn, domain, row.get("last_event_id"))
+    if linked and observation_id is not None and linked.get("observation_id") == canon(domain, observation_id):
+        return linked
+    # Some consumers advance last_event_id to recovery while retaining the
+    # last abnormal observation. Resolve the event from that observation.
+    return _event_for_observation(conn, domain, resource_key, observation_id)
+
+
 def incident_timeline(conn,incident_id):
     domain,row=_incident_record(conn,incident_id)
     if not row: return None
@@ -209,16 +220,16 @@ def incident_timeline(conn,incident_id):
     direct="opened_event_id" in row
     linkage_mode="DIRECT_EVENT_IDS" if direct else "LEGACY_RESOURCE_TIME_CORRELATION"
     opened_event=_event_by_id(conn,domain,row.get("opened_event_id")) if direct else _event_for_observation(conn,domain,resource_key,row.get("opened_observation_id"))
-    last_event=_event_by_id(conn,domain,row.get("last_event_id")) if direct else _event_for_observation(conn,domain,resource_key,row.get("last_abnormal_observation_id"))
+    last_event=_last_abnormal_event(conn,domain,row,resource_key)
     recovered_event=_event_for_observation(conn,domain,resource_key,row.get("recovered_observation_id"))
     items=[]
     items.append({"kind":"INCIDENT_OPENED","timestamp":row.get("opened_at"),"authority":"DERIVED","event_id":opened_event.get("id") if opened_event else None,"observation_id":canon(domain,row["opened_observation_id"]) if row.get("opened_observation_id") else None,"changes":incident.get("opening_changes") or (opened_event.get("changes") if opened_event else None),"evidence_refs":[r for r in [evidence("event",domain,opened_event["local_id"]) if opened_event else None,evidence("observation",domain,row["opened_observation_id"]) if row.get("opened_observation_id") else None] if r]})
     lifecycle_ids={x.get("id") for x in (opened_event,last_event,recovered_event) if x}
     for run in reversed(_compact_events(_incident_events(conn,domain,row))):
-        if run.get("first_event_id") in lifecycle_ids and run.get("latest_event_id") in lifecycle_ids: continue
+        if run.get("repeat_count",1)<=1 and run.get("first_event_id") in lifecycle_ids and run.get("latest_event_id") in lifecycle_ids: continue
         items.append({"kind":"MATERIAL_CHANGE","timestamp":run.get("last_observed_at"),"authority":"DERIVED","event_id":run.get("latest_event_id"),"observation_id":((run.get("latest_evidence_refs") or [None])[0].split(":",1)[1] if (run.get("latest_evidence_refs") or [None])[0] else None),"changes":run.get("latest_changes"),"repeat_count":run.get("repeat_count"),"first_observed_at":run.get("first_observed_at"),"evidence_refs":list(dict.fromkeys((run.get("first_evidence_refs") or [])+(run.get("latest_evidence_refs") or [])))})
     if row.get("last_abnormal_observation_id")!=row.get("opened_observation_id") or row.get("last_abnormal_at")!=row.get("opened_at"):
-        items.append({"kind":"LAST_ABNORMAL","timestamp":row.get("last_abnormal_at"),"authority":"DERIVED","event_id":last_event.get("id") if last_event else None,"observation_id":canon(domain,row["last_abnormal_observation_id"]) if row.get("last_abnormal_observation_id") else None,"changes":incident.get("latest_changes") or (last_event.get("changes") if last_event else None),"evidence_refs":[r for r in [evidence("event",domain,last_event["local_id"]) if last_event else None,evidence("observation",domain,row["last_abnormal_observation_id"]) if row.get("last_abnormal_observation_id") else None] if r]})
+        items.append({"kind":"LAST_ABNORMAL","timestamp":row.get("last_abnormal_at"),"authority":"DERIVED","event_id":last_event.get("id") if last_event else None,"observation_id":canon(domain,row["last_abnormal_observation_id"]) if row.get("last_abnormal_observation_id") else None,"changes":last_event.get("changes") if last_event else (incident.get("latest_changes") if incident.get("state")=="OPEN" else None),"evidence_refs":[r for r in [evidence("event",domain,last_event["local_id"]) if last_event else None,evidence("observation",domain,row["last_abnormal_observation_id"]) if row.get("last_abnormal_observation_id") else None] if r]})
     if row.get("recovered_observation_id") is not None and row.get("recovered_at") is not None:
         items.append({"kind":"INCIDENT_RECOVERED","timestamp":row.get("recovered_at"),"authority":"DERIVED","event_id":recovered_event.get("id") if recovered_event else None,"observation_id":canon(domain,row["recovered_observation_id"]),"changes":recovered_event.get("changes") if recovered_event else None,"evidence_refs":[r for r in [evidence("event",domain,recovered_event["local_id"]) if recovered_event else None,evidence("observation",domain,row["recovered_observation_id"])] if r]})
     order={"INCIDENT_OPENED":0,"MATERIAL_CHANGE":1,"LAST_ABNORMAL":2,"INCIDENT_RECOVERED":3}
@@ -242,7 +253,8 @@ def incident_evidence_bundle(conn,incident_id,limit=50):
     direct="opened_event_id" in row
     provenance={"linkage_mode":"DIRECT_EVENT_IDS" if direct else "LEGACY_RESOURCE_TIME_CORRELATION","authoritative_ids":{"opened_observation_id":row.get("opened_observation_id"),"last_abnormal_observation_id":row.get("last_abnormal_observation_id"),"recovered_observation_id":row.get("recovered_observation_id"),"opened_event_id":row.get("opened_event_id"),"last_event_id":row.get("last_event_id")},"limitations":[] if direct else ["PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."]}
     opening=_evidence_pair(conn,domain,resource_key,row.get("opened_observation_id"),row.get("opened_event_id") if direct else None)
-    latest=_evidence_pair(conn,domain,resource_key,row.get("last_abnormal_observation_id"),row.get("last_event_id") if direct else None)
+    last_abnormal_event=_last_abnormal_event(conn,domain,row,resource_key)
+    latest={"observation":_obs_evidence(conn,domain,row.get("last_abnormal_observation_id")),"event":_event_evidence(conn,domain,last_abnormal_event)}
     recovery=_evidence_pair(conn,domain,resource_key,row.get("recovered_observation_id")) if row.get("recovered_observation_id") is not None and row.get("recovered_at") is not None else None
     return {"incident":incident,"timeline":timeline,"opening_evidence":opening,"latest_abnormal_evidence":latest,"recovery_evidence":recovery,"material_changes":changes,"provenance":provenance,"authority":"DERIVED"}
 

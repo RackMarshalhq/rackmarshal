@@ -22,7 +22,7 @@ class ApiV1Contract(unittest.TestCase):
   self.db=sqlite3.connect(':memory:'); self.db.row_factory=sqlite3.Row; self.db.executescript(SCHEMA)
   self.db.execute("INSERT INTO resource_incidents VALUES(1,'qemu','100','HA','MISSING','OPEN','VERIFIED',10,11,NULL,'2026-09-29T01:00:00Z','2026-09-29T02:00:00Z',NULL,2,NULL,NULL)")
   self.db.execute("INSERT INTO zfs_incidents VALUES(1,'zfs_pool','data','data',NULL,'STATUS-CHANGED','RECOVERED','VERIFIED',20,21,22,'2026-09-28T01:00:00Z','2026-09-28T02:00:00Z','2026-09-28T03:00:00Z',1,'{}','{}')")
-  self.db.execute("INSERT INTO zfs_observations VALUES(22,'2026-09-28T03:00:00Z','ms01',1,'2026-09-28T03:00:01Z','{\"token\":\"SECRET\"}')")
+  self.db.execute("INSERT INTO zfs_observations VALUES(22,'2026-09-28T03:00:00Z','fixture-host',1,'2026-09-28T03:00:01Z','{\"token\":\"SECRET\"}')")
  def tearDown(self): self.db.close()
  def test_canonical_ids_are_domain_unique(self): self.assertNotEqual(canon('PVE',1),canon('ZFS',1))
  def test_numeric_incident_id_rejected(self):
@@ -40,19 +40,19 @@ class ApiV1Contract(unittest.TestCase):
   code,p=route(self.db,'/v1/health',{}); self.assertEqual((code,p['api_version'],p['data']['database_readable']),(200,'v1',True))
  def test_material_changes_collapse_repeated_polling_per_resource(self):
   rows=[
-   (1,101,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:00:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]'),
+   (1,101,'backup_phone','fictional-user','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:00:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]'),
    (2,102,'backup_phone','preston','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:01:00Z',None,'[{"field":"phone_age_hours","actual":180,"expected":"<= 168.0"}]'),
-   (3,103,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:05:00Z',None,'[{"field":"phone_age_hours","actual":175,"expected":"<= 168.0"}]'),
+   (3,103,'backup_phone','fictional-user','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:05:00Z',None,'[{"field":"phone_age_hours","actual":175,"expected":"<= 168.0"}]'),
    (4,104,'backup_phone','preston','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:06:00Z',None,'[{"field":"phone_age_hours","actual":185,"expected":"<= 168.0"}]')]
   self.db.executemany('INSERT INTO backup_events VALUES(?,?,?,?,?,?,?,?,?,?)',rows)
   items,meta=material_changes(self.db,{'domain':'BACKUP','observed_after':'2026-09-29T20:00:00Z','observed_before':'2026-09-29T21:00:00Z','limit':'20'})
   self.assertEqual(meta['raw_event_count'],4); self.assertEqual(meta['material_change_count'],2); self.assertEqual(meta['collapsed_event_count'],2)
-  by_key={x['resource_key']:x for x in items}; self.assertEqual(by_key['olivia']['repeat_count'],2); self.assertEqual(by_key['olivia']['first_changes'][0]['actual'],170); self.assertEqual(by_key['olivia']['latest_changes'][0]['actual'],175)
+  by_key={x['resource_key']:x for x in items}; self.assertEqual(by_key['fictional-user']['repeat_count'],2); self.assertEqual(by_key['fictional-user']['first_changes'][0]['actual'],170); self.assertEqual(by_key['fictional-user']['latest_changes'][0]['actual'],175)
  def test_material_changes_preserve_transition_away_and_back(self):
   rows=[
-   (10,110,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:00:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]'),
-   (11,111,'backup_phone','olivia','RECOVERED',None,'VERIFIED','2026-09-29T20:10:00Z',None,'[{"field":"status","actual":"OK","expected":"OK"}]'),
-   (12,112,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:20:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]')]
+   (10,110,'backup_phone','fictional-user','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:00:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]'),
+   (11,111,'backup_phone','fictional-user','RECOVERED',None,'VERIFIED','2026-09-29T20:10:00Z',None,'[{"field":"status","actual":"OK","expected":"OK"}]'),
+   (12,112,'backup_phone','fictional-user','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:20:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]')]
   self.db.executemany('INSERT INTO backup_events VALUES(?,?,?,?,?,?,?,?,?,?)',rows)
   items,meta=material_changes(self.db,{'domain':'BACKUP','limit':'20'})
   self.assertEqual(meta['material_change_count'],3); self.assertEqual([x['event_type'] for x in reversed(items)],['STATUS-CHANGED','RECOVERED','STATUS-CHANGED'])

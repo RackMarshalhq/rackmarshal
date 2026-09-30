@@ -300,3 +300,65 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **NO PUBLIC INGRESS REQUIRED:** Do not expose port 8000 or port 9110 publicly for ChatGPT integration.
 - **EXTERNAL ADMIN GATE:** Associate the existing tunnel with the intended Business workspace and create the RackMarshal Investigator custom app from the authenticated workspace admin UI. This cannot be certified from the RackMarshal host alone.
 - **ACCEPTANCE GATE REMAINS:** After app creation, scan exactly the 11 read-only tools and run the documented workspace acceptance prompts before publishing or widening access.
+
+
+## CYCLE RELIABILITY AND RECOVERY PROVENANCE — 2026-09-30
+
+- **USER AUTHORIZED / PROMOTED:** Bounded engineering repairs restore scheduled
+  domain processing and self-watch without changing incident schemas, baselines,
+  observation authority, security policy, credentials, or API/MCP write scope.
+- **DELIVERY:** All six domain runners and self-watch pass ordinary string argv
+  to delivery. The unused legacy --explainer flag is optional; explanations
+  remain cached/advisory. Queue-empty regression execution covers all seven.
+- **LOCKS:** HA, ZFS, and HARDWARE lock under the configured state database parent,
+  already writable under the existing systemd sandbox. ProtectSystem remains
+  strict; no additional filesystem permission was granted.
+- **MOUNT CONFIGURATION:** Collector honors the selected RackMarshal config and
+  configured PVE_NODE, preserves explicit environment overrides, URL-encodes the
+  node path, and fails before an empty-node request. Existing API TLS/credential
+  settings remain unchanged.
+- **PROCESSORS:** HA defaults to its packaged comparator; ordered, bounded catch-up
+  processes pending observations through the new observation without skipping
+  lifecycle records. Hardware invokes its module argv directly, eliminating a
+  Path(list) error. Real disposable-ledger regressions execute both processors.
+- **AUTHORITY CORRECTION:** last_event_id may point to recovery. Timeline and
+  evidence bundle now pair last abnormal evidence with the authoritative last
+  abnormal observation, never borrowing a later healthy event. If an abnormal
+  event is absent, observation-only evidence remains explicit. Repeated runs
+  remain visible even when their endpoints coincide with lifecycle events.
+- **PUBLICATION:** Replaced site/person names in test fixtures with fictional
+  identifiers. Publication gate now passes its actual privacy scan, full tests,
+  compilation, and fresh-database staging smoke (30 manifests, 17 safe CLIs).
+- **TESTED:** 121 discovery tests pass on staging Python 3.13 and CT 110 Python
+  3.11 with ResourceWarnings enabled and zero ResourceWarnings. Skill-creator
+  quick_validate.py reports Skill is valid for the Investigator skill.
+- **REAL PRODUCTION PROOF:** At 13:35 UTC, all six domain observations were fresh
+  per MCP; all six domain cycles and self-watch had success/exit 0. Status, MCP,
+  and tunnel were active; tunnel health/readiness returned live/ready HTTP 200.
+  At 13:41 UTC, production LAN HTTP passed 37 checks and real MCP Investigator
+  evaluation passed 18/18. Proof artifacts are metadata-only under evals/results.
+- **RECOVERY AUTHORITY:** Independent MOUNT observation MOUNT:3685 at
+  2026-09-30T13:23:54.546Z checked 23 resources successfully and the normal
+  processor recorded 21 recoveries. The configured existing notification
+  pipeline delivered 21 recovery notifications, with zero delivery failures.
+  No incident rows were manually closed or rewritten. MOUNT:9 now records
+  abnormal event MOUNT:2337 / observation MOUNT:3684 separately from recovery
+  event MOUNT:2358 / observation MOUNT:3685.
+- **DATED SNAPSHOT:** Recorded status remains PROBLEM with 12 OPEN incidents:
+  BACKUP 4 and PVE 8. HA, ZFS, HARDWARE, MOUNT record zero OPEN incidents. Successful
+  collectors do not imply these remaining infrastructure incidents recovered.
+- **ROLLBACK:** Each promoted source file was copied with SHA-256 verification;
+  pre-change files are under /var/lib/rackmarshal/deployment-backups in
+  cycle-delivery-20260930, health-lock-mount-20260930,
+  health-processors-20260930, health-ha-backlog-20260930,
+  health-lifecycle-20260930, health-lifecycle-mcp-20260930, and
+  health-repeat-counts-20260930, and health-lock-cleanup-20260930. Restore the relevant package files in reverse
+  deployment order; restart status/MCP only for API rollback. Collector-produced
+  evidence/recoveries remain durable history and are never undone by code rollback.
+- **BUSINESS PREPARATION:** Investigator skill now has validated YAML metadata,
+  exact verified v1.1 policy, compact workflows, and an explicit operational vs
+  engineering scope. Local plugin version is 0.1.1. A separate skills-only
+  preparation bundle is available; no cloud MCP binding/app identifier is
+  invented. Existing loopback .mcp.json is local-only. Workspace association,
+  registration, permissions, and publication remain unperformed pending the
+  user's explicit integration request and authenticated admin context.
