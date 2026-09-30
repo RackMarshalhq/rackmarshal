@@ -139,3 +139,14 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** An optional `rackmarshal-investigate` OpenAI Responses API edge client is packaged with GPT-6 Luna as its default model and the exact nine-tool allowlist; it requires runtime credentials and does not make RackMarshal Core depend on AI.
 - **SECURITY:** The temporary full-access Responses API key was revoked by the operator and its CT 110 credential file was removed. No broad Responses credential is retained by RackMarshal.
 - **PENDING MEASUREMENT:** The post-compaction external Luna token count has not been remeasured because the temporary Responses credential was deliberately revoked. The production data-path proof shows 170 raw overnight BACKUP events collapsing to 2 material-change runs.
+
+
+## RACKMARSHAL 1.1A CONTRACT FREEZE — 2026-09-29
+
+- **FROZEN:** RackMarshal 1.1A begins with deterministic Incident Timeline and Incident Evidence Bundle contracts.
+- **FROZEN:** Proposed endpoints are `GET /v1/incidents/{incident_id}/timeline` and `GET /v1/incidents/{incident_id}/evidence-bundle`.
+- **VERIFIED:** Current ledgers support both features without a schema migration. ZFS, BACKUP, HA, HARDWARE, and MOUNT incidents carry direct event linkage (`opened_event_id`, `last_event_id`). PVE is a legacy exception and must use explicit `LEGACY_RESOURCE_TIME_CORRELATION` provenance based on resource identity, lifecycle timestamps, and authoritative observation IDs.
+- **FROZEN:** Timeline/evidence construction is deterministic and read-only; no AI causation or severity inference enters the canonical data.
+- **FROZEN:** Recovery appears only when authoritative `recovered_observation_id` and `recovered_at` exist.
+- **FROZEN:** Evidence bundles remain incident-bounded, compact material changes, and never expose raw `payload_json` or secrets.
+- **NEXT:** Implement API v1.1 timeline/evidence-bundle service functions and contract tests against real ledgers; MCP expansion remains gated until those API contracts pass.
