@@ -1,0 +1,92 @@
+{
+  "source_revision": "26cb00c209427bc0d86c9366917322e418fd0786",
+  "script_sha256": "d839d6d427246d3c7a95cd9e6e51393e9f9408e522821a37bc48956a266dddc8",
+  "requested_by": "human user in this chat",
+  "authorization": "Keep them and create a new baseline",
+  "executed_by": "Codex operator administration; not Investigator",
+  "started_at": "2026-09-30T17:05:43.702958+00:00",
+  "timer_previously_active": true,
+  "adoption": {
+    "observation_id": 11340,
+    "approval_note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states.",
+    "state": "APPLIED",
+    "backup": "/var/lib/rackmarshal/deployment-backups/pve-baseline-3edeeage/state-before.db",
+    "rows": [
+      {
+        "resource_type": "lxc",
+        "resource_key": "117",
+        "display_name": "rackmarshal-migration-drill",
+        "expected_status": "stopped",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      },
+      {
+        "resource_type": "lxc",
+        "resource_key": "118",
+        "display_name": "rackmarshal-delivery-qual",
+        "expected_status": "stopped",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      },
+      {
+        "resource_type": "lxc",
+        "resource_key": "119",
+        "display_name": "rackmarshal-delivery-qual2",
+        "expected_status": "stopped",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      },
+      {
+        "resource_type": "lxc",
+        "resource_key": "120",
+        "display_name": "rackmarshal-delivery-final",
+        "expected_status": "stopped",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      },
+      {
+        "resource_type": "lxc",
+        "resource_key": "121",
+        "display_name": "rackmarshal-fullcycle-qual",
+        "expected_status": "stopped",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      },
+      {
+        "resource_type": "lxc",
+        "resource_key": "122",
+        "display_name": "rackmarshal-reconcile-qual",
+        "expected_status": "stopped",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      },
+      {
+        "resource_type": "lxc",
+        "resource_key": "123",
+        "display_name": "rackmarshal-reconcile-final",
+        "expected_status": "stopped",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      },
+      {
+        "resource_type": "lxc",
+        "resource_key": "124",
+        "display_name": "rackmarshal-reconcile-accept",
+        "expected_status": "running",
+        "baseline_state": "VERIFIED",
+        "source_observation": 11340,
+        "note": "User explicitly requested: Keep them and create a new baseline. Retain LXC 117-124 at their recorded states."
+      }
+    ],
+    "before_count": 20,
+    "after_count": 28
+  },
+  "timer_restored": true
+}

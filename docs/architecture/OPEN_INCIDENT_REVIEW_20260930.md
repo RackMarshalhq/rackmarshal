@@ -137,3 +137,12 @@ configuration was changed. HTTP 46 checks/MCP 18 cases pass. Eleven OPEN inciden
 remain: three planned phone backups and eight PVE inventory incidents. See
 PBS_WEEKLY_VERIFICATION_RECORDING.md and Source of Truth for authority, rollback
 and bounded-history limits. The original review above remains a dated snapshot.
+
+
+## Retained PVE baseline and recorded recovery — September 30
+
+The user explicitly approved keeping LXC 117–124 and creating a baseline. Operator source 26cb00c added eight VERIFIED entries atomically from observation:PVE:11340: 117–123 expected stopped, 124 expected running. The existing 20 entries and all guest states were preserved. Consistent private backup: /var/lib/rackmarshal/deployment-backups/pve-baseline-3edeeage. Investigator remains read-only.
+
+Normal processing independently recovered PVE:36–PVE:43 at 17:05:44.344970 UTC from observation:PVE:11345. Latest abnormal evidence remains observation:PVE:11344; all eight retain 153 recorded occurrences and explicit legacy correlation provenance. These were NEW inventory conditions resolved by accepting intended policy, not guest faults repaired. No incident was manually closed.
+
+Production proof: PVE OK, zero PVE incidents open, three phone BACKUP incidents open; HTTP 47 checks and Investigator 18/18 pass. Status, MCP, tunnel and PVE timer active. Qualification: 173 staging test executions pass; target 172 pass/one Git-only skip; zero ResourceWarnings. Planned phone backups remain Michael tonight September 30 and Olivia/Preston October 5, with ordinary evidence-based recovery required. Business workspace setup remains pending explicit instructions.
