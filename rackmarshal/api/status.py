@@ -9,6 +9,7 @@ from urllib.parse import urlparse, parse_qs
 
 from rackmarshal.api.v1 import route as route_v1
 from rackmarshal.ui.incidents import render_incident_page
+from rackmarshal.ui.dashboard import render_incident_index
 
 from rackmarshal.core.config import (
     domains_dir,
@@ -956,6 +957,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
+
+        if path in ("/", "/incidents", "/incidents/"):
+            try:
+                conn = connect_db()
+                try:
+                    markup = render_incident_index(conn)
+                finally:
+                    conn.close()
+                self.send_html(200, markup)
+            except Exception:
+                self.send_html(500, "<!doctype html><title>RackMarshal error</title><p>Unable to render incident dashboard.</p>")
+            return
 
         if path.startswith("/incidents/"):
             incident_id = path[len("/incidents/"):].strip("/")

@@ -229,3 +229,15 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** Isolated HTTP proof passed for open direct-linkage `BACKUP:29`, recovered direct-linkage `BACKUP:33`, and recovered PVE legacy-linkage `PVE:35`.
 - **PROMOTED / VERIFIED:** Production RackMarshal status service on CT 110 serves the new summary API and incident page on port 9110. Production smoke tests passed for all three representative incidents.
 - **NEXT:** Add an incident index/list page and refine deterministic narrative semantics before adding richer cross-incident correlation UI.
+
+
+## INCIDENT INDEX / DASHBOARD — 2026-09-30
+
+- **IMPLEMENTED:** `GET /` and `GET /incidents` render the deterministic, read-only human incident dashboard.
+- **OPEN FIRST:** The dashboard separates all currently OPEN incidents from recent recovery history and orders each section by its authoritative lifecycle timestamp.
+- **VISIBLE FIELDS:** Incident ID, domain, resource type/key/display name, state, and opened/recovered timestamp are shown with links to the existing incident detail pages.
+- **DEGRADED-SCHEMA SAFE:** The dashboard aggregates only incident ledger tables present in the database, without changing core API behavior.
+- **SECURITY:** Ledger-derived text is HTML-escaped; no raw `payload_json` is rendered; the existing no-store/nosniff/restrictive-CSP headers apply. There are no write/remediation controls and no AI invocation.
+- **REAL-DATA PROOF:** Isolated CT 110 proof rendered the current production ledger, including BACKUP, PVE, and MOUNT open incidents plus recent recoveries.
+- **PRODUCTION VERIFIED:** `/`, `/incidents`, `/incidents/BACKUP:29`, and `/incidents/PVE:43` returned HTTP 200 on production port 9110. Representative current links `BACKUP:38`, `PVE:43`, and `MOUNT:9` were present.
+- **CURRENT SNAPSHOT AT PROOF:** 33 OPEN incidents were present in the ledger. This is a time-specific observed snapshot, not a frozen system invariant.
