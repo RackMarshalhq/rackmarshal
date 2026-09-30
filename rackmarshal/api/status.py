@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
 from rackmarshal.api.v1 import route as route_v1
+from rackmarshal.ui.incidents import render_incident_page
 
 from rackmarshal.core.config import (
     domains_dir,
@@ -941,9 +942,36 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def send_html(self, status_code, markup):
+        body = markup.encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'")
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
+
+        if path.startswith("/incidents/"):
+            incident_id = path[len("/incidents/"):].strip("/")
+            try:
+                conn = connect_db()
+                try:
+                    markup = render_incident_page(conn, incident_id)
+                finally:
+                    conn.close()
+                if markup is None:
+                    self.send_html(404, "<!doctype html><title>Incident not found</title><p>Incident not found.</p>")
+                else:
+                    self.send_html(200, markup)
+            except ValueError:
+                self.send_html(400, "<!doctype html><title>Invalid incident ID</title><p>Invalid incident ID.</p>")
+            return
 
         if path.startswith("/v1/"):
             params = {k: v[-1] for k, v in parse_qs(parsed.query, keep_blank_values=True).items()}

@@ -246,6 +246,42 @@ def incident_evidence_bundle(conn,incident_id,limit=50):
     recovery=_evidence_pair(conn,domain,resource_key,row.get("recovered_observation_id")) if row.get("recovered_observation_id") is not None and row.get("recovered_at") is not None else None
     return {"incident":incident,"timeline":timeline,"opening_evidence":opening,"latest_abnormal_evidence":latest,"recovery_evidence":recovery,"material_changes":changes,"provenance":provenance,"authority":"DERIVED"}
 
+def _format_change(change):
+    if not isinstance(change,dict): return str(change)
+    field=change.get("field") or "state"
+    actual=change.get("actual")
+    expected=change.get("expected")
+    if expected is None: return f"{field}={actual}"
+    return f"{field}={actual} (expected {expected})"
+
+def _change_sentence(changes):
+    if not changes: return None
+    return "; ".join(_format_change(c) for c in changes)
+
+def incident_summary(conn,incident_id):
+    timeline=incident_timeline(conn,incident_id)
+    if not timeline: return None
+    bundle=incident_evidence_bundle(conn,incident_id)
+    incident=bundle["incident"]
+    opened=next((x for x in timeline["items"] if x["kind"]=="INCIDENT_OPENED"),None)
+    latest=next((x for x in reversed(timeline["items"]) if x["kind"] in ("LAST_ABNORMAL","INCIDENT_OPENED")),opened)
+    recovery=next((x for x in timeline["items"] if x["kind"]=="INCIDENT_RECOVERED"),None)
+    resource=incident.get("display_name") or incident.get("resource_key") or "unknown resource"
+    headline=f"{incident_id} is {incident['state']} for {resource}."
+    opened_detail=_change_sentence((opened or {}).get("changes"))
+    opened_statement=f"Opened at {incident.get('opened_at')}" + (f" with {opened_detail}." if opened_detail else ".")
+    latest_detail=_change_sentence((latest or {}).get("changes"))
+    latest_statement=f"Latest abnormal state was recorded at {incident.get('last_abnormal_at')}" + (f" with {latest_detail}." if latest_detail else ".")
+    if incident.get("state")=="RECOVERED" and incident.get("recovered_at"):
+        recovery_statement=f"Recovery was recorded at {incident['recovered_at']}."
+    else:
+        recovery_statement="No recovery is recorded."
+    refs=[]
+    for item in timeline["items"]:
+        for ref in item.get("evidence_refs") or []:
+            if ref not in refs: refs.append(ref)
+    return {"incident_id":incident_id,"domain":incident.get("domain"),"resource_type":incident.get("resource_type"),"resource_key":incident.get("resource_key"),"state":incident.get("state"),"headline":headline,"opened_statement":opened_statement,"latest_statement":latest_statement,"recovery_statement":recovery_statement,"cause_statement":"RackMarshal does not establish root cause from the recorded incident evidence.","evidence_refs":refs,"provenance":bundle.get("provenance"),"authority":"DERIVED"}
+
 def route(conn,path,params,status_builder=None):
     try:
         if path=="/v1/health":
@@ -266,6 +302,9 @@ def route(conn,path,params,status_builder=None):
         if path.startswith("/v1/incidents/") and path.endswith("/evidence-bundle"):
             incident_id=path[len("/v1/incidents/"):-len("/evidence-bundle")].rstrip("/")
             item=incident_evidence_bundle(conn,incident_id,params.get("limit",50)); return (200,envelope(item)) if item else error("INCIDENT_NOT_FOUND","incident not found",404)
+        if path.startswith("/v1/incidents/") and path.endswith("/summary"):
+            incident_id=path[len("/v1/incidents/"):-len("/summary")].rstrip("/")
+            item=incident_summary(conn,incident_id); return (200,envelope(item)) if item else error("INCIDENT_NOT_FOUND","incident not found",404)
         if path.startswith("/v1/incidents/"):
             item=get_incident(conn,path.rsplit("/",1)[1]); return (200,envelope(item)) if item else error("INCIDENT_NOT_FOUND","incident not found",404)
         if path=="/v1/observations": items,meta=list_observations(conn,params); return 200,envelope(items,**meta)

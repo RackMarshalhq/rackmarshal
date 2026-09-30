@@ -218,3 +218,14 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** Evaluator retries transient HTTP 429 responses rather than misclassifying provider throttling as an agent-quality failure.
 - **SECURITY VERIFIED:** `/etc/rackmarshal/model-eval.env` was deleted immediately after the passing run. The operator must revoke the temporary OpenAI API key itself after this proof.
 - **GATE OPEN:** Incident narrative/UI work may now proceed.
+
+
+## INCIDENT NARRATIVE / DETAIL PAGE — FIRST SLICE 2026-09-29
+
+- **FROZEN:** Deterministic incident summary contract lives at `contracts/ui-v1.1/INCIDENT_SUMMARY_PAGE.md`. The summary/page use RackMarshal ledger facts only and do not require or invoke AI.
+- **IMPLEMENTED:** `GET /v1/incidents/{incident_id}/summary` returns deterministic headline/opened/latest/recovery/cause statements, canonical evidence refs, provenance, and `authority=DERIVED`.
+- **IMPLEMENTED:** `GET /incidents/{incident_id}` renders a local read-only incident detail page with state, deterministic summary, ordered timeline, evidence links, and linkage provenance. It exposes no remediation/acknowledge/close/restart controls.
+- **SECURITY VERIFIED:** All ledger-derived HTML is escaped; pages expose no raw `payload_json`. Response headers include `no-store`, `nosniff`, and a restrictive Content-Security-Policy.
+- **VERIFIED:** Isolated HTTP proof passed for open direct-linkage `BACKUP:29`, recovered direct-linkage `BACKUP:33`, and recovered PVE legacy-linkage `PVE:35`.
+- **PROMOTED / VERIFIED:** Production RackMarshal status service on CT 110 serves the new summary API and incident page on port 9110. Production smoke tests passed for all three representative incidents.
+- **NEXT:** Add an incident index/list page and refine deterministic narrative semantics before adding richer cross-incident correlation UI.
