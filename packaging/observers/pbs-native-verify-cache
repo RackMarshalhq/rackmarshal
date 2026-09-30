@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+import json, subprocess, time
+from pathlib import Path
+OUT=Path('/var/lib/homelab-monitor/pbs-native-verify.json')
+result={'job_id':'weekly-homelab','datastore':'homelab-backups','status':None,'starttime':None,'endtime':None,'age_hours':None,'errors':[]}
+py="import json,subprocess; a=json.loads(subprocess.check_output(['proxmox-backup-manager','task','list','--all','--limit','1000','--output-format','json'],text=True)); x=[r for r in a if r.get('worker_type')=='verificationjob' and r.get('worker_id')=='homelab-backups:weekly-homelab']; print(json.dumps(x[0] if x else {}))"
+try:
+    q=subprocess.run(['/usr/sbin/qm','guest','exec','104','--','python3','-c',py],capture_output=True,text=True,timeout=30,check=False)
+    if q.returncode: result['errors'].append(f"qga_rc={q.returncode}:{(q.stderr or q.stdout)[:160]}")
+    else:
+        wrapper=json.loads(q.stdout); task=json.loads(wrapper.get('out-data') or '{}')
+        if not task: result['errors'].append('weekly_verification_task_not_found')
+        else:
+            for k in ('status','starttime','endtime'): result[k]=task.get(k)
+            if result['endtime']: result['age_hours']=round((time.time()-float(result['endtime']))/3600.0,3)
+except Exception as exc: result['errors'].append(str(exc)[:200])
+tmp=OUT.with_suffix('.tmp'); tmp.write_text(json.dumps(result,separators=(',',':'))+'\n'); tmp.chmod(0o644); tmp.replace(OUT)

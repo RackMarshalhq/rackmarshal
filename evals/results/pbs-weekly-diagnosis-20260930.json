@@ -1,0 +1,50 @@
+{
+  "diagnostic_recorded_at": "2026-09-30T16:44:13.838755+00:00",
+  "scope": "development-only read-only PBS task/job metadata via existing QGA; not Investigator shell authority",
+  "original_source_sha256": "1cdc4cd961254ad71a33b0040219aa020feffdaf6ceb74dd2e96a84f47cb03b9",
+  "query_100": {
+    "count": 100,
+    "weekly_matches": 0,
+    "types": {
+      "aptupdate": 3,
+      "verify": 33,
+      "prune": 31,
+      "backup": 31,
+      "logrotate": 2
+    }
+  },
+  "query_1000": {
+    "count": 1000,
+    "weekly_positions": [
+      133,
+      178
+    ]
+  },
+  "configured_job": {
+    "id": "weekly-homelab",
+    "store": "homelab-backups",
+    "schedule": "sun 04:30",
+    "ignore_verified": false
+  },
+  "weekly_results": [
+    {
+      "worker_type": "verificationjob",
+      "worker_id": "homelab-backups:weekly-homelab",
+      "status": "OK",
+      "starttime": 1790497800,
+      "endtime": 1790498219,
+      "started_at": "2026-09-27T08:30:00+00:00",
+      "completed_at": "2026-09-27T08:36:59+00:00"
+    },
+    {
+      "worker_type": "verificationjob",
+      "worker_id": "homelab-backups:weekly-homelab",
+      "status": "OK",
+      "starttime": 1790477285,
+      "endtime": 1790477712,
+      "started_at": "2026-09-27T02:48:05+00:00",
+      "completed_at": "2026-09-27T02:55:12+00:00"
+    }
+  ],
+  "root_cause": "Unfiltered 100-task list truncates before exact verificationjob; individual verify workers are not substituted. Supported CLI maximum is 1000; typefilter is not available on this CLI."
+}
