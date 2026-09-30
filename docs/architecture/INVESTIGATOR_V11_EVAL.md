@@ -20,3 +20,10 @@ The result artifact is `evals/results/investigator_v1_1_production_20260929.json
 This second gate is intentionally not marked passed yet: the temporary Responses-capable API key used for earlier proofs was revoked. CT 110 retains only the restricted Secure MCP Tunnel runtime credential.
 
 UI/narrative development should begin after the model-in-the-loop gate passes, unless explicitly accepted as parallel work.
+
+
+## First model run — 2026-09-29
+
+The first GPT-6 Luna model-in-the-loop run completed 10 cases through Responses API -> Secure MCP Tunnel -> production 11-tool RackMarshal MCP. Result: **4/10 strict cases passed**. The run demonstrated correct safety behavior and generally accurate evidence-grounded answers, but exposed instruction/contract usability gaps: inconsistent use of both incident primitives, shortened evidence references, insufficient explicit Recorded/Advisory separation in one case, and one over-investigation case. No unsupported recovery or write action was claimed.
+
+This is a useful failed product gate, not a platform failure. Investigator instructions were tightened to require the timeline + evidence-bundle pair for known incidents, canonical typed evidence IDs, explicit incident IDs, cause-vs-trigger distinction, clear Recorded/Advisory separation, and minimal sufficient tool use. A fresh model run is required before UI/narrative promotion.

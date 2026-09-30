@@ -197,3 +197,13 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **IMPLEMENTED / PENDING RUN:** Model-in-the-loop suite `evals/investigator_v1_1_model.json` and evaluator `rackmarshal.agent.model_eval` score Luna tool choice, typed evidence citation, recovery proof, provenance, uncertainty/cause boundaries, fact-vs-advisory separation, efficiency, and read-only authority behavior.
 - **SECURITY:** Model-in-the-loop gate is not falsely marked passed. The prior temporary Responses-capable key was revoked; CT 110 retains only the restricted Secure MCP Tunnel runtime credential. A temporary Responses-capable key is required to execute this final agent-quality gate.
 - **GATE:** Incident UI/narrative work begins after the model-in-the-loop gate passes, unless the operator explicitly chooses parallel development.
+
+
+## INVESTIGATOR V1.1 MODEL GATE — FIRST RUN 2026-09-29
+
+- **FAILED / USEFUL:** GPT-6 Luna completed the real Responses API -> Secure MCP Tunnel -> production 11-tool RackMarshal MCP evaluation. Strict result: 4/10 cases passed.
+- **VERIFIED:** The model correctly respected read-only authority, did not claim remediation, did not invent recovery, and generally stayed evidence-grounded.
+- **FAILED:** Tool-choice/answer-contract consistency was insufficient: some known-incident questions used only one of timeline/bundle; some answers shortened typed evidence IDs; one answer lacked explicit Recorded/Advisory separation; the overnight case exceeded the efficiency threshold.
+- **CORRECTIVE CHANGE:** Investigator instructions now require timeline + evidence bundle for known incidents, exact typed evidence refs, explicit incident IDs, trigger-vs-root-cause distinction, clear fact/advisory separation, and minimal sufficient tool use.
+- **SECURITY VERIFIED:** `/etc/rackmarshal/model-eval.env` was deleted immediately after the run. The temporary key itself must still be revoked in the OpenAI project by the operator.
+- **GATE REMAINS CLOSED:** A fresh model-in-the-loop run must pass before incident UI/narrative work begins under the current gate.
