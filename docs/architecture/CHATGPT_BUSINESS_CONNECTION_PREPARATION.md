@@ -153,3 +153,32 @@ https://developers.openai.com/api/docs/guides/secure-mcp-tunnels
 Workspace acceptance cases for PBS and PVE must now explain the recorded
 recoveries and prior conditions, preserving observation-only recovery evidence
 and legacy PVE linkage; do not imply these incidents are currently OPEN.
+
+
+## Business registration attempt and association prerequisite — 2026-09-30
+
+User explicitly confirmed creation of RackMarshal Investigator through the
+existing private tunnel for initial private testing. Two bounded Create attempts
+in authenticated RackMarshal Business returned “Couldn't create MCP app. Try
+again.” No successful connection ID or discovered tool inventory returned;
+workspace acceptance remains pending. Do not report the connection as created.
+
+Local /healthz and /readyz return HTTP 200 live/ready; MCP and tunnel services
+active. No recent tunnel journal entries. Doctor confirms profile, tunnel ID,
+control-plane key presence, MCP reachability and absence of OAuth metadata;
+its health-listener failure is an expected bind conflict with the already
+running production listener on 127.0.0.1:8080, not evidence that the live service
+is down. Production service was not stopped or reconfigured for diagnostics.
+
+Authenticated Platform Tunnels shows RackMarshal Home associated with Personal
+organization and no ChatGPT workspace. Edit offers RackMarshal workspace
+7a12a28c-ed93-4d70-be81-0a459c667e1a. Missing association is a verified unmet
+prerequisite and likely cause; the generic registration error alone does not
+prove the backend cause. Only that workspace is selected in an unsaved draft,
+preserving Personal organization. Save has not been clicked. Specific user
+confirmation is required to expand the existing tunnel association to this
+workspace, then retry the already-authorized private connection registration.
+No new tunnel, credential, public ingress, broader publication, or runtime
+permissions are proposed. Association allows the target workspace to find/use
+the tunnel subject to its existing controls; it does not certify operator-only
+audience. Inspect actual audience and tool inventory after registration.

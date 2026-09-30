@@ -461,3 +461,32 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **USER REQUEST:** Work on the Business connection after SoT update. Authenticated Chrome identifies RackMarshal Business; Plugins Add → Create MCP App exposes the Tunnel connection form. Exact admin role, tunnel workspace association and audience remain unverified. Security and login showed no Developer mode toggle; available form used without changing security settings.
 - **PREPARED:** Existing rackmarshal-home tunnel identified from a scoped CT profile inspection without credential exposure. Name/description, existing tunnel ID and server No authentication selection reviewed in the draft. No additional OAuth credentials or public endpoint proposed. Draft dismissed before acknowledgment/Create.
 - **PENDING:** Action-time confirmation for creating new read-only access through the existing private tunnel; required by Computer Use policy. No connection registered, no association or permission change, no credentials created, no public exposure. After authorized registration: inspect eleven tools and actual ID/audience, bind Investigator policy and perform workspace acceptance. Business checklist updated to latest 173-test/47-HTTP/18-MCP local qualification and recovered PVE/PBS examples.
+
+
+## Business registration attempt and association prerequisite — 2026-09-30
+
+User explicitly confirmed creation of RackMarshal Investigator through the
+existing private tunnel for initial private testing. Two bounded Create attempts
+in authenticated RackMarshal Business returned “Couldn't create MCP app. Try
+again.” No successful connection ID or discovered tool inventory returned;
+workspace acceptance remains pending. Do not report the connection as created.
+
+Local /healthz and /readyz return HTTP 200 live/ready; MCP and tunnel services
+active. No recent tunnel journal entries. Doctor confirms profile, tunnel ID,
+control-plane key presence, MCP reachability and absence of OAuth metadata;
+its health-listener failure is an expected bind conflict with the already
+running production listener on 127.0.0.1:8080, not evidence that the live service
+is down. Production service was not stopped or reconfigured for diagnostics.
+
+Authenticated Platform Tunnels shows RackMarshal Home associated with Personal
+organization and no ChatGPT workspace. Edit offers RackMarshal workspace
+7a12a28c-ed93-4d70-be81-0a459c667e1a. Missing association is a verified unmet
+prerequisite and likely cause; the generic registration error alone does not
+prove the backend cause. Only that workspace is selected in an unsaved draft,
+preserving Personal organization. Save has not been clicked. Specific user
+confirmation is required to expand the existing tunnel association to this
+workspace, then retry the already-authorized private connection registration.
+No new tunnel, credential, public ingress, broader publication, or runtime
+permissions are proposed. Association allows the target workspace to find/use
+the tunnel subject to its existing controls; it does not certify operator-only
+audience. Inspect actual audience and tool inventory after registration.
