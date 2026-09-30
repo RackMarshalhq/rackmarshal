@@ -1,0 +1,22 @@
+# RackMarshal Investigator v1.1 Evaluation Gate
+
+Status: **LIVE MCP PASS / MODEL-IN-THE-LOOP PENDING CREDENTIAL**
+Date: 2026-09-29
+
+## Production MCP acceptance
+
+`evals/investigator_v1_1_live.json` is the permanent live-data acceptance suite for the 11-tool production MCP surface. It was run through a real MCP client against `http://127.0.0.1:8000/mcp` on CT 110.
+
+Result: **18/18 cases passed**, using **30 production MCP calls** with zero evaluation failures.
+
+Coverage includes RackMarshal health, current failures, current backup health, dynamically discovered open backup follow-up, long-running open incidents, recovered incidents, PVE legacy provenance, ZFS/HA/MOUNT lifecycle cases, fixed-window material-change compaction, recovery history, domain state, evidence dereferencing, deterministic repeated calls, invalid IDs, missing incidents, and invalid evidence-bundle limits.
+
+The result artifact is `evals/results/investigator_v1_1_production_20260929.json`. It stores pass/fail/tool-call metadata only, not raw infrastructure evidence.
+
+## Model-in-the-loop acceptance
+
+`evals/investigator_v1_1_model.json` and `rackmarshal.agent.model_eval` define the Luna agent-quality gate. It scores required tool choice, typed evidence citation, recorded-vs-advisory separation, unsupported-cause uncertainty, recovery proof, provenance transparency, tool-call efficiency, and refusal of write/remediation authority.
+
+This second gate is intentionally not marked passed yet: the temporary Responses-capable API key used for earlier proofs was revoked. CT 110 retains only the restricted Secure MCP Tunnel runtime credential.
+
+UI/narrative development should begin after the model-in-the-loop gate passes, unless explicitly accepted as parallel work.

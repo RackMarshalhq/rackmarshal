@@ -1,0 +1,367 @@
+{
+  "version": "investigator-v1.1-live",
+  "server": "http://127.0.0.1:8000/mcp",
+  "cases": [
+    {
+      "id": "health",
+      "goal": "Is RackMarshal itself healthy?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_health",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "current_failures",
+      "goal": "What is currently broken?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_status",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "tool": "list_incidents",
+          "args": {
+            "state": "OPEN",
+            "limit": 100
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "backup_health",
+      "goal": "Are backups healthy?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_backup_status",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "tool": "list_incidents",
+          "args": {
+            "domain": "BACKUP",
+            "state": "OPEN",
+            "limit": 100
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "open_backup_current",
+      "goal": "Explain the current Michael phone backup incident.",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "list_incidents",
+          "args": {
+            "domain": "BACKUP",
+            "state": "OPEN",
+            "limit": 1
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "BACKUP:34"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "BACKUP:34"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "open_backup_long_running",
+      "goal": "Why is Preston's backup incident still open?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "BACKUP:29"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "BACKUP:29"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "recovered_backup",
+      "goal": "Did the rsync backup incident recover?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "BACKUP:33"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "BACKUP:33"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "pve_legacy",
+      "goal": "Explain the lifecycle of PVE:35.",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "PVE:35"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "PVE:35"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "zfs_recovery",
+      "goal": "What happened to the data mirror incident?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "ZFS:8"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "ZFS:8"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mount_rich_timeline",
+      "goal": "Show the Preston iPhone mount incident lifecycle.",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "MOUNT:3"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "MOUNT:3"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "ha_recovery",
+      "goal": "Did the Home Assistant core incident recover?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "HA:3"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "HA:3"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "overnight_compaction",
+      "goal": "What failed overnight in the fixed proof window?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_recent_changes",
+          "args": {
+            "since": "2026-09-29T18:00:00Z",
+            "until": "2026-09-30T02:00:00Z",
+            "limit": 50
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "recovery_history",
+      "goal": "What recovered on September 29?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_recovery_history",
+          "args": {
+            "since": "2026-09-29T00:00:00Z",
+            "limit": 100
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "pve_domain",
+      "goal": "What is the PVE domain state?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_domain_status",
+          "args": {
+            "domain": "PVE"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "evidence_dereference",
+      "goal": "Can the opening evidence for BACKUP:33 be independently inspected?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "BACKUP:33"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_evidence",
+          "args": {
+            "evidence_ref": "observation:BACKUP:10350"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "determinism",
+      "goal": "Is the incident timeline deterministic?",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "MOUNT:3"
+          },
+          "is_error": false
+        },
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "MOUNT:3"
+          },
+          "is_error": false
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "bad_numeric_id",
+      "goal": "Reject ambiguous incident IDs.",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_timeline",
+          "args": {
+            "incident_id": "29"
+          },
+          "is_error": true
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "missing_incident",
+      "goal": "Reject missing incidents.",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "BACKUP:999999"
+          },
+          "is_error": true
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "bad_bundle_limit",
+      "goal": "Reject oversized evidence requests.",
+      "pass": true,
+      "calls": [
+        {
+          "tool": "get_incident_evidence_bundle",
+          "args": {
+            "incident_id": "BACKUP:33",
+            "limit": 51
+          },
+          "is_error": true
+        }
+      ],
+      "failures": []
+    }
+  ],
+  "failures": [],
+  "passed": true,
+  "case_count": 18,
+  "passed_count": 18
+}

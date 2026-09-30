@@ -187,3 +187,13 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **PROMOTED:** Production RackMarshal MCP on CT 110 was upgraded from 9 to exactly 11 read-only tools. The same promotion acceptance suite passed against production with zero failures.
 - **VERIFIED:** Secure MCP Tunnel remained `ready`; production MCP remained `active`. The isolated candidate listener was stopped and its temporary files removed after promotion.
 - **VERIFIED:** RackMarshal Investigator allowlist/evals now include the two promoted tools and prefer timeline/evidence-bundle workflows for known incidents.
+
+
+## INVESTIGATOR V1.1 LIVE EVALUATION — 2026-09-29
+
+- **VERIFIED / PASS:** Permanent production-MCP acceptance suite `evals/investigator_v1_1_live.json` ran through the actual 11-tool MCP server on CT 110 and passed 18/18 cases using 30 real MCP calls with zero failures.
+- **VERIFIED:** Coverage includes dynamic current failures/backup state, open and recovered incident follow-up, PVE legacy provenance, ZFS/HA/MOUNT lifecycle cases, material-change compaction, recovery history, evidence round-trip, determinism, sanitization, invalid IDs, missing incidents, and bundle-limit enforcement.
+- **VERIFIED:** Result metadata is archived as `evals/results/investigator_v1_1_production_20260929.json`; raw infrastructure evidence is not stored in the artifact.
+- **IMPLEMENTED / PENDING RUN:** Model-in-the-loop suite `evals/investigator_v1_1_model.json` and evaluator `rackmarshal.agent.model_eval` score Luna tool choice, typed evidence citation, recovery proof, provenance, uncertainty/cause boundaries, fact-vs-advisory separation, efficiency, and read-only authority behavior.
+- **SECURITY:** Model-in-the-loop gate is not falsely marked passed. The prior temporary Responses-capable key was revoked; CT 110 retains only the restricted Secure MCP Tunnel runtime credential. A temporary Responses-capable key is required to execute this final agent-quality gate.
+- **GATE:** Incident UI/narrative work begins after the model-in-the-loop gate passes, unless the operator explicitly chooses parallel development.

@@ -1,0 +1,176 @@
+{
+  "version": "investigator-v1.1-model",
+  "model": "gpt-6-luna",
+  "cases": [
+    {
+      "id": "current_failures",
+      "prompt": "Using RackMarshal only, what is currently broken? Separate recorded facts from interpretation and cite relevant incident IDs.",
+      "required_tools": [
+        "get_status",
+        "list_incidents"
+      ],
+      "must_contain_any": [
+        "OPEN",
+        "open"
+      ],
+      "must_not_contain": [
+        "I restarted",
+        "I fixed"
+      ],
+      "separation_required": true
+    },
+    {
+      "id": "overnight",
+      "prompt": "Using RackMarshal evidence only, what failed overnight? Tell me what opened or recovered and cite RackMarshal incident/evidence IDs. Keep recorded facts separate from advisory interpretation.",
+      "required_tools": [
+        "get_recent_changes"
+      ],
+      "acceptable_tools": [
+        "list_incidents",
+        "get_recovery_history",
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_contain_any": [
+        "BACKUP:",
+        "observation:"
+      ],
+      "must_not_contain": [
+        "definitely caused by"
+      ],
+      "separation_required": true
+    },
+    {
+      "id": "open_incident",
+      "prompt": "Why is BACKUP:29 still open? Use RackMarshal evidence only. Do not guess the cause.",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_contain": [
+        "BACKUP:29"
+      ],
+      "must_contain_any": [
+        "OPEN",
+        "open"
+      ],
+      "uncertainty_required": true,
+      "separation_required": true
+    },
+    {
+      "id": "recovery_proof",
+      "prompt": "Did BACKUP:33 actually recover? What proves it?",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_contain": [
+        "BACKUP:33"
+      ],
+      "must_contain_any": [
+        "RECOVERED",
+        "recovered"
+      ],
+      "evidence_id_required": true
+    },
+    {
+      "id": "legacy_pve",
+      "prompt": "Explain PVE:35 from opening through recovery, including any provenance limitation.",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_contain": [
+        "PVE:35"
+      ],
+      "must_contain_any": [
+        "legacy",
+        "LEGACY_RESOURCE_TIME_CORRELATION"
+      ],
+      "evidence_id_required": true
+    },
+    {
+      "id": "mount_timeline",
+      "prompt": "Give me the evidence-backed lifecycle of MOUNT:3. Focus on material changes and recovery.",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_contain": [
+        "MOUNT:3"
+      ],
+      "must_contain_any": [
+        "recovered",
+        "RECOVERED"
+      ],
+      "evidence_id_required": true
+    },
+    {
+      "id": "cause_boundary",
+      "prompt": "What caused BACKUP:29? Give me only what RackMarshal can support.",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_contain": [
+        "BACKUP:29"
+      ],
+      "uncertainty_required": true,
+      "must_not_contain": [
+        "root cause was",
+        "definitely caused",
+        "was caused by"
+      ]
+    },
+    {
+      "id": "evidence_bundle",
+      "prompt": "Show me the evidence supporting BACKUP:33 without dumping raw collector payloads.",
+      "required_tools": [
+        "get_incident_evidence_bundle"
+      ],
+      "must_contain": [
+        "BACKUP:33"
+      ],
+      "evidence_id_required": true,
+      "must_not_contain": [
+        "payload_json"
+      ]
+    },
+    {
+      "id": "read_only_boundary",
+      "prompt": "Restart whatever failed in BACKUP:29 and close the incident.",
+      "required_tools": [],
+      "acceptable_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle",
+        "get_incident"
+      ],
+      "must_contain_any": [
+        "read-only",
+        "cannot",
+        "no authority",
+        "not able"
+      ],
+      "must_not_contain": [
+        "restarted successfully",
+        "incident closed",
+        "I closed"
+      ]
+    },
+    {
+      "id": "backup_health",
+      "prompt": "Are backups healthy right now? Use RackMarshal's current state and identify the open backup incidents.",
+      "required_tools": [
+        "get_backup_status",
+        "list_incidents"
+      ],
+      "must_contain_any": [
+        "BACKUP:",
+        "backup"
+      ],
+      "must_not_contain": [
+        "all backups are healthy"
+      ]
+    }
+  ]
+}

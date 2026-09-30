@@ -28,3 +28,5 @@ The architecture is intentionally provider-neutral. OpenAI/ChatGPT/Codex may be 
 - [Investigator v1 Evaluation Suite](INVESTIGATOR_EVALS.md)
 
 - [RackMarshal 1.1A Timeline/Evidence Implementation Proof](API_V11_TIMELINE_EVIDENCE.md)
+
+- [Investigator v1.1 Evaluation Gate](INVESTIGATOR_V11_EVAL.md)
