@@ -12,6 +12,10 @@ rm -f /etc/systemd/system/rackmarshal-status.service
 rm -f /etc/systemd/system/rackmarshal-notify.service
 rm -f /etc/systemd/system/rackmarshal-notify.timer
 rm -f /etc/systemd/system/rackmarshal-domain@.service /etc/systemd/system/rackmarshal-domain@.timer
+for unit in rackmarshal-domain@.service rackmarshal-self-watch.service; do
+  rm -f "/etc/systemd/system/$unit.d/20-cycle-health.conf"
+  rmdir "/etc/systemd/system/$unit.d" 2>/dev/null || true
+done
 systemctl daemon-reload
 rm -rf /opt/rackmarshal
 

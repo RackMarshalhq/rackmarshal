@@ -2,8 +2,8 @@
 """Record durable RackMarshal systemd cycle health.
 
 Intended callers:
-- ExecStartPost: record SUCCESS after a completed cycle
-- OnFailure handler: record FAILED after a failed cycle
+- ExecStopPost: record the systemd result under the exact current unit name
+- Explicit --state callers remain supported
 
 The recorder only writes cycle_health. It does not create incidents,
 enqueue notifications, or inspect systemd.
@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -143,14 +144,34 @@ def record(
         conn.close()
 
 
+def systemd_result(environment: dict) -> tuple[str, int | None, int | None, dict]:
+    """Interpret ExecStopPost metadata, never infer completion from missing data."""
+    result = environment.get("SERVICE_RESULT", "")
+    if not result:
+        raise ValueError("SERVICE_RESULT is required for --from-systemd")
+    code = environment.get("EXIT_CODE", "")
+    status = environment.get("EXIT_STATUS", "")
+    # A clean stop caused by a signal is not proof that a oneshot completed.
+    completed = result == "success" and code == "exited" and status == "0"
+    detail = {"source": "systemd.ExecStopPost", "service_result": result,
+              "exit_code": code or None, "exit_status": status or None}
+    if environment.get("INVOCATION_ID"):
+        detail["invocation_id"] = environment["INVOCATION_ID"]
+    # Match systemd's numeric CLD_* convention; signal names stay in detail.
+    numeric_code = {"exited": 1, "killed": 2, "dumped": 3}.get(code)
+    numeric_status = int(status) if status.isascii() and status.isdecimal() else None
+    return "SUCCESS" if completed else "FAILED", numeric_code, numeric_status, detail
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Record RackMarshal cycle execution health"
     )
     parser.add_argument("--unit", required=True)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--from-systemd", action="store_true")
+    mode.add_argument(
         "--state",
-        required=True,
         choices=sorted(VALID_STATES),
     )
     parser.add_argument("--exit-code", type=int, default=None)
@@ -166,6 +187,14 @@ def main() -> int:
 
     if not isinstance(detail, dict):
         parser.error("--detail must decode to a JSON object")
+
+    if args.from_systemd:
+        if args.exit_code is not None or args.exit_status is not None or args.detail != "{}":
+            parser.error("--from-systemd cannot override systemd exit metadata")
+        try:
+            args.state, args.exit_code, args.exit_status, detail = systemd_result(os.environ)
+        except ValueError as exc:
+            parser.error(str(exc))
 
     db_path = args.db or state_db()
 
