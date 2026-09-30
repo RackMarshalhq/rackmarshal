@@ -92,3 +92,12 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** MCP argument schemas now explicitly type `limit` as integer; the initial protocol inspection caught and corrected the missing annotations before freeze.
 - **FROZEN:** RackMarshal MCP v1 pins the official SDK compatibility line to `mcp>=1.28,<2`. SDK v2 is a breaking redesign and requires an explicit future migration/re-verification rather than an automatic dependency upgrade.
 - **NEXT:** Add the first read-only RackMarshal Investigator skill/agent behavior over these nine tools. No infrastructure mutation authority is permitted.
+
+
+## INVESTIGATOR V1 — 2026-09-29
+
+- **VERIFIED:** The first RackMarshal agent behavior contract is implemented as a read-only Investigator over exactly the nine VERIFIED MCP v1 tools.
+- **VERIFIED:** Contract tests enforce that the Investigator has no tool outside the verified MCP surface and that incident/recovery investigations require evidence/recovery-history tools.
+- **FROZEN:** Investigator synthesis is ADVISORY. RackMarshal Core remains authoritative for observations, incidents, and recovery.
+- **FROZEN:** Investigator v1 has no infrastructure mutation, shell, SQL, incident-closing, or acknowledgement authority.
+- **NEXT:** Package the Investigator as a provider-neutral skill/instruction artifact and connect it to ChatGPT/Codex through the verified MCP server; retain human control and read-only authority.

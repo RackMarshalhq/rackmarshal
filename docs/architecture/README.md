@@ -22,3 +22,5 @@ This directory contains the frozen architecture baseline for RackMarshal's API, 
 **DESIGN BASELINE** means the direction is adopted but implementation details may evolve without violating the core principles.
 
 The architecture is intentionally provider-neutral. OpenAI/ChatGPT/Codex may be first-class clients, but RackMarshal Core must remain fully functional without them.
+
+- [RackMarshal Investigator](INVESTIGATOR.md)
