@@ -543,3 +543,10 @@ Next useful step: normal private operational use with the skill explicitly selec
 - **QUALIFICATION:** Disposable Debian 12 fresh install/reboot; stable upgrade/rollback/reupgrade; 92 wheel members byte-verified; 28 preexisting rows across 34 tables/config preserved, legitimate appended notification history retained; six HTTP checks; invalid-wheel failure retained installation/history; eleven positive MCP tools and six negative cases. CI Python 3.11/3.12/3.13 and Pages PASS. Dependency audit 29 audited/zero known vulnerabilities, local project skipped. Static analysis zero high/23 medium/82 low; medium findings contextually reviewed.
 - **PRIVATE RECEIPTS:** internal/published-rc1-verification.json, internal/published-rc1-verified/, candidate-final-upgrade-rollback.log, candidate-final-mcp-proof.log. Initial dump-equality assertion was too strict for normal appended notifications; corrected checks preserve all existing rows/config and retain notification appends.
 - **LIMITS:** Private combined cloud 0.1.2 separately installed/accepted; private binding and operational records excluded from release. Local ZIP desktop installation, implicit activation and broader audience controls unqualified. Disposable CT125 remains a qualification fixture, not adopted production or evidence of production recovery.
+
+
+## RC1 GITHUB AND WEBSITE ANNOUNCEMENT — 2026-09-30 UTC
+
+- **VERIFIED:** Documentation-only PR https://github.com/RackMarshalhq/rackmarshal/pull/9 squash-merged at 2db1da39ee7f657e7c7dc81b208e051bd104453f. GitHub main README announces RC1; live https://rackmarshal.com/ hero presents stable 1.0.0 and preview 1.1.0 RC1. Live install/docs pages show preview-specific commands and tagged changelog/upgrade/hosted setup links; stable installation preserved.
+- **CHECKS:** Python 3.11–3.13 tests, CodeQL and Pages preview PASS before merge. Browser verified live home/install/docs; latest stable API still v1.0.0. No runtime code, private binding or operational records published. Core RC1 PR8 remains draft.
+- **RECEIPT:** internal/rc1-website-publication.json.
