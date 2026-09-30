@@ -13,3 +13,7 @@ dist/
 
 # Private release-gate evidence; never publish
 internal/
+
+# Private workspace bindings and operational receipts
+evals/results/
+packaging/chatgpt-business/

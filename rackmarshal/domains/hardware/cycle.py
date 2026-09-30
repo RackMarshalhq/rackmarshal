@@ -38,8 +38,7 @@ PROCESS_HARDWARE_INCIDENTS = module_cmd("rackmarshal.domains.hardware.incidents"
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
-LOCK_FILE = Path("/run/lock/rackmarshal-hardware-cycle.lock")
+LOCK_FILE = state_db().parent / "locks" / "rackmarshal-hardware-cycle.lock"
 
 # Production thresholds.
 #
@@ -110,11 +109,8 @@ def run_json(command, *, stdin_text=None):
 
 def process_hardware_incidents_ledger():
     """Step D: mirror temperature events into hardware_events/incidents."""
-    script = Path(PROCESS_HARDWARE_INCIDENTS)
-    if not script.is_file():
-        return {"status": "SKIP", "note": "processor_missing"}
     result = subprocess.run(
-        [PYTHON, str(script)],
+        PROCESS_HARDWARE_INCIDENTS,
         text=True,
         cwd=str(_ROOT),
         check=False,
@@ -176,8 +172,6 @@ def deliver_notifications():
             DB,
             "--credential",
             HA_CREDENTIAL,
-            "--explainer",
-            INCIDENT_EXPLAINER,
             "--notification-prefix",
             "rackmarshal",
         ]
@@ -312,7 +306,6 @@ def write_observations(conn, payload, observed_at, devices):
 
 def main():
     LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
-
     with LOCK_FILE.open("w") as lock:
         try:
             fcntl.flock(

@@ -1,0 +1,364 @@
+{
+  "version": "investigator-v1.1-live",
+  "server": "http://127.0.0.1:8000/mcp",
+  "cases": [
+    {
+      "id": "health",
+      "goal": "Is RackMarshal itself healthy?",
+      "calls": [
+        [
+          "get_health",
+          {}
+        ]
+      ],
+      "assertions": [
+        "health_ok"
+      ]
+    },
+    {
+      "id": "current_failures",
+      "goal": "What is currently broken?",
+      "calls": [
+        [
+          "get_status",
+          {}
+        ],
+        [
+          "list_incidents",
+          {
+            "state": "OPEN",
+            "limit": 100
+          }
+        ]
+      ],
+      "assertions": [
+        "status_open_count_matches"
+      ]
+    },
+    {
+      "id": "backup_health",
+      "goal": "Are backups healthy?",
+      "calls": [
+        [
+          "get_backup_status",
+          {}
+        ],
+        [
+          "list_incidents",
+          {
+            "domain": "BACKUP",
+            "state": "OPEN",
+            "limit": 100
+          }
+        ]
+      ],
+      "assertions": [
+        "backup_open_incidents_consistent"
+      ]
+    },
+    {
+      "id": "open_backup_current",
+      "goal": "Explain the current User A phone backup incident.",
+      "calls": [
+        [
+          "list_incidents",
+          {
+            "domain": "BACKUP",
+            "state": "OPEN",
+            "limit": 1
+          }
+        ],
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "$result.0.data.0.id"
+          }
+        ],
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "$result.0.data.0.id"
+          }
+        ]
+      ],
+      "assertions": [
+        "discovered_open_incident",
+        "open_no_recovery",
+        "sanitized",
+        "bounded_bundle"
+      ]
+    },
+    {
+      "id": "open_backup_long_running",
+      "goal": "Why is User C's backup incident still open?",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "BACKUP:29"
+          }
+        ],
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "BACKUP:29"
+          }
+        ]
+      ],
+      "assertions": [
+        "open_no_recovery",
+        "direct_linkage",
+        "sanitized",
+        "material_compacted"
+      ]
+    },
+    {
+      "id": "recovered_backup",
+      "goal": "Did the rsync backup incident recover?",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "BACKUP:33"
+          }
+        ],
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "BACKUP:33"
+          }
+        ]
+      ],
+      "assertions": [
+        "recovered_proven",
+        "direct_linkage",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "pve_legacy",
+      "goal": "Explain the lifecycle of PVE:35.",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "PVE:35"
+          }
+        ],
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "PVE:35"
+          }
+        ]
+      ],
+      "assertions": [
+        "recovered_proven",
+        "legacy_linkage",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "zfs_recovery",
+      "goal": "What happened to the data mirror incident?",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "ZFS:8"
+          }
+        ],
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "ZFS:8"
+          }
+        ]
+      ],
+      "assertions": [
+        "recovered_proven",
+        "direct_linkage",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "mount_rich_timeline",
+      "goal": "Show the User C iPhone mount incident lifecycle.",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "MOUNT:3"
+          }
+        ],
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "MOUNT:3"
+          }
+        ]
+      ],
+      "assertions": [
+        "recovered_proven",
+        "has_material_change",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "ha_recovery",
+      "goal": "Did the Home Assistant core incident recover?",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "HA:3"
+          }
+        ],
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "HA:3"
+          }
+        ]
+      ],
+      "assertions": [
+        "recovered_proven",
+        "direct_linkage",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "overnight_compaction",
+      "goal": "What failed overnight in the fixed proof window?",
+      "calls": [
+        [
+          "get_recent_changes",
+          {
+            "since": "2026-09-29T18:00:00Z",
+            "until": "2026-09-30T02:00:00Z",
+            "limit": 50
+          }
+        ]
+      ],
+      "assertions": [
+        "changes_compacted",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "recovery_history",
+      "goal": "What recovered on September 29?",
+      "calls": [
+        [
+          "get_recovery_history",
+          {
+            "since": "2026-09-29T00:00:00Z",
+            "limit": 100
+          }
+        ]
+      ],
+      "assertions": [
+        "contains_backup_33",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "pve_domain",
+      "goal": "What is the PVE domain state?",
+      "calls": [
+        [
+          "get_domain_status",
+          {
+            "domain": "PVE"
+          }
+        ]
+      ],
+      "assertions": [
+        "domain_pve"
+      ]
+    },
+    {
+      "id": "evidence_dereference",
+      "goal": "Can the opening evidence for BACKUP:33 be independently inspected?",
+      "calls": [
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "BACKUP:33"
+          }
+        ],
+        [
+          "get_evidence",
+          {
+            "evidence_ref": "$result.0.data.opening_evidence.observation.id"
+          }
+        ]
+      ],
+      "assertions": [
+        "evidence_roundtrip",
+        "sanitized"
+      ]
+    },
+    {
+      "id": "determinism",
+      "goal": "Is the incident timeline deterministic?",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "MOUNT:3"
+          }
+        ],
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "MOUNT:3"
+          }
+        ]
+      ],
+      "assertions": [
+        "same_data"
+      ]
+    },
+    {
+      "id": "bad_numeric_id",
+      "goal": "Reject ambiguous incident IDs.",
+      "calls": [
+        [
+          "get_incident_timeline",
+          {
+            "incident_id": "29"
+          }
+        ]
+      ],
+      "expect_error": true
+    },
+    {
+      "id": "missing_incident",
+      "goal": "Reject missing incidents.",
+      "calls": [
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "BACKUP:999999"
+          }
+        ]
+      ],
+      "expect_error": true
+    },
+    {
+      "id": "bad_bundle_limit",
+      "goal": "Reject oversized evidence requests.",
+      "calls": [
+        [
+          "get_incident_evidence_bundle",
+          {
+            "incident_id": "BACKUP:33",
+            "limit": 51
+          }
+        ]
+      ],
+      "expect_error": true
+    }
+  ]
+}

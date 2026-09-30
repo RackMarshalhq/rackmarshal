@@ -29,9 +29,8 @@ PROCESSOR = module_cmd("rackmarshal.domains.zfs.incidents")
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
 
-LOCK_FILE = Path("/run/lock/rackmarshal-zfs-cycle.lock")
+LOCK_FILE = state_db().parent / "locks" / "rackmarshal-zfs-cycle.lock"
 
 
 class CycleError(Exception):
@@ -82,6 +81,7 @@ def main():
         exist_ok=True,
     )
 
+    LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
     with LOCK_FILE.open("w") as lock:
         try:
             fcntl.flock(
@@ -317,8 +317,6 @@ def main():
                 DB,
                 "--credential",
                 HA_CREDENTIAL,
-                "--explainer",
-                INCIDENT_EXPLAINER,
                 "--notification-prefix",
                 "rackmarshal",
             ]

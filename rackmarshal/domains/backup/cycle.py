@@ -30,7 +30,6 @@ DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 
 DB = str(state_db())
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
 
 
 def run(command, input_text=None):
@@ -118,8 +117,6 @@ def deliver_notifications():
         DB,
         "--credential",
         HA_CREDENTIAL,
-        "--explainer",
-        INCIDENT_EXPLAINER,
         "--notification-prefix",
         "rackmarshal",
     ])

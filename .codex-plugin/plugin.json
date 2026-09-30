@@ -1,0 +1,7 @@
+{
+  "name": "rackmarshal-investigator",
+  "version": "1.1.0-rc1",
+  "description": "Read-only operational investigation using RackMarshal evidence.",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

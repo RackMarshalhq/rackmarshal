@@ -1,6 +1,7 @@
+import atexit
 import os, tempfile, unittest
 from pathlib import Path
-_td=tempfile.TemporaryDirectory(); _c=Path(_td.name)/'c'; _c.write_text(f'STATE_DB={_td.name}/x.db\n'); os.environ['RACKMARSHAL_CONFIG']=str(_c)
+_td=tempfile.TemporaryDirectory(); atexit.register(_td.cleanup); _c=Path(_td.name)/'c'; _c.write_text(f'STATE_DB={_td.name}/x.db\n'); os.environ['RACKMARSHAL_CONFIG']=str(_c)
 from rackmarshal.domains.pve.comparator import compare as pve_compare
 from rackmarshal.domains.ha.comparator import compare as ha_compare
 from rackmarshal.domains.zfs.comparator import pool_match_result

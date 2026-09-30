@@ -82,6 +82,15 @@ for unit in rackmarshal-status.service rackmarshal-notify.service rackmarshal-no
   install -o root -g root -m 0644 "$UNIT_DIR/$unit" "/etc/systemd/system/$unit"
 done
 
+# Attach result recording without enabling or replacing an optional self-watch unit.
+for unit in rackmarshal-domain@.service rackmarshal-self-watch.service; do
+  if [[ "$unit" == rackmarshal-self-watch.service ]] && ! systemctl cat "$unit" >/dev/null 2>&1; then
+    continue
+  fi
+  install -d -o root -g root -m 0755 "/etc/systemd/system/$unit.d"
+  install -o root -g root -m 0644 "$UNIT_DIR/$unit.d/20-cycle-health.conf" "/etc/systemd/system/$unit.d/20-cycle-health.conf"
+done
+
 systemctl daemon-reload
 systemd-analyze verify /etc/systemd/system/rackmarshal-status.service /etc/systemd/system/rackmarshal-notify.service /etc/systemd/system/rackmarshal-notify.timer
 

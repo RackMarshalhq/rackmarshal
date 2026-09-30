@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rackmarshal"
-version = "1.0.0"
+version = "1.1.0rc1"
 description = "Local-first infrastructure operations and incident management for self-hosted systems."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,8 +13,15 @@ license-files = ["LICENSE"]
 authors = [{name = "RackMarshal"}]
 classifiers = ["Programming Language :: Python :: 3", "Operating System :: POSIX :: Linux"]
 
+[project.optional-dependencies]
+mcp = ["mcp>=1.28,<2"]
+
 [project.scripts]
 rackmarshal = "rackmarshal.cli:main"
+rackmarshal-mcp = "rackmarshal.mcp.server:main"
+rackmarshal-investigate = "rackmarshal.agent.openai_client:main"
+rackmarshal-eval-investigator = "rackmarshal.agent.live_eval:main"
+rackmarshal-eval-investigator-model = "rackmarshal.agent.model_eval:main"
 
 [project.urls]
 Homepage = "https://rackmarshal.com"

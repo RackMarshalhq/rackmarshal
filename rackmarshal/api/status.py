@@ -5,7 +5,11 @@ import subprocess
 import sqlite3
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
+
+from rackmarshal.api.v1 import route as route_v1
+from rackmarshal.ui.incidents import render_incident_page
+from rackmarshal.ui.dashboard import render_incident_index
 
 from rackmarshal.core.config import (
     domains_dir,
@@ -939,8 +943,61 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def send_html(self, status_code, markup):
+        body = markup.encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'")
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        if path in ("/", "/incidents", "/incidents/"):
+            try:
+                conn = connect_db()
+                try:
+                    markup = render_incident_index(conn, freshness_builder=build_freshness)
+                finally:
+                    conn.close()
+                self.send_html(200, markup)
+            except Exception:
+                self.send_html(500, "<!doctype html><title>RackMarshal error</title><p>Unable to render incident dashboard.</p>")
+            return
+
+        if path.startswith("/incidents/"):
+            incident_id = path[len("/incidents/"):].strip("/")
+            try:
+                conn = connect_db()
+                try:
+                    markup = render_incident_page(conn, incident_id, freshness_builder=build_freshness)
+                finally:
+                    conn.close()
+                if markup is None:
+                    self.send_html(404, "<!doctype html><title>Incident not found</title><p>Incident not found.</p>")
+                else:
+                    self.send_html(200, markup)
+            except ValueError:
+                self.send_html(400, "<!doctype html><title>Invalid incident ID</title><p>Invalid incident ID.</p>")
+            return
+
+        if path.startswith("/v1/"):
+            params = {k: v[-1] for k, v in parse_qs(parsed.query, keep_blank_values=True).items()}
+            try:
+                conn = connect_db()
+                try:
+                    status_code, payload = route_v1(conn, path, params, build_status)
+                finally:
+                    conn.close()
+                self.send_json(status_code, payload)
+            except Exception as exc:
+                self.send_json(500, {"api_version":"v1","generated_at":utc_now(),"error":{"code":"INTERNAL_ERROR","message":str(exc)}})
+            return
 
         if path == "/health":
             self.send_json(

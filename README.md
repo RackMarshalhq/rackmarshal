@@ -2,9 +2,9 @@
 
 Local-first infrastructure operations and incident management for self-hosted systems.
 
-RackMarshal observes infrastructure, records durable operational state, detects and tracks incidents, and verifies recovery. It grew from a working homelab operations system and is being prepared for broader use across homelabs, self-hosted infrastructure, edge systems, and small infrastructure environments.
+RackMarshal observes infrastructure, records durable operational state, detects and tracks incidents, and verifies recovery. It grew from a working homelab operations system and is now available for broader use across homelabs, self-hosted infrastructure, edge systems, and small infrastructure environments.
 
-> **Project status:** RackMarshal 1.0 is the first stable release of the local-first infrastructure operations platform.
+> **Project status:** RackMarshal 1.1.0 RC1 is a tester preview. RackMarshal 1.0.0 remains the stable release.
 
 ## What exists today
 
@@ -17,7 +17,7 @@ The current codebase contains operational domains for:
 - hardware health
 - mount availability
 
-RackMarshal stores observations, events, incidents, cycle health, and related state in SQLite. Domain manifests describe the available collector/processing entrypoints, and the local status API exposes `/health` and `/status`.
+RackMarshal stores observations, events, incidents, cycle health, and related state in SQLite. Domain manifests describe the available collector/processing entrypoints, and the local status API exposes `/health`, `/status`, and the read-only versioned `/v1` API. The incident dashboard, lifecycle/evidence views, and optional eleven-tool MCP Investigator build on recorded state.
 
 ## Design principles
 
@@ -43,6 +43,7 @@ The installer does not copy production credentials or discover your infrastructu
 
 ## Documentation
 
+- [Architecture and agent roadmap](docs/architecture/README.md)
 - [Installation](INSTALL.md)
 - [Configuration](CONFIGURATION.md)
 - [Upgrade](UPGRADE.md)

@@ -561,7 +561,8 @@ def main():
 
     parser.add_argument(
         "--explainer",
-        required=True,
+        default=None,
+        help="Legacy compatibility option; cached advisory explanations are used when enabled.",
     )
 
     parser.add_argument(

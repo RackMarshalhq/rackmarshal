@@ -11,8 +11,9 @@ TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 B="$TMP/rackmarshal-installer-$LABEL"; mkdir -p "$B/scripts" "$B/packaging/systemd" "$B/config"
 cp "$WHEEL" "$B/"
 cp scripts/install.sh scripts/uninstall.sh "$B/scripts/"
-cp packaging/systemd/* "$B/packaging/systemd/"
+cp -R packaging/systemd/* "$B/packaging/systemd/"
 cp config/*.example* "$B/config/" 2>/dev/null || true
 cp LICENSE README.md INSTALL.md CONFIGURATION.md UPGRADE.md UNINSTALL.md SECURITY.md CHANGELOG.md "$B/"
-tar -C "$TMP" -czf "dist/rackmarshal-installer-$LABEL.tar.gz" "rackmarshal-installer-$LABEL"
+SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct)}"
+tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -C "$TMP" -cf - "rackmarshal-installer-$LABEL" | gzip -n > "dist/rackmarshal-installer-$LABEL.tar.gz"
 echo "dist/rackmarshal-installer-$LABEL.tar.gz"

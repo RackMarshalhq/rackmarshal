@@ -1,0 +1,104 @@
+{
+  "version": "investigator-v1",
+  "cases": [
+    {
+      "id": "overnight",
+      "prompt": "What failed overnight?",
+      "kind": "overnight",
+      "required_tools": [
+        "get_recent_changes",
+        "list_incidents",
+        "get_recovery_history"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "current",
+      "prompt": "What is currently broken?",
+      "kind": "current_failures",
+      "required_tools": [
+        "get_status",
+        "list_incidents"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "recovered_today",
+      "prompt": "What recovered today?",
+      "kind": "recovery",
+      "required_tools": [
+        "get_recovery_history"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "incident_open",
+      "prompt": "Why is BACKUP:29 still open?",
+      "kind": "incident",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "zfs_precursor",
+      "prompt": "What changed before this ZFS incident?",
+      "kind": "incident",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle",
+        "get_recent_changes"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "backup_health",
+      "prompt": "Are backups healthy?",
+      "kind": "backups",
+      "required_tools": [
+        "get_backup_status",
+        "list_incidents"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "rackmarshal_health",
+      "prompt": "Is RackMarshal itself healthy?",
+      "kind": "health",
+      "required_tools": [
+        "get_health"
+      ],
+      "must_separate_advisory": false
+    },
+    {
+      "id": "incident_evidence",
+      "prompt": "What evidence supports this incident?",
+      "kind": "incident",
+      "required_tools": [
+        "get_incident_evidence_bundle"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "recovery_proof",
+      "prompt": "Did this incident actually recover?",
+      "kind": "recovery",
+      "required_tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "must_separate_advisory": true
+    },
+    {
+      "id": "pve_since_midnight",
+      "prompt": "What happened in the PVE domain since midnight?",
+      "kind": "domain",
+      "required_tools": [
+        "get_domain_status",
+        "get_recent_changes"
+      ],
+      "must_separate_advisory": true
+    }
+  ]
+}

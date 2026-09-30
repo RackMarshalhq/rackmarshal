@@ -30,7 +30,6 @@ PROCESSOR = module_cmd("rackmarshal.domains.mount.incidents")
 ENQUEUER = module_cmd("rackmarshal.notifications.queue")
 DELIVERY_WORKER = module_cmd("rackmarshal.notifications.delivery")
 HA_CREDENTIAL = str(ha_credential_file())
-INCIDENT_EXPLAINER = module_cmd("rackmarshal.incidents.explain")
 
 # Deliver can hang on HA even with 0 pending rows; keep the cycle moving.
 DELIVER_TIMEOUT_S = float(
@@ -120,8 +119,6 @@ def main() -> int:
             DB,
             "--credential",
             HA_CREDENTIAL,
-            "--explainer",
-            INCIDENT_EXPLAINER,
             "--notification-prefix",
             "rackmarshal",
         ],

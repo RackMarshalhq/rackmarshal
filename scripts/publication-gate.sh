@@ -6,9 +6,10 @@ patterns='192\.168\.|10\.[0-9]+\.[0-9]+\.[0-9]+|172\.(1[6-9]|2[0-9]|3[01])\.[0-9
 paths=(rackmarshal config packaging tests README.md INSTALL.md CONFIGURATION.md UPGRADE.md UNINSTALL.md SECURITY.md CONTRIBUTING.md CHANGELOG.md LICENSE pyproject.toml)
 if grep -RIE "$patterns" "${paths[@]}"; then echo 'FAIL: site/private pattern found'; fail=1; fi
 if find . -path './.git' -prune -o -path './internal' -prune -o -type f \( -name '*.env' -o -name '*.pem' -o -name '*.key' -o -name '*.db' -o -name '*.sqlite' \) -print | grep .; then echo 'FAIL: forbidden file type'; fail=1; fi
-grep -RIE "$patterns" scripts --exclude=publication-gate.sh && { echo 'FAIL: site/private pattern found in scripts'; fail=1; } || true
-python3 -m unittest discover -s tests -v
+grep -RIE "$patterns" scripts --exclude=publication-gate.sh --exclude=release-privacy-gate.py && { echo 'FAIL: site/private pattern found in scripts'; fail=1; } || true
+python3 -W error::ResourceWarning -m unittest discover -s tests -v
 python3 tests/staging_smoke.py
 python3 -m compileall -q rackmarshal
 [[ $fail -eq 0 ]] || exit 1
+python3 scripts/release-privacy-gate.py --source
 echo PUBLICATION_GATE_PASS
