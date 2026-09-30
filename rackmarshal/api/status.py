@@ -5,7 +5,9 @@ import subprocess
 import sqlite3
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
+
+from rackmarshal.api.v1 import route as route_v1
 
 from rackmarshal.core.config import (
     domains_dir,
@@ -940,7 +942,18 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        if path.startswith("/v1/"):
+            params = {k: v[-1] for k, v in parse_qs(parsed.query, keep_blank_values=True).items()}
+            try:
+                with connect_db() as conn:
+                    status_code, payload = route_v1(conn, path, params, build_status)
+                self.send_json(status_code, payload)
+            except Exception as exc:
+                self.send_json(500, {"api_version":"v1","generated_at":utc_now(),"error":{"code":"INTERNAL_ERROR","message":str(exc)}})
+            return
 
         if path == "/health":
             self.send_json(

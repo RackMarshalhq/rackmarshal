@@ -42,3 +42,13 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **FROZEN:** Recoveries are a normalized view over recovered incidents and their `recovered_observation_id`; no duplicate recovery authority is introduced.
 - **FROZEN:** Raw collector payloads are not default public responses and require sanitization when exposed as typed evidence.
 - **NEXT:** Implement the read-only service/adapters and contract tests. MCP remains gated until API v1 passes those tests.
+
+
+## API V1 IMPLEMENTATION — 2026-09-29
+
+- **VERIFIED:** Read-only API v1 service/adapters are implemented in `rackmarshal/api/v1.py` and routed through the existing status API server without changing legacy `/health` or `/status`.
+- **VERIFIED:** v1 implements health, status, domains, incidents, observations, events/changes, evidence, recoveries, and backup status surfaces.
+- **VERIFIED:** Domain-qualified public IDs, nullable severity, recovery evidence, opaque pagination, and raw-payload redaction are enforced by contract tests.
+- **VERIFIED:** Full unittest discovery passes: 30 tests, including 7 API v1 contract tests and all 23 pre-existing tests.
+- **FROZEN:** API v1 remains read-only; MCP is still not implemented.
+- **NEXT:** Exercise v1 against a fresh-host/real RackMarshal database, add HTTP-level endpoint smoke tests, then decide whether the API gate is strong enough to begin MCP v1.
