@@ -71,14 +71,20 @@ def paginate(items, params):
 
 def normalize_event(domain,row):
     x=dict(row); lid=x["id"]; oid=x.get("observation_id")
-    return {"id":canon(domain,lid),"local_id":lid,"domain":domain,"observation_id":canon(domain,oid) if oid else None,"resource_type":x.get("resource_type") or ("hardware_device" if domain=="HARDWARE" else "mount" if domain=="MOUNT" else None),"resource_key":x.get("resource_key") or x.get("serial") or x.get("mount_id"),"event_type":x.get("event_type") or x.get("outcome"),"baseline_state":x.get("baseline_state"),"observed_at":x.get("observed_at") or x.get("detected_at"),"changes":_json(x.get("changes_json")),"authority":"DERIVED","evidence_refs":[evidence("observation",domain,oid)] if oid else []}
+    changes=_json(x.get("changes_json"))
+    if changes is None and (x.get("expected_status") is not None or x.get("actual_status") is not None):
+        changes=[{"field":"status","expected":x.get("expected_status"),"actual":x.get("actual_status")}]
+    return {"id":canon(domain,lid),"local_id":lid,"domain":domain,"observation_id":canon(domain,oid) if oid else None,"resource_type":x.get("resource_type") or ("hardware_device" if domain=="HARDWARE" else "mount" if domain=="MOUNT" else None),"resource_key":x.get("resource_key") or x.get("serial") or x.get("mount_id"),"event_type":x.get("event_type") or x.get("outcome"),"baseline_state":x.get("baseline_state"),"observed_at":x.get("observed_at") or x.get("detected_at"),"changes":changes,"authority":"DERIVED","evidence_refs":[evidence("observation",domain,oid)] if oid else []}
 
 def query_events(conn,params):
     domains=[_domain(params["domain"])] if params.get("domain") else list(DOMAINS); out=[]
     for d in domains:
         table=EVENT_TABLES[d]; cols=_table_columns(conn,table); where=[]; vals=[]
-        for q,c in (("resource_type","resource_type"),("resource_key","resource_key")):
-            if params.get(q) and c in cols: where.append(f"{c}=?"); vals.append(params[q])
+        if params.get("resource_type") and "resource_type" in cols:
+            where.append("resource_type=?"); vals.append(params["resource_type"])
+        if params.get("resource_key"):
+            key_col="resource_key" if "resource_key" in cols else "serial" if "serial" in cols else "mount_id" if "mount_id" in cols else None
+            if key_col: where.append(f"{key_col}=?"); vals.append(params["resource_key"])
         tcol="observed_at" if "observed_at" in cols else "detected_at"
         if params.get("observed_after"): where.append(f"{tcol}>=?"); vals.append(params["observed_after"])
         if params.get("observed_before"): where.append(f"{tcol}<?"); vals.append(params["observed_before"])
@@ -97,9 +103,7 @@ def _change_signature(item):
         else: fields.append((None,json.dumps(change,sort_keys=True,default=str)))
     return (item.get("domain"),item.get("resource_type"),item.get("resource_key"),item.get("event_type"),item.get("baseline_state"),tuple(fields))
 
-def material_changes(conn,params):
-    raw=query_events(conn,params)
-    # Collapse repeated polling per resource while preserving genuine transitions for that resource.
+def _compact_events(raw):
     runs=[]; current={}
     for item in reversed(raw):
         sig=_change_signature(item)
@@ -113,6 +117,11 @@ def material_changes(conn,params):
             runs.append(run); current[resource]=run
     for run in runs: run.pop("_signature",None)
     runs.sort(key=lambda x:(x.get("last_observed_at") or "",x.get("latest_event_id") or ""),reverse=True)
+    return runs
+
+def material_changes(conn,params):
+    raw=query_events(conn,params)
+    runs=_compact_events(raw)
     items,meta=paginate(runs,params)
     meta["raw_event_count"]=len(raw); meta["material_change_count"]=len(runs); meta["collapsed_event_count"]=len(raw)-len(runs)
     return items,meta
@@ -153,6 +162,90 @@ def get_evidence(conn,ref):
     # Deliberately no payload_json: public evidence is sanitized metadata/structured ledger evidence.
     return {"id":ref,"kind":kind,"domain":d,"authority":item.get("authority"),"content":item}
 
+def _incident_record(conn, incident_id):
+    domain,local_id=parse_id(incident_id)
+    row=conn.execute(f"SELECT * FROM {INCIDENT_TABLES[domain]} WHERE id=?",(local_id,)).fetchone()
+    return domain,dict(row) if row else None
+
+def _incident_resource(domain,row):
+    return (
+        row.get("resource_type") or ("hardware_device" if domain=="HARDWARE" else "mount" if domain=="MOUNT" else None),
+        row.get("resource_key") or row.get("serial") or row.get("mount_id"),
+    )
+
+def _event_by_id(conn,domain,event_id):
+    if event_id is None: return None
+    row=conn.execute(f"SELECT * FROM {EVENT_TABLES[domain]} WHERE id=?",(event_id,)).fetchone()
+    return normalize_event(domain,row) if row else None
+
+def _event_for_observation(conn,domain,resource_key,observation_id):
+    if observation_id is None: return None
+    table=EVENT_TABLES[domain]; cols=_table_columns(conn,table)
+    key_col="resource_key" if "resource_key" in cols else "serial" if "serial" in cols else "mount_id" if "mount_id" in cols else None
+    if not key_col: return None
+    row=conn.execute(f"SELECT * FROM {table} WHERE observation_id=? AND {key_col}=? ORDER BY id LIMIT 1",(observation_id,resource_key)).fetchone()
+    return normalize_event(domain,row) if row else None
+
+def _incident_events(conn,domain,row):
+    resource_type,resource_key=_incident_resource(domain,row)
+    params={"domain":domain,"resource_type":resource_type,"resource_key":resource_key,"observed_after":row.get("opened_at")}
+    events=query_events(conn,params)
+    upper=row.get("recovered_at") or row.get("last_abnormal_at")
+    if upper:
+        events=[e for e in events if not e.get("observed_at") or e["observed_at"]<=upper]
+    return events
+
+def _obs_evidence(conn,domain,observation_id):
+    return get_evidence(conn,evidence("observation",domain,observation_id)) if observation_id is not None else None
+
+def _event_evidence(conn,domain,event_item):
+    return get_evidence(conn,evidence("event",domain,event_item["local_id"])) if event_item else None
+
+def incident_timeline(conn,incident_id):
+    domain,row=_incident_record(conn,incident_id)
+    if not row: return None
+    incident=normalize_incident(domain,row)
+    _,resource_key=_incident_resource(domain,row)
+    direct="opened_event_id" in row
+    linkage_mode="DIRECT_EVENT_IDS" if direct else "LEGACY_RESOURCE_TIME_CORRELATION"
+    opened_event=_event_by_id(conn,domain,row.get("opened_event_id")) if direct else _event_for_observation(conn,domain,resource_key,row.get("opened_observation_id"))
+    last_event=_event_by_id(conn,domain,row.get("last_event_id")) if direct else _event_for_observation(conn,domain,resource_key,row.get("last_abnormal_observation_id"))
+    recovered_event=_event_for_observation(conn,domain,resource_key,row.get("recovered_observation_id"))
+    items=[]
+    items.append({"kind":"INCIDENT_OPENED","timestamp":row.get("opened_at"),"authority":"DERIVED","event_id":opened_event.get("id") if opened_event else None,"observation_id":canon(domain,row["opened_observation_id"]) if row.get("opened_observation_id") else None,"changes":incident.get("opening_changes") or (opened_event.get("changes") if opened_event else None),"evidence_refs":[r for r in [evidence("event",domain,opened_event["local_id"]) if opened_event else None,evidence("observation",domain,row["opened_observation_id"]) if row.get("opened_observation_id") else None] if r]})
+    lifecycle_ids={x.get("id") for x in (opened_event,last_event,recovered_event) if x}
+    for run in reversed(_compact_events(_incident_events(conn,domain,row))):
+        if run.get("first_event_id") in lifecycle_ids and run.get("latest_event_id") in lifecycle_ids: continue
+        items.append({"kind":"MATERIAL_CHANGE","timestamp":run.get("last_observed_at"),"authority":"DERIVED","event_id":run.get("latest_event_id"),"observation_id":((run.get("latest_evidence_refs") or [None])[0].split(":",1)[1] if (run.get("latest_evidence_refs") or [None])[0] else None),"changes":run.get("latest_changes"),"repeat_count":run.get("repeat_count"),"first_observed_at":run.get("first_observed_at"),"evidence_refs":list(dict.fromkeys((run.get("first_evidence_refs") or [])+(run.get("latest_evidence_refs") or [])))})
+    if row.get("last_abnormal_observation_id")!=row.get("opened_observation_id") or row.get("last_abnormal_at")!=row.get("opened_at"):
+        items.append({"kind":"LAST_ABNORMAL","timestamp":row.get("last_abnormal_at"),"authority":"DERIVED","event_id":last_event.get("id") if last_event else None,"observation_id":canon(domain,row["last_abnormal_observation_id"]) if row.get("last_abnormal_observation_id") else None,"changes":incident.get("latest_changes") or (last_event.get("changes") if last_event else None),"evidence_refs":[r for r in [evidence("event",domain,last_event["local_id"]) if last_event else None,evidence("observation",domain,row["last_abnormal_observation_id"]) if row.get("last_abnormal_observation_id") else None] if r]})
+    if row.get("recovered_observation_id") is not None and row.get("recovered_at") is not None:
+        items.append({"kind":"INCIDENT_RECOVERED","timestamp":row.get("recovered_at"),"authority":"DERIVED","event_id":recovered_event.get("id") if recovered_event else None,"observation_id":canon(domain,row["recovered_observation_id"]),"changes":recovered_event.get("changes") if recovered_event else None,"evidence_refs":[r for r in [evidence("event",domain,recovered_event["local_id"]) if recovered_event else None,evidence("observation",domain,row["recovered_observation_id"])] if r]})
+    order={"INCIDENT_OPENED":0,"MATERIAL_CHANGE":1,"LAST_ABNORMAL":2,"INCIDENT_RECOVERED":3}
+    items.sort(key=lambda x:(x.get("timestamp") or "",order.get(x["kind"],9),x.get("event_id") or "",x.get("observation_id") or ""))
+    return {"incident_id":incident["id"],"domain":domain,"resource_type":incident["resource_type"],"resource_key":incident["resource_key"],"state":incident["state"],"opened_at":incident["opened_at"],"last_abnormal_at":incident["last_abnormal_at"],"recovered_at":incident["recovered_at"],"items":items,"authority":"DERIVED","provenance":{"linkage_mode":linkage_mode,"direct_event_linkage":direct}}
+def _evidence_pair(conn,domain,resource_key,observation_id,event_id=None):
+    event_item=_event_by_id(conn,domain,event_id) if event_id is not None else _event_for_observation(conn,domain,resource_key,observation_id)
+    return {"observation":_obs_evidence(conn,domain,observation_id),"event":_event_evidence(conn,domain,event_item)}
+
+def incident_evidence_bundle(conn,incident_id,limit=50):
+    try: limit=int(limit)
+    except (TypeError,ValueError) as exc: raise ValueError("INVALID_LIMIT") from exc
+    if limit<1 or limit>50: raise ValueError("INVALID_LIMIT")
+    domain,row=_incident_record(conn,incident_id)
+    if not row: return None
+    incident=normalize_incident(domain,row)
+    timeline=incident_timeline(conn,incident_id)
+    _,resource_key=_incident_resource(domain,row)
+    events=_incident_events(conn,domain,row)
+    changes=_compact_events(events)[:limit]
+    direct="opened_event_id" in row
+    provenance={"linkage_mode":"DIRECT_EVENT_IDS" if direct else "LEGACY_RESOURCE_TIME_CORRELATION","authoritative_ids":{"opened_observation_id":row.get("opened_observation_id"),"last_abnormal_observation_id":row.get("last_abnormal_observation_id"),"recovered_observation_id":row.get("recovered_observation_id"),"opened_event_id":row.get("opened_event_id"),"last_event_id":row.get("last_event_id")},"limitations":[] if direct else ["PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."]}
+    opening=_evidence_pair(conn,domain,resource_key,row.get("opened_observation_id"),row.get("opened_event_id") if direct else None)
+    latest=_evidence_pair(conn,domain,resource_key,row.get("last_abnormal_observation_id"),row.get("last_event_id") if direct else None)
+    recovery=_evidence_pair(conn,domain,resource_key,row.get("recovered_observation_id")) if row.get("recovered_observation_id") is not None and row.get("recovered_at") is not None else None
+    return {"incident":incident,"timeline":timeline,"opening_evidence":opening,"latest_abnormal_evidence":latest,"recovery_evidence":recovery,"material_changes":changes,"provenance":provenance,"authority":"DERIVED"}
+
 def route(conn,path,params,status_builder=None):
     try:
         if path=="/v1/health":
@@ -167,6 +260,12 @@ def route(conn,path,params,status_builder=None):
                 d=_domain(path.rsplit("/",1)[1]); item=next((x for x in domains if x["domain"]==d),None); return (200,envelope(item)) if item else error("DOMAIN_NOT_FOUND","unknown domain",404)
             return 200,envelope(domains)
         if path=="/v1/incidents": items,meta=list_incidents(conn,params); return 200,envelope(items,**meta)
+        if path.startswith("/v1/incidents/") and path.endswith("/timeline"):
+            incident_id=path[len("/v1/incidents/"):-len("/timeline")].rstrip("/")
+            item=incident_timeline(conn,incident_id); return (200,envelope(item)) if item else error("INCIDENT_NOT_FOUND","incident not found",404)
+        if path.startswith("/v1/incidents/") and path.endswith("/evidence-bundle"):
+            incident_id=path[len("/v1/incidents/"):-len("/evidence-bundle")].rstrip("/")
+            item=incident_evidence_bundle(conn,incident_id,params.get("limit",50)); return (200,envelope(item)) if item else error("INCIDENT_NOT_FOUND","incident not found",404)
         if path.startswith("/v1/incidents/"):
             item=get_incident(conn,path.rsplit("/",1)[1]); return (200,envelope(item)) if item else error("INCIDENT_NOT_FOUND","incident not found",404)
         if path=="/v1/observations": items,meta=list_observations(conn,params); return 200,envelope(items,**meta)

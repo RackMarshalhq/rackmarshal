@@ -150,3 +150,17 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **FROZEN:** Recovery appears only when authoritative `recovered_observation_id` and `recovered_at` exist.
 - **FROZEN:** Evidence bundles remain incident-bounded, compact material changes, and never expose raw `payload_json` or secrets.
 - **NEXT:** Implement API v1.1 timeline/evidence-bundle service functions and contract tests against real ledgers; MCP expansion remains gated until those API contracts pass.
+
+
+## RACKMARSHAL 1.1A API IMPLEMENTATION / REAL-DATA PROOF — 2026-09-29
+
+- **VERIFIED:** Incident Timeline and Incident Evidence Bundle service functions are implemented with routes `GET /v1/incidents/{incident_id}/timeline` and `GET /v1/incidents/{incident_id}/evidence-bundle`.
+- **VERIFIED:** No database migration was required. Existing authoritative incident/event/observation ledgers are sufficient.
+- **VERIFIED:** Isolated real-HTTP proof on CT 110 against `/var/lib/rackmarshal/state.db` checked all 82 current production incidents across BACKUP, PVE, MOUNT, HA, and ZFS with zero lifecycle/provenance failures. Hardware currently has no production incidents/events and is covered by direct-linkage fixture tests.
+- **VERIFIED:** 220 timeline evidence references dereferenced successfully; no timeline or evidence bundle exposed raw `payload_json`.
+- **VERIFIED:** Recovery is present only for incidents with authoritative recovery fields; open incidents never receive synthetic recovery.
+- **VERIFIED:** PVE is explicitly marked `LEGACY_RESOURCE_TIME_CORRELATION`; populated non-PVE domains use `DIRECT_EVENT_IDS`.
+- **VERIFIED:** Evidence bundles are compact and bounded (maximum 50 material-change runs); representative production bundles were ~4.7–7.9 KB.
+- **VERIFIED:** Full suite passes 64 tests with zero `ResourceWarning` messages.
+- **GATE HELD:** Updated service code is installed in the MCP integration runtime, but MCP protocol discovery still advertises exactly the original 9 read-only tools. `get_incident_timeline` and `get_incident_evidence_bundle` are NOT exposed yet.
+- **NEXT:** Design/freeze the two goal-oriented MCP tool contracts over these now-proven API/service surfaces, then protocol-test them before expanding the public MCP surface from 9 to 11 tools.
