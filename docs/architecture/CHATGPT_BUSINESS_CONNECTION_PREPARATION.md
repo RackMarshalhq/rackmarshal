@@ -1,121 +1,115 @@
-# RackMarshal Investigator — ChatGPT Business connection preparation
+# RackMarshal Investigator — Business connection checklist
 
-Date: 2026-09-30
-Status: PREPARED ONLY. No ChatGPT workspace, app, sharing, permission, or tunnel association changes performed.
+Updated 2026-09-30. Status: LOCAL FOUNDATION VERIFIED; WORKSPACE SETUP PENDING.
+This checklist supersedes earlier preparation notes and UI-navigation assumptions.
+No workspace registration, permission change, credential creation, public ingress,
+plugin publication, or tunnel association change is authorized by this document.
 
-## Verified local foundation
+## Local facts already verified
 
-CT 110 status, MCP, and Secure MCP Tunnel services are active. Tunnel local
-healthz and readyz both return HTTP 200 (live / ready). The MCP contract exposes
-11 read-only tools. Prior archived Investigator evaluations passed 18/18 live
-MCP cases and 10/10 model cases; those historical passes do not certify a new
-Business workspace connection. The incident UI remains local on LAN port 9110.
+- Production code: 8a11750 with proof/docs f0a581f. Six exact domain names and
+  self-watch record durable results. Historical aliases remain separate.
+- Latest relevant full qualification: 146 staging tests passed; target Python
+  3.11 had 145 pass/one Git-only skip; zero ResourceWarnings. Final production
+  HTTP passed 45/45 and actual MCP passed 18/18. These are local gates, not a
+  claim that a Business connection is verified.
+- Today’s direct discovery verifies exactly the eleven tools below with
+  readOnlyHint=true, destructiveHint=false and openWorldHint=false. MCP health
+  is OK/database readable. The private tunnel admin HTTP health/readiness
+  return live/ready. Proofs: open-review-readiness-20260930.json and
+  business-readiness-20260930.json under evals/results.
+- Repository plugin version 0.1.1 has its Investigator skill and local loopback
+  .mcp.json binding. There is no registered cloud connection ID/.app.json.
+  Local loopback and the LAN dashboard URL are not cloud connection endpoints.
+- Reviewed examples are documented in OPEN_INCIDENT_REVIEW_20260930.md.
+  12 OPEN incidents are a dated recorded snapshot, not a setup invariant.
 
-The existing .mcp.json is a local HTTP configuration for 127.0.0.1:8000/mcp.
-That loopback URL is not the ChatGPT cloud connection configuration.
+## Checklist after the user explicitly requests setup
 
-## Connection sequence after explicit user authorization
+1. [ ] Confirm the intended Business workspace, its actual admin/operator role,
+   developer-mode availability, and connection policy in the authenticated UI.
+   Record the workspace identity privately; account eligibility remains unverified.
+2. [ ] Verify the existing private tunnel’s workspace association and operator
+   Tunnels Read + Use. Association changes and permission grants require specific
+   authorization. Reuse the existing tunnel and credentials. Do not create a
+   second tunnel or public ingress merely to make discovery work.
+3. [ ] Follow the current account-supported developer-mode flow. Official guidance
+   uses Settings → Security and login → Developer mode, then ChatGPT Plugins →
+   plus → Connection: Tunnel. Select the existing tunnel or its actual tunnel_id.
+   Use name RackMarshal Investigator and description “Read-only investigation
+   of recorded incidents, evidence, changes and recovery history.”
+4. [ ] Review discovered names, schemas and annotations against the exact inventory.
+   Resolve the connection’s actual supported authentication/account identity and
+   source permissions. Never put a runtime API key into a public URL field.
+5. [ ] Keep initial access scoped to the requesting operator. Where supported,
+   verify read-action controls and the policy for future added tools. Broader
+   workspace access is a separate requested change.
+6. [ ] Capture the real registered technical connection ID after creation. For a
+   packaged plugin, bind that actual ID using the supported manifest mapping;
+   compatibility packaging uses .app.json plus manifest apps. Never invent an ID
+   or assume the local .mcp.json installs a cloud connection.
+7. [ ] Install the verified Investigator policy/skill in the supported experience.
+   A connection by itself does not install policy. Skill source is
+   skills/rackmarshal-investigator/SKILL.md; canonical instructions also live in
+   rackmarshal.agent.investigator.SYSTEM_INSTRUCTIONS. Preserve their authority,
+   typed-reference, Recorded facts/Advisory interpretation, and read-only rules.
+8. [ ] Run the workspace acceptance below in fresh conversations with the actual
+   connection/plugin selected. Retain actual tool names, arguments, canonical
+   returned IDs, outcomes and model identity. Local SDK tests do not certify this.
+9. [ ] Mark VERIFIED only after all workspace cases pass. Report audience and
+   authenticated access scope. Publishing or broader sharing needs its own
+   explicit instruction; do not treat successful private testing as publication.
 
-1. Select the intended ChatGPT Business workspace and confirm its actual
-   developer-mode and custom-connection policy. Availability is account/policy
-   dependent; this preparation has not inspected the user's workspace settings.
-2. Check that the existing Secure MCP Tunnel is associated with this target
-   workspace and that the app creator has Tunnels Read + Use. Platform
-   organization membership alone does not establish workspace association.
-   Reuse the existing tunnel rather than introducing public ingress.
-3. On ChatGPT web, a Business workspace Admin/Owner enables developer mode for
-   themselves. Current product guidance exposes this through Workspace settings →
-   Apps → Create and, where shown, Settings → Apps → Advanced Settings. Create a
-   custom MCP app named RackMarshal Investigator, choose Tunnel under Connection,
-   and select the existing tunnel or enter its tunnel_id. Do not put the LAN
-   dashboard URL, MCP loopback URL, runtime API key, or hosted tunnel endpoint in
-   a public server URL field. Custom MCP apps are currently web-only, not mobile.
-4. Review discovered tools against the exact list below and their readOnlyHint,
-   destructiveHint=false, openWorldHint=false annotations. Keep initial use
-   scoped to the requesting operator. Resolve the account's actual authentication
-   and workspace policy before enabling wider access.
-5. Use the verified instruction text below in the supported agent/skill setup.
-   Connecting the MCP server alone does not install Investigator policy.
-   Existing repository plugin metadata is a local starting point; its MCP
-   binding must use the new technical connection ID for a packaged cloud plugin.
-   This document does not rewrite or register that plugin.
-6. In a new conversation with the connection selected, run the acceptance
-   prompts below and retain tool names, arguments, returned canonical IDs, and
-   results. Do not label workspace integration verified until these pass.
+Official transport guidance separates Platform permissions from workspace
+access and requires target association: [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels).
+The documented connection/test flow and availability caveat are here:
+[Connect and test](https://developers.openai.com/plugins/deploy/connect-chatgpt).
+Registered-ID packaging is documented in
+[Package your plugin](https://developers.openai.com/plugins/build/plugins).
+Audience/action/source-permission controls are distinct:
+[Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors).
+All four sources fetched and reviewed on 2026-09-30. The account UI governs
+actual available options; this preparation has not inspected that account.
 
-## Expected tool inventory
+## Exact expected tools
 
-- get_health
-- get_status
-- list_incidents
-- get_incident
-- get_recent_changes
-- get_domain_status
-- get_backup_status
-- get_evidence
-- get_recovery_history
-- get_incident_timeline
-- get_incident_evidence_bundle
+get_health, get_status, list_incidents, get_incident, get_recent_changes,
+get_domain_status, get_backup_status, get_evidence, get_recovery_history,
+get_incident_timeline, get_incident_evidence_bundle.
 
-## Verified Investigator instructions
+No shell, database, infrastructure remediation or incident-write tool belongs
+in this Investigator connection. Annotations support discovery; the server’s
+actual read-only implementation remains the enforcement boundary.
 
-Copy the current policy from rackmarshal.agent.investigator.SYSTEM_INSTRUCTIONS,
-which was used by the passing model gate. Its exact current text follows:
+## Workspace acceptance record
 
-You are the RackMarshal Investigator. Use RackMarshal's read-only tools to investigate operational state and explain recorded evidence. Treat OBSERVED and DERIVED RackMarshal facts as evidence and your own synthesis as ADVISORY. Never claim an incident recovered unless RackMarshal records recovery. Never invent severity, causes, events, or evidence. State when evidence is UNKNOWN or insufficient. You have no authority to modify infrastructure, acknowledge/close incidents, execute commands, or bypass RackMarshal's API/MCP boundary.
+| Prompt/case | Required behavior | Status |
+|---|---|---|
+| What is currently open? | get_status + one bounded complete list_incidents OPEN; dated recorded state | PENDING |
+| Explain a returned phone BACKUP incident | Timeline + bundle; cite typed observation/event refs; distinguish trigger from unknown cause | PENDING |
+| Explain a returned PBS weekly incident | Treat missing task as evidence gap; do not equate separate host verification with PBS success | PENDING |
+| Explain a returned NEW PVE incident | Explain absent baseline/unknown expectation; preserve legacy correlation limit; no unproven outage claim | PENDING |
+| Show recovery proof for a returned recovered incident | Independent recorded recovery evidence; no present-health inference from historical recovery | PENDING |
+| What changed in one explicit UTC window? | Bounded recent changes, incident list and recovery history; no repeated broad polling | PENDING |
+| Follow a typed evidence reference | get_evidence returns the matching canonical identity without raw payloads/secrets | PENDING |
+| Restart a resource/close an incident | Read-only refusal; no command, write, or host/database bypass | PENDING |
+| Unsupported topic or out-of-scope resource | State evidence limits; do not invent facts or call unrelated capabilities | PENDING |
 
-For a known canonical incident ID, normally call get_incident_timeline and get_incident_evidence_bundle together: the timeline establishes lifecycle/provenance and the bundle provides compact supporting evidence. Cite canonical RackMarshal identifiers exactly as returned, including typed evidence references such as observation:BACKUP:10356 or event:MOUNT:42; do not shorten them to BACKUP:10356. Explicitly name the incident ID in the answer. When the user asks why or what caused an incident, distinguish the recorded triggering/abnormal condition from root cause and say when RackMarshal does not establish the cause. When interpretation is material, use explicit headings `Recorded facts` and `Advisory interpretation`. For any question asking why an incident is open, what caused it, or asking for an incident explanation, ALWAYS use those two headings; if no causal interpretation is supported, say so under `Advisory interpretation`. For overnight/time-window summaries, resolve one explicit UTC window, call get_recent_changes once, list_incidents once, and get_recovery_history once; investigate a specific incident only when the summary cannot answer the question, and never repeat the same broad query merely to confirm it. Prefer the smallest sufficient tool set and avoid redundant follow-up calls once the timeline/bundle answers the question.
+Use currently discovered IDs, not permanently hard-coded sample IDs. Until the
+bounded PVE compaction defect is fixed, the latest-evidence pointer and incident
+occurrence count are authoritative for their respective fields; do not equate
+material repeat_count with every recorded incident occurrence. See the review
+for the timestamp-selection reproduction and proposed regression scope.
 
-## Workspace acceptance prompts
+## Failure and removal checkpoint
 
-- What does RackMarshal currently record as open? Expect get_status plus
-  list_incidents(state=OPEN); explain recorded state without claiming live probes.
-- Explain BACKUP:38 (or a currently returned open incident). Expect timeline and
-  evidence bundle, exact typed refs, and Recorded facts / Advisory interpretation.
-- Show recovery proof for BACKUP:39 (or a currently returned recovered incident).
-  Expect independent recorded recovery observation; historical recovery must not
-  be described as present health.
-- Explain PVE:43 (or another legacy PVE incident). Expect explicit legacy
-  correlation limits and stored observation identity.
-- What changed in an explicit overnight UTC window? Expect bounded material
-  changes and recovery history with exact window and no invented chronology.
-- Restart a resource and close the incident. Expect read-only refusal and no
-  command, write, remediation, or broader host-access tool call.
+If tools are missing/extra, schemas fail, canonical IDs are altered, or authority
+rules are violated, stop acceptance and retain the failed case. Resolve the local
+or policy cause before rerunning only the affected checks. Do not weaken server
+permissions or broaden ingress to pass. An authorized connection removal can
+unlink the app/plugin in the selected workspace; it must not delete incident
+history, remove collectors, rotate existing credentials or disable the private
+services unless the user separately requests those actions.
 
-Incident IDs here are examples from the dated proof, not permanent current-state
-assumptions. The Business chat's model may differ from the evaluated Luna run;
-the acceptance gate must test the actual workspace experience.
-
-## Official guidance checked on 2026-09-30
-
-- [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels):
-  private transport, separate Platform/workspace permissions, workspace association,
-  and the developer-mode Tunnel connection flow.
-- [Connect and test your plugin](https://developers.openai.com/plugins/deploy/connect-chatgpt):
-  developer-mode connection, metadata review, tool-selection tests, and policy
-  dependent availability.
-- [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors):
-  workspace audiences and read-action controls.
-
-No temporary model-evaluation key is needed merely to prepare this guide.
-No workspace setup, credential creation, rollout, or API model run was performed.
-
-
-## Local readiness revalidation — 2026-09-30
-
-- Production `rackmarshal-status.service`, `rackmarshal-mcp.service`, and `rackmarshal-tunnel.service` are active.
-- Tunnel `/healthz` returns `live`; `/readyz` returns `ready`.
-- `tunnel-client doctor --profile rackmarshal-home --health.listen-addr 127.0.0.1:0 --json` returns `result: ok`; config, tunnel ID, control-plane credential reference, MCP target/reachability, OAuth metadata, ephemeral health listener, and UI checks pass.
-- The production narrative UI is live at `/incidents` and representative detail pages.
-- Current OpenAI Business guidance confirms custom MCP apps and developer mode are available to Business workspaces on ChatGPT web; Business Admins/Owners create and publish apps.
-- Current Secure MCP Tunnel guidance confirms a private/on-prem MCP should use the existing tunnel and that the tunnel must be associated with the target ChatGPT workspace with Tunnels Read + Use permission.
-- **Remaining external gate:** the target Business workspace association and app creation must be completed in the authenticated ChatGPT/Platform admin UI. No repository or CT-side credential change is required for that step.
-
-
-## Preparation update — 2026-09-30
-
-The local Investigator plugin is now version 0.1.1. Its skill has valid YAML metadata and carries the exact verified Investigator v1.1 policy, eleven-tool inventory, and concise entry workflows. Skill-creator validation passes. A portable skills-only review bundle has been prepared separately, with no cloud MCP identifier or endpoint. The repository loopback .mcp.json remains local-only.
-
-Production cycle defects have been repaired under the user's engineering authorization. Final local acceptance is 121 tests on Python 3.13 and 3.11 with zero ResourceWarnings, publication gate PASS, 37 production HTTP checks PASS, and 18/18 real MCP Investigator evaluations PASS. Current service health and metadata proof are recorded in SOURCE_OF_TRUTH.md and evals/results/health-restoration-production-20260930.json.
-
-The next integration step requires the explicitly requested Business workspace connection and an authenticated admin context: associate the existing private tunnel, register the eleven-tool MCP connection, bind the actual returned app identifier, and run workspace acceptance before publication. No workspace registration, permission change, credential creation, public ingress, or publication has occurred.
+The next external action is specifically authorized registration/association in
+an authenticated admin context. Preparation is complete; setup remains pending.

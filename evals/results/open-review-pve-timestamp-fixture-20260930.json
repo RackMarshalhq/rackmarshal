@@ -1,0 +1,10 @@
+{
+  "scope": "isolated in-memory existing fixture; no production write",
+  "result": "REPRODUCED",
+  "incident_occurrence_count": 2,
+  "latest_abnormal_event": "event:PVE:8",
+  "latest_abnormal_observation": "observation:PVE:21",
+  "material_latest_event": "PVE:7",
+  "material_repeat_count": 1,
+  "description": "PVE event detected_at after incident last_abnormal_at observation timestamp is excluded from material compaction, while latest evidence resolves it by observation ID."
+}

@@ -1,0 +1,107 @@
+{
+  "checked_at": "2026-09-30T16:16:18.066118+00:00",
+  "source": "read-only production MCP",
+  "tools": [
+    {
+      "name": "get_health",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_status",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "list_incidents",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_incident",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_recent_changes",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_domain_status",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_backup_status",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_evidence",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_recovery_history",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_incident_timeline",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    },
+    {
+      "name": "get_incident_evidence_bundle",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  ],
+  "get_health": {
+    "api_version": "v1",
+    "generated_at": "2026-09-30T16:16:18.113686Z",
+    "data": {
+      "status": "OK",
+      "database_readable": true,
+      "api_version": "v1"
+    },
+    "meta": {}
+  },
+  "get_domain_status": {
+    "api_version": "v1",
+    "generated_at": "2026-09-30T16:16:18.209236Z",
+    "data": {
+      "domain": "BACKUP",
+      "status": "PROBLEM",
+      "last_observation": {
+        "id": 11317,
+        "observed_at": "2026-09-30T16:15:32.983651Z",
+        "source": "Proxmox VE API + Proxmox Backup Server API",
+        "schema_version": 1,
+        "tls_verified": 1,
+        "resource_count": 14
+      },
+      "freshness": {
+        "age_seconds": 45,
+        "stale_after_seconds": 900,
+        "state": "OK",
+        "observed_at": "2026-09-30T16:15:32.983651Z"
+      },
+      "open_incident_count": 4,
+      "authority": "DERIVED"
+    },
+    "meta": {}
+  }
+}

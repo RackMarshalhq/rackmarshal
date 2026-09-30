@@ -1,0 +1,1844 @@
+{
+  "checked_at": "2026-09-30T16:11:40.472909+00:00",
+  "source": "read-only production MCP",
+  "calls": [
+    {
+      "tool": "get_status",
+      "arguments": {}
+    },
+    {
+      "tool": "list_incidents",
+      "arguments": {
+        "state": "OPEN",
+        "limit": 100
+      }
+    },
+    {
+      "tool": "get_backup_status",
+      "arguments": {}
+    },
+    {
+      "tool": "get_domain_status",
+      "arguments": {
+        "domain": "PVE"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "BACKUP:38"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "BACKUP:38"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:43"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:43"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:42"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:42"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:41"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:41"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:40"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:40"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:39"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:39"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:38"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:38"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:37"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:37"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "PVE:36"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "PVE:36"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "BACKUP:34"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "BACKUP:34"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "BACKUP:29"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "BACKUP:29"
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "BACKUP:26"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "BACKUP:26"
+      }
+    }
+  ],
+  "open_incident_count": 12,
+  "list_total": 12,
+  "next_cursor": null,
+  "domain_observations": [
+    {
+      "domain": "PVE",
+      "status": "PROBLEM",
+      "open_incident_count": 8,
+      "last_observation": {
+        "id": 11313,
+        "observed_at": "2026-09-30T16:10:12.423813Z",
+        "source": "Proxmox VE API",
+        "schema_version": 1,
+        "tls_verified": 1,
+        "resource_count": 28
+      },
+      "authority": "DERIVED"
+    },
+    {
+      "domain": "BACKUP",
+      "status": "PROBLEM",
+      "open_incident_count": 4,
+      "last_observation": {
+        "id": 11314,
+        "observed_at": "2026-09-30T16:10:12.448475Z",
+        "source": "Proxmox VE API + Proxmox Backup Server API",
+        "schema_version": 1,
+        "tls_verified": 1,
+        "resource_count": 14
+      },
+      "authority": "DERIVED"
+    }
+  ],
+  "incidents": [
+    {
+      "incident": {
+        "id": "BACKUP:38",
+        "local_id": 38,
+        "domain": "BACKUP",
+        "resource_type": "backup_host_verify",
+        "resource_key": "pbs-native-weekly",
+        "display_name": "PBS native weekly verification",
+        "incident_type": "STATUS-CHANGED",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-30T06:12:42.254015Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.448475Z",
+        "recovered_at": null,
+        "occurrence_count": 112,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:11057",
+          "observation:BACKUP:11314"
+        ],
+        "opening_changes": [
+          {
+            "actual": null,
+            "expected": "OK",
+            "field": "status"
+          },
+          {
+            "actual": "weekly_verification_task_not_found",
+            "expected": "none",
+            "field": "probe_errors"
+          },
+          {
+            "actual": null,
+            "expected": "<= 192.0",
+            "field": "age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": null,
+            "expected": "OK",
+            "field": "status"
+          },
+          {
+            "actual": "weekly_verification_task_not_found",
+            "expected": "none",
+            "field": "probe_errors"
+          },
+          {
+            "actual": null,
+            "expected": "<= 192.0",
+            "field": "age_hours"
+          }
+        ]
+      },
+      "latest_abnormal_event": {
+        "id": "event:BACKUP:1598",
+        "kind": "event",
+        "domain": "BACKUP",
+        "authority": "DERIVED",
+        "content": {
+          "id": "BACKUP:1598",
+          "local_id": 1598,
+          "domain": "BACKUP",
+          "observation_id": "BACKUP:11314",
+          "resource_type": "backup_host_verify",
+          "resource_key": "pbs-native-weekly",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:BACKUP:11314"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:BACKUP:11314",
+        "kind": "observation",
+        "domain": "BACKUP",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "BACKUP:11314",
+          "local_id": 11314,
+          "domain": "BACKUP",
+          "collector": "backup_domain",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "recorded_at": "2026-09-30T16:10:20.417Z",
+          "source": "Proxmox VE API + Proxmox Backup Server API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:BACKUP:11314"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:BACKUP:11057",
+        "event:BACKUP:1153"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "DIRECT_EVENT_IDS",
+        "authoritative_ids": {
+          "opened_observation_id": 11057,
+          "last_abnormal_observation_id": 11314,
+          "recovered_observation_id": null,
+          "opened_event_id": 1153,
+          "last_event_id": 1598
+        },
+        "limitations": []
+      },
+      "material_changes": [
+        {
+          "domain": "BACKUP",
+          "resource_type": "backup_host_verify",
+          "resource_key": "pbs-native-weekly",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "first_observed_at": "2026-09-30T06:12:42.254015Z",
+          "last_observed_at": "2026-09-30T16:10:12.448475Z",
+          "first_event_id": "BACKUP:1153",
+          "latest_event_id": "BACKUP:1598",
+          "first_changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "latest_changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "repeat_count": 112,
+          "first_evidence_refs": [
+            "observation:BACKUP:11057"
+          ],
+          "latest_evidence_refs": [
+            "observation:BACKUP:11314"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:43",
+        "local_id": 43,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "124",
+        "display_name": "rackmarshal-reconcile-accept",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1593",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1593",
+          "local_id": 1593,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "124",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.685Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "running"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:457"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "124",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.230Z",
+          "first_event_id": "PVE:457",
+          "latest_event_id": "PVE:1585",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "running"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "running"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:42",
+        "local_id": 42,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "123",
+        "display_name": "rackmarshal-reconcile-final",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1592",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1592",
+          "local_id": 1592,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "123",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.685Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:456"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "123",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.230Z",
+          "first_event_id": "PVE:456",
+          "latest_event_id": "PVE:1584",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:41",
+        "local_id": 41,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "122",
+        "display_name": "rackmarshal-reconcile-qual",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1591",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1591",
+          "local_id": 1591,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "122",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.685Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:455"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "122",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.230Z",
+          "first_event_id": "PVE:455",
+          "latest_event_id": "PVE:1583",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:40",
+        "local_id": 40,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "121",
+        "display_name": "rackmarshal-fullcycle-qual",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1590",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1590",
+          "local_id": 1590,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "121",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.685Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:454"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "121",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.230Z",
+          "first_event_id": "PVE:454",
+          "latest_event_id": "PVE:1582",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:39",
+        "local_id": 39,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "120",
+        "display_name": "rackmarshal-delivery-final",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1589",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1589",
+          "local_id": 1589,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "120",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.685Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:453"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "120",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.230Z",
+          "first_event_id": "PVE:453",
+          "latest_event_id": "PVE:1581",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:38",
+        "local_id": 38,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "119",
+        "display_name": "rackmarshal-delivery-qual2",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1588",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1588",
+          "local_id": 1588,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "119",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.685Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:452"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "119",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.230Z",
+          "first_event_id": "PVE:452",
+          "latest_event_id": "PVE:1580",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:37",
+        "local_id": 37,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "118",
+        "display_name": "rackmarshal-delivery-qual",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1587",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1587",
+          "local_id": 1587,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "118",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.683Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:451"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "118",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.230Z",
+          "first_event_id": "PVE:451",
+          "latest_event_id": "PVE:1579",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "PVE:36",
+        "local_id": 36,
+        "domain": "PVE",
+        "resource_type": "lxc",
+        "resource_key": "117",
+        "display_name": "rackmarshal-migration-drill",
+        "incident_type": "NEW",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": null,
+        "opened_at": "2026-09-30T03:27:40.190862Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.423813Z",
+        "recovered_at": null,
+        "occurrence_count": 143,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:PVE:10996",
+          "observation:PVE:11313"
+        ],
+        "opening_changes": null,
+        "latest_changes": null
+      },
+      "latest_abnormal_event": {
+        "id": "event:PVE:1586",
+        "kind": "event",
+        "domain": "PVE",
+        "authority": "DERIVED",
+        "content": {
+          "id": "PVE:1586",
+          "local_id": 1586,
+          "domain": "PVE",
+          "observation_id": "PVE:11313",
+          "resource_type": "lxc",
+          "resource_key": "117",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "observed_at": "2026-09-30T16:10:12.683Z",
+          "changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:PVE:11313"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:PVE:11313",
+        "kind": "observation",
+        "domain": "PVE",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "PVE:11313",
+          "local_id": 11313,
+          "domain": "PVE",
+          "collector": "pve_cluster_resources",
+          "observed_at": "2026-09-30T16:10:12.423813Z",
+          "recorded_at": "2026-09-30T16:10:12.505Z",
+          "source": "Proxmox VE API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:PVE:11313"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:PVE:10996",
+        "event:PVE:450"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "LEGACY_RESOURCE_TIME_CORRELATION",
+        "authoritative_ids": {
+          "opened_observation_id": 10996,
+          "last_abnormal_observation_id": 11313,
+          "recovered_observation_id": null,
+          "opened_event_id": null,
+          "last_event_id": null
+        },
+        "limitations": [
+          "PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."
+        ]
+      },
+      "material_changes": [
+        {
+          "domain": "PVE",
+          "resource_type": "lxc",
+          "resource_key": "117",
+          "event_type": "NEW",
+          "baseline_state": null,
+          "first_observed_at": "2026-09-30T03:27:40.315Z",
+          "last_observed_at": "2026-09-30T16:04:41.229Z",
+          "first_event_id": "PVE:450",
+          "latest_event_id": "PVE:1578",
+          "first_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "latest_changes": [
+            {
+              "field": "status",
+              "expected": null,
+              "actual": "stopped"
+            }
+          ],
+          "repeat_count": 142,
+          "first_evidence_refs": [
+            "observation:PVE:10996"
+          ],
+          "latest_evidence_refs": [
+            "observation:PVE:11309"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "BACKUP:34",
+        "local_id": 34,
+        "domain": "BACKUP",
+        "resource_type": "backup_phone",
+        "resource_key": "michael",
+        "display_name": "Phone backup (michael)",
+        "incident_type": "STATUS-CHANGED",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-30T02:46:32.914439Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.448475Z",
+        "recovered_at": null,
+        "occurrence_count": 148,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:10974",
+          "observation:BACKUP:11314"
+        ],
+        "opening_changes": [
+          {
+            "actual": 168.072,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": 181.466,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ]
+      },
+      "latest_abnormal_event": {
+        "id": "event:BACKUP:1595",
+        "kind": "event",
+        "domain": "BACKUP",
+        "authority": "DERIVED",
+        "content": {
+          "id": "BACKUP:1595",
+          "local_id": 1595,
+          "domain": "BACKUP",
+          "observation_id": "BACKUP:11314",
+          "resource_type": "backup_phone",
+          "resource_key": "michael",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "changes": [
+            {
+              "actual": 181.466,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:BACKUP:11314"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:BACKUP:11314",
+        "kind": "observation",
+        "domain": "BACKUP",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "BACKUP:11314",
+          "local_id": 11314,
+          "domain": "BACKUP",
+          "collector": "backup_domain",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "recorded_at": "2026-09-30T16:10:20.417Z",
+          "source": "Proxmox VE API + Proxmox Backup Server API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:BACKUP:11314"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:BACKUP:10974",
+        "event:BACKUP:1039"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "DIRECT_EVENT_IDS",
+        "authoritative_ids": {
+          "opened_observation_id": 10974,
+          "last_abnormal_observation_id": 11314,
+          "recovered_observation_id": null,
+          "opened_event_id": 1039,
+          "last_event_id": 1595
+        },
+        "limitations": []
+      },
+      "material_changes": [
+        {
+          "domain": "BACKUP",
+          "resource_type": "backup_phone",
+          "resource_key": "michael",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "first_observed_at": "2026-09-30T02:46:32.914439Z",
+          "last_observed_at": "2026-09-30T16:10:12.448475Z",
+          "first_event_id": "BACKUP:1039",
+          "latest_event_id": "BACKUP:1595",
+          "first_changes": [
+            {
+              "actual": 168.072,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "latest_changes": [
+            {
+              "actual": 181.466,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "repeat_count": 148,
+          "first_evidence_refs": [
+            "observation:BACKUP:10974"
+          ],
+          "latest_evidence_refs": [
+            "observation:BACKUP:11314"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "BACKUP:29",
+        "local_id": 29,
+        "domain": "BACKUP",
+        "resource_type": "backup_phone",
+        "resource_key": "preston",
+        "display_name": "Phone backup (preston)",
+        "incident_type": "STATUS-CHANGED",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-27T14:22:24.258895Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.448475Z",
+        "recovered_at": null,
+        "occurrence_count": 538,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:9204",
+          "observation:BACKUP:11314"
+        ],
+        "opening_changes": [
+          {
+            "actual": 168.073,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": 241.87,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ]
+      },
+      "latest_abnormal_event": {
+        "id": "event:BACKUP:1597",
+        "kind": "event",
+        "domain": "BACKUP",
+        "authority": "DERIVED",
+        "content": {
+          "id": "BACKUP:1597",
+          "local_id": 1597,
+          "domain": "BACKUP",
+          "observation_id": "BACKUP:11314",
+          "resource_type": "backup_phone",
+          "resource_key": "preston",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "changes": [
+            {
+              "actual": 241.87,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:BACKUP:11314"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:BACKUP:11314",
+        "kind": "observation",
+        "domain": "BACKUP",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "BACKUP:11314",
+          "local_id": 11314,
+          "domain": "BACKUP",
+          "collector": "backup_domain",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "recorded_at": "2026-09-30T16:10:20.417Z",
+          "source": "Proxmox VE API + Proxmox Backup Server API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:BACKUP:11314"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:BACKUP:9204",
+        "event:BACKUP:256"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "DIRECT_EVENT_IDS",
+        "authoritative_ids": {
+          "opened_observation_id": 9204,
+          "last_abnormal_observation_id": 11314,
+          "recovered_observation_id": null,
+          "opened_event_id": 256,
+          "last_event_id": 1597
+        },
+        "limitations": []
+      },
+      "material_changes": [
+        {
+          "domain": "BACKUP",
+          "resource_type": "backup_phone",
+          "resource_key": "preston",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "first_observed_at": "2026-09-27T14:22:24.258895Z",
+          "last_observed_at": "2026-09-30T16:10:12.448475Z",
+          "first_event_id": "BACKUP:256",
+          "latest_event_id": "BACKUP:1597",
+          "first_changes": [
+            {
+              "actual": 168.073,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "latest_changes": [
+            {
+              "actual": 241.87,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "repeat_count": 538,
+          "first_evidence_refs": [
+            "observation:BACKUP:9204"
+          ],
+          "latest_evidence_refs": [
+            "observation:BACKUP:11314"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    },
+    {
+      "incident": {
+        "id": "BACKUP:26",
+        "local_id": 26,
+        "domain": "BACKUP",
+        "resource_type": "backup_phone",
+        "resource_key": "olivia",
+        "display_name": "Phone backup (olivia)",
+        "incident_type": "STATUS-CHANGED",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-26T05:25:00.647837Z",
+        "last_abnormal_at": "2026-09-30T16:10:12.448475Z",
+        "recovered_at": null,
+        "occurrence_count": 569,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:8389",
+          "observation:BACKUP:11314"
+        ],
+        "opening_changes": [
+          {
+            "actual": 168.788,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": 275.541,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ]
+      },
+      "latest_abnormal_event": {
+        "id": "event:BACKUP:1596",
+        "kind": "event",
+        "domain": "BACKUP",
+        "authority": "DERIVED",
+        "content": {
+          "id": "BACKUP:1596",
+          "local_id": 1596,
+          "domain": "BACKUP",
+          "observation_id": "BACKUP:11314",
+          "resource_type": "backup_phone",
+          "resource_key": "olivia",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "changes": [
+            {
+              "actual": 275.541,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "authority": "DERIVED",
+          "evidence_refs": [
+            "observation:BACKUP:11314"
+          ]
+        }
+      },
+      "latest_abnormal_observation": {
+        "id": "observation:BACKUP:11314",
+        "kind": "observation",
+        "domain": "BACKUP",
+        "authority": "OBSERVED",
+        "content": {
+          "id": "BACKUP:11314",
+          "local_id": 11314,
+          "domain": "BACKUP",
+          "collector": "backup_domain",
+          "observed_at": "2026-09-30T16:10:12.448475Z",
+          "recorded_at": "2026-09-30T16:10:20.417Z",
+          "source": "Proxmox VE API + Proxmox Backup Server API",
+          "schema_version": 1,
+          "authority": "OBSERVED",
+          "evidence_ref": "observation:BACKUP:11314"
+        }
+      },
+      "opening_evidence_refs": [
+        "observation:BACKUP:8389",
+        "event:BACKUP:184"
+      ],
+      "timeline_kinds": [
+        "INCIDENT_OPENED",
+        "MATERIAL_CHANGE",
+        "LAST_ABNORMAL"
+      ],
+      "recovery_evidence": null,
+      "provenance": {
+        "linkage_mode": "DIRECT_EVENT_IDS",
+        "authoritative_ids": {
+          "opened_observation_id": 8389,
+          "last_abnormal_observation_id": 11314,
+          "recovered_observation_id": null,
+          "opened_event_id": 184,
+          "last_event_id": 1596
+        },
+        "limitations": []
+      },
+      "material_changes": [
+        {
+          "domain": "BACKUP",
+          "resource_type": "backup_phone",
+          "resource_key": "olivia",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "first_observed_at": "2026-09-26T05:25:00.647837Z",
+          "last_observed_at": "2026-09-30T16:10:12.448475Z",
+          "first_event_id": "BACKUP:184",
+          "latest_event_id": "BACKUP:1596",
+          "first_changes": [
+            {
+              "actual": 168.788,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "latest_changes": [
+            {
+              "actual": 275.541,
+              "expected": "<= 168.0",
+              "field": "phone_age_hours"
+            }
+          ],
+          "repeat_count": 569,
+          "first_evidence_refs": [
+            "observation:BACKUP:8389"
+          ],
+          "latest_evidence_refs": [
+            "observation:BACKUP:11314"
+          ],
+          "authority": "DERIVED"
+        }
+      ]
+    }
+  ]
+}
