@@ -9,9 +9,9 @@ plugin publication, or tunnel association change is authorized by this document.
 
 - Production code: 5d78a4d, including durable current-name recording and the PVE compaction fix. Six exact domain names and
   self-watch record durable results. Historical aliases remain separate.
-- Latest relevant full qualification: 161 test executions passed; target Python
-  3.11 had 160 pass/one Git-only skip; zero ResourceWarnings. Final production
-  HTTP passed 45/45 and actual MCP passed 18/18. These are local gates, not a
+- Latest relevant full qualification: 173 test executions passed; target Python
+  3.11 had 172 pass/one Git-only skip; zero ResourceWarnings. Final production
+  HTTP passed 47 checks and actual MCP passed 18/18. These are local gates, not a
   claim that a Business connection is verified.
 - Today’s direct discovery verifies exactly the eleven tools below with
   readOnlyHint=true, destructiveHint=false and openWorldHint=false. MCP health
@@ -22,7 +22,9 @@ plugin publication, or tunnel association change is authorized by this document.
   .mcp.json binding. There is no registered cloud connection ID/.app.json.
   Local loopback and the LAN dashboard URL are not cloud connection endpoints.
 - Reviewed examples are documented in OPEN_INCIDENT_REVIEW_20260930.md.
-  12 OPEN incidents are a dated recorded snapshot, not a setup invariant.
+  The initial 12 OPEN incidents are a historical snapshot. Latest saved production
+  proof has three OPEN phone BACKUP incidents and zero PVE incidents; eight
+  PVE NEW incidents recovered after explicitly authorized baseline adoption.
 
 ## Checklist after the user explicitly requests setup
 
@@ -114,3 +116,40 @@ services unless the user separately requests those actions.
 
 The next external action is specifically authorized registration/association in
 an authenticated admin context. Preparation is complete; setup remains pending.
+
+
+## Authenticated Business setup inspection — 2026-09-30
+
+User requested work on the Business connection after the SoT update. The
+authenticated Chrome UI identifies the current workspace as RackMarshal Business.
+Plugins exposes Add → Create MCP App → New Plugin, with Server URL/Tunnel choices.
+Security and login did not show a Developer mode toggle; the creation form is
+nonetheless available. Do not change security settings to chase a documentation
+UI assumption. Exact admin role and workspace policy remain unverified.
+
+Existing CT service selects tunnel-client profile rackmarshal-home. A scoped
+read of the profile identified the existing tunnel ID without reading or
+printing runtime credentials. The form was inspected and populated with name
+RackMarshal Investigator, description Read-only investigation of recorded
+incidents, evidence, changes and recovery history, existing Tunnel ID, and
+No authentication (no additional server OAuth layer; private tunnel access
+remains separate). The draft dialog was dismissed without checking the risk
+acknowledgment or clicking Create; no registered connection exists from this
+work. No tunnel association, role, credential or security setting changed.
+
+Registration is the next concrete action: create the read-only connection
+through the existing private tunnel for the requesting operator in RackMarshal
+Business, then verify audience, eleven discovered tools, registered technical
+ID, policy binding and workspace acceptance. Computer Use policy requires
+action-time confirmation for new security-sensitive access, even with earlier
+general authorization. Confirmation remains pending; no association or broader
+workspace-access grant is included. If existing tunnel association is missing,
+record the actual error and request the specific association change.
+
+Official connection/tunnel pages fetched again September 30:
+https://developers.openai.com/plugins/deploy/connect-chatgpt
+https://developers.openai.com/api/docs/guides/secure-mcp-tunnels
+
+Workspace acceptance cases for PBS and PVE must now explain the recorded
+recoveries and prior conditions, preserving observation-only recovery evidence
+and legacy PVE linkage; do not imply these incidents are currently OPEN.
