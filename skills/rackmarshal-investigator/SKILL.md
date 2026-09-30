@@ -15,7 +15,7 @@ The v1 tool set is read-only: get_health, get_status, list_incidents, get_incide
 - Current failures: get_status, then list_incidents(state="OPEN").
 - Known incident: get_incident, then get_recent_changes around the incident; follow relevant evidence refs with get_evidence.
 - Recovery: get_incident plus get_recovery_history; cite the recorded recovery evidence.
-- Overnight: get_recent_changes(since=<UTC boundary>), list_incidents for the same period/state as needed, then get_recovery_history.
+- Overnight: resolve an explicit UTC `since` and `until` boundary, call get_recent_changes(since=<UTC start>, until=<UTC end>) with a conservative limit, then list_incidents and get_recovery_history only as needed. Prefer material-change summaries over paginating raw repeated changes.
 - Backups: get_backup_status, then BACKUP incidents if the summary indicates a problem.
 - Domain question: get_domain_status first, then domain-filtered incidents/changes.
 

@@ -1,6 +1,6 @@
 # RackMarshal Investigator v1
 
-Status: **BEHAVIOR CONTRACT IMPLEMENTED**
+Status: **VERIFIED / FROZEN — READ-ONLY V1**
 Date: 2026-09-29
 
 The first RackMarshal agent behavior is a read-only operational investigator. It is not an autonomous operator.
@@ -15,3 +15,7 @@ Initial investigation goals are current failures, a known incident, recovery ver
 The portable Investigator is packaged at `skills/rackmarshal-investigator/SKILL.md`, with repository agent guidance in `AGENTS.md` and plugin metadata in `.codex-plugin/plugin.json`. `.mcp.json` supplies the local development MCP target. The local target is intentionally loopback-only and is not a ChatGPT deployment endpoint.
 
 For hosted ChatGPT, RackMarshal remains private and SHALL use Secure MCP Tunnel or another explicitly approved authenticated private connection rather than opening the MCP listener to the public Internet.
+
+## Investigator v1 freeze — 2026-09-29
+
+Investigator v1 is frozen around the nine read-only MCP tools, evidence/advisory authority boundary, Secure MCP Tunnel deployment, material-change compaction, permanent evaluation suite, and optional OpenAI Responses API edge client. RackMarshal Core remains fully usable without AI. Future write/action capability requires a separately versioned authority contract and does not modify Investigator v1.

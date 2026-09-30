@@ -19,6 +19,7 @@ mcp = ["mcp>=1.28,<2"]
 [project.scripts]
 rackmarshal = "rackmarshal.cli:main"
 rackmarshal-mcp = "rackmarshal.mcp.server:main"
+rackmarshal-investigate = "rackmarshal.agent.openai_client:main"
 
 [project.urls]
 Homepage = "https://rackmarshal.com"

@@ -10,5 +10,6 @@ def investigation_plan(question_kind):
   "overnight":("get_recent_changes","list_incidents","get_recovery_history"),
   "backups":("get_backup_status","list_incidents"),
   "domain":("get_domain_status","list_incidents","get_recent_changes"),
+  "health":("get_health",),
  }
  return plans.get(question_kind,("get_status",))

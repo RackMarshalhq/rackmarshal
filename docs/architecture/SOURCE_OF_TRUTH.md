@@ -128,3 +128,14 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** `get_recent_changes` now supports explicit UTC `since` and `until` bounds.
 - **VERIFIED:** Real production data for 2026-09-29 18:00Z through 2026-09-30 02:00Z collapsed 170 raw BACKUP events into 2 material change runs (168 repetitive polling events removed from the agent payload) while preserving the Olivia and Preston stale-backup evidence chain.
 - **VERIFIED:** Full suite passes 48 tests with zero `ResourceWarning` messages.
+
+
+## INVESTIGATOR V1 FREEZE / EVALS — 2026-09-29
+
+- **VERIFIED / FROZEN:** RackMarshal Investigator v1 is a read-only evidence consumer over the nine-tool MCP v1 surface. RackMarshal Core remains authoritative and fully usable without AI.
+- **VERIFIED / FROZEN:** Secure MCP Tunnel provides the private OpenAI connection; the MCP listener remains loopback-only.
+- **VERIFIED / FROZEN:** `get_recent_changes` uses material-change compaction with explicit `since`/`until` bounds while `/v1/events` remains the forensic event stream.
+- **VERIFIED:** Permanent Investigator evaluation contract contains 10 representative investigation cases and rejects capabilities outside the nine-tool read-only surface.
+- **VERIFIED:** An optional `rackmarshal-investigate` OpenAI Responses API edge client is packaged with GPT-6 Luna as its default model and the exact nine-tool allowlist; it requires runtime credentials and does not make RackMarshal Core depend on AI.
+- **SECURITY:** The temporary full-access Responses API key was revoked by the operator and its CT 110 credential file was removed. No broad Responses credential is retained by RackMarshal.
+- **PENDING MEASUREMENT:** The post-compaction external Luna token count has not been remeasured because the temporary Responses credential was deliberately revoked. The production data-path proof shows 170 raw overnight BACKUP events collapsing to 2 material-change runs.

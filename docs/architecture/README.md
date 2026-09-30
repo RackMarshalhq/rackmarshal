@@ -24,3 +24,5 @@ This directory contains the frozen architecture baseline for RackMarshal's API, 
 The architecture is intentionally provider-neutral. OpenAI/ChatGPT/Codex may be first-class clients, but RackMarshal Core must remain fully functional without them.
 
 - [RackMarshal Investigator](INVESTIGATOR.md)
+
+- [Investigator v1 Evaluation Suite](INVESTIGATOR_EVALS.md)
