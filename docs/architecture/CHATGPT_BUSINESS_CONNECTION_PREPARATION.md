@@ -23,12 +23,13 @@ That loopback URL is not the ChatGPT cloud connection configuration.
    workspace and that the app creator has Tunnels Read + Use. Platform
    organization membership alone does not establish workspace association.
    Reuse the existing tunnel rather than introducing public ingress.
-3. Where available, enable Developer mode in Settings → Security and login.
-   Open ChatGPT Plugins, select plus, create a connection named RackMarshal
-   Investigator, and choose Tunnel under Connection. Select the existing tunnel
-   or use its identifier from the authenticated tunnel settings. Do not put the
-   LAN dashboard URL, MCP loopback URL, runtime API key, or hosted tunnel endpoint
-   in a public server URL field.
+3. On ChatGPT web, a Business workspace Admin/Owner enables developer mode for
+   themselves. Current product guidance exposes this through Workspace settings →
+   Apps → Create and, where shown, Settings → Apps → Advanced Settings. Create a
+   custom MCP app named RackMarshal Investigator, choose Tunnel under Connection,
+   and select the existing tunnel or enter its tunnel_id. Do not put the LAN
+   dashboard URL, MCP loopback URL, runtime API key, or hosted tunnel endpoint in
+   a public server URL field. Custom MCP apps are currently web-only, not mobile.
 4. Review discovered tools against the exact list below and their readOnlyHint,
    destructiveHint=false, openWorldHint=false annotations. Keep initial use
    scoped to the requesting operator. Resolve the account's actual authentication
@@ -98,3 +99,14 @@ the acceptance gate must test the actual workspace experience.
 
 No temporary model-evaluation key is needed merely to prepare this guide.
 No workspace setup, credential creation, rollout, or API model run was performed.
+
+
+## Local readiness revalidation — 2026-09-30
+
+- Production `rackmarshal-status.service`, `rackmarshal-mcp.service`, and `rackmarshal-tunnel.service` are active.
+- Tunnel `/healthz` returns `live`; `/readyz` returns `ready`.
+- `tunnel-client doctor --profile rackmarshal-home --health.listen-addr 127.0.0.1:0 --json` returns `result: ok`; config, tunnel ID, control-plane credential reference, MCP target/reachability, OAuth metadata, ephemeral health listener, and UI checks pass.
+- The production narrative UI is live at `/incidents` and representative detail pages.
+- Current OpenAI Business guidance confirms custom MCP apps and developer mode are available to Business workspaces on ChatGPT web; Business Admins/Owners create and publish apps.
+- Current Secure MCP Tunnel guidance confirms a private/on-prem MCP should use the existing tunnel and that the tunnel must be associated with the target ChatGPT workspace with Tunnels Read + Use permission.
+- **Remaining external gate:** the target Business workspace association and app creation must be completed in the authenticated ChatGPT/Platform admin UI. No repository or CT-side credential change is required for that step.

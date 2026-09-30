@@ -290,3 +290,13 @@ No MCP implementation or autonomous-action implementation is authorized by this 
   prompts are documented in CHATGPT_BUSINESS_CONNECTION_PREPARATION.md.
   Existing historical Investigator gates do not establish that new workspace
   integration has been completed or verified.
+
+
+## CHATGPT BUSINESS CONNECTION READINESS — 2026-09-30
+
+- **LOCAL READY:** Status, MCP, and Secure MCP Tunnel services are active; tunnel health is `live` and readiness is `ready`.
+- **DOCTOR VERIFIED:** A non-conflicting ephemeral-listener `tunnel-client doctor` run returned `result: ok` with the MCP target reachable.
+- **BUSINESS PATH VERIFIED AGAINST CURRENT OPENAI GUIDANCE:** Business Admins/Owners can create custom MCP apps in developer mode on ChatGPT web. Private RackMarshal MCP should remain behind Secure MCP Tunnel.
+- **NO PUBLIC INGRESS REQUIRED:** Do not expose port 8000 or port 9110 publicly for ChatGPT integration.
+- **EXTERNAL ADMIN GATE:** Associate the existing tunnel with the intended Business workspace and create the RackMarshal Investigator custom app from the authenticated workspace admin UI. This cannot be certified from the RackMarshal host alone.
+- **ACCEPTANCE GATE REMAINS:** After app creation, scan exactly the 11 read-only tools and run the documented workspace acceptance prompts before publishing or widening access.
