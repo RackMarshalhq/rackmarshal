@@ -1,0 +1,241 @@
+{
+  "version": "investigator-v1.1-model",
+  "model": "gpt-6-luna",
+  "cases": [
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_status",
+        "list_incidents",
+        "get_backup_status"
+      ],
+      "text": "## Recorded facts\n\nAt the latest RackMarshal status check (2026-09-30 03:16 UTC), the overall status was **PROBLEM**, with **3 open incidents, all in BACKUP**. PVE, ZFS, HA, HARDWARE, and MOUNT were reported **OK**.\n\nThe latest backup observation, `observation:BACKUP:10989` (03:14 UTC), records three phone backups older than the expected maximum of 168 hours:\n\n- **Michael \u2014 `BACKUP:34`**: 168.532 hours\n- **Preston \u2014 `BACKUP:29`**: 228.936 hours\n- **Olivia \u2014 `BACKUP:26`**: 262.607 hours\n\nAll three incidents are open and have no recorded recovery. RackMarshal lists their severity as unknown (`null`).\n\n## Advisory interpretation\n\nThe clearly recorded current breakage is **stale phone backups for Michael, Preston, and Olivia**. RackMarshal\u2019s status does not establish why these backups are stale, so I can\u2019t identify a cause.",
+      "id": "current_failures",
+      "response_id": "resp_07e5a2bdab5b4824006abc7f0e582c87d285c91514ba44b134",
+      "usage": {
+        "input_tokens": 4390,
+        "input_tokens_details": {
+          "cache_write_tokens": 1302,
+          "cached_tokens": 0
+        },
+        "output_tokens": 780,
+        "output_tokens_details": {
+          "reasoning_tokens": 488
+        },
+        "total_tokens": 5170
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_status",
+        "get_recent_changes",
+        "list_incidents",
+        "get_recovery_history"
+      ],
+      "text": "## Recorded facts\n\n**Window used:** 2026-09-29 18:00 UTC through 2026-09-30 03:16:44 UTC.\n\nRackMarshal recorded three abnormal backup-phone freshness conditions:\n\n- **Michael \u2014 opened overnight:** incident **BACKUP:34** opened at 2026-09-30 02:46:32 UTC. Phone backup age was **168.072 hours** at opening and **168.532 hours** at the latest observation, above the expected **\u2264168.0 hours**. Evidence: `observation:BACKUP:10974`, `observation:BACKUP:10989`.\n- **Preston \u2014 already open, persisted overnight:** incident **BACKUP:29**. Age rose from **219.718** to **228.936 hours**, above the same threshold. Evidence: `observation:BACKUP:10683`, `observation:BACKUP:10989`.\n- **Olivia \u2014 already open, persisted overnight:** incident **BACKUP:26**. Age rose from **253.389** to **262.607 hours**, above the same threshold. Evidence: `observation:BACKUP:10683`, `observation:BACKUP:10989`.\n\nThe recovery-history result contained no recoveries in this window. **No recovery was recorded overnight.**\n\n## Advisory interpretation\n\nThe recorded failure was that these phone-backup ages exceeded RackMarshal\u2019s freshness expectation; only Michael\u2019s incident opened during the stated window. The evidence does **not** establish why the backups became stale or whether a particular backup job, device, or service caused it.",
+      "id": "overnight",
+      "response_id": "resp_098f977e1dfa3d2e006abc7f191ec087d29de4a177c789afa7",
+      "usage": {
+        "input_tokens": 15432,
+        "input_tokens_details": {
+          "cache_write_tokens": 37,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 1380,
+        "output_tokens_details": {
+          "reasoning_tokens": 905
+        },
+        "total_tokens": 16812
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "text": "## Recorded facts\nIncident **BACKUP:29** is open for the `preston` phone backup. RackMarshal\u2019s latest recorded abnormal observation, at **2026-09-30 03:14:10 UTC**, shows `phone_age_hours` at **228.936**, above the expected **\u2264 168.0**. The incident opened on **2026-09-27 14:22:24 UTC**, when the same measure was **168.073**. RackMarshal records 396 repeated occurrences and no recovery evidence (`recovered_at` is null). Supporting references: `observation:BACKUP:9204`, `observation:BACKUP:10989`, `event:BACKUP:256`, and `event:BACKUP:1056`.\n\n## Advisory interpretation\nThe recorded reason it remains open is that the latest observed phone-backup age still exceeds the stated threshold, and RackMarshal has not recorded recovery. The evidence does **not** establish why the backup age is high or what caused it.",
+      "id": "open_incident",
+      "response_id": "resp_070e06c89ba1a081006abc7f29a4a087d2bfa65f800d7bdf01",
+      "usage": {
+        "input_tokens": 3437,
+        "input_tokens_details": {
+          "cache_write_tokens": 25,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 271,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 3708
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "text": "Yes. RackMarshal records **BACKUP:33** as `RECOVERED` at **2026-09-29 08:11:32.907983 UTC**.\n\n**What proves it:** The incident timeline records an `INCIDENT_RECOVERED` transition tied to **observation:BACKUP:10356**. The evidence bundle identifies that as an `OBSERVED` backup-domain observation, collected from the **Proxmox VE API + Proxmox Backup Server API** at that time. RackMarshal\u2019s recovery status is `DERIVED` from that observation.\n\nFor context, it opened at 08:00:32 UTC because the backup status was `INCOMPLETE` rather than `OK`, and `finished` was `false`, recorded in **observation:BACKUP:10350** and **event:BACKUP:634**. The bundle includes metadata\u2014but not the recovery observation\u2019s detailed field values\u2014so it proves RackMarshal recorded an independently observed recovery, not the specific recovered values.",
+      "id": "recovery_proof",
+      "response_id": "resp_0ae193aa7fd603f8006abc7f30eba087d2ace13c1a5863c18b",
+      "usage": {
+        "input_tokens": 3722,
+        "input_tokens_details": {
+          "cache_write_tokens": 16,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 343,
+        "output_tokens_details": {
+          "reasoning_tokens": 69
+        },
+        "total_tokens": 4065
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "text": "## Recorded facts\n\n**PVE:35** concerns LXC resource **121** (`rackmarshal-fullcycle-qual`). RackMarshal records it as **RECOVERED**.\n\n- **Opened:** 2026-09-28 15:39:39.845812 UTC. An observation from the Proxmox VE API recorded by `pve_cluster_resources` was associated with a derived `NEW` event. That event reports `status`: expected `null`, actual `stopped`. References: `observation:PVE:9827` and `event:PVE:449`.\n- **Recovered:** 2026-09-28 16:17:40.127977 UTC, about 38 minutes later. RackMarshal independently recorded a later Proxmox VE API observation, `observation:PVE:9828`. No recovery event or further change details are provided.\n\nThe incident and event are marked **DERIVED**; the underlying observations are **OBSERVED**. RackMarshal reports severity as `null`.\n\n## Advisory interpretation\n\nThe recorded opening condition was that this LXC resource appeared as `stopped` in an observation associated with a `NEW` event. The later observation is recorded as recovery, but the supplied evidence does not state what specifically changed or establish why the resource was stopped.\n\nThere is a **provenance limitation**: the incident uses `LEGACY_RESOURCE_TIME_CORRELATION`, with `direct_event_linkage: false`. RackMarshal says legacy PVE incident rows do not store opened/last event IDs; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs. Thus `event:PVE:449` is associated through that correlation, not directly linked as an authoritative incident event.",
+      "id": "legacy_pve",
+      "response_id": "resp_0f34d0a16e713c87006abc7f3e849c87d2b10c10b71a05360c",
+      "usage": {
+        "input_tokens": 3468,
+        "input_tokens_details": {
+          "cache_write_tokens": 19,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 603,
+        "output_tokens_details": {
+          "reasoning_tokens": 187
+        },
+        "total_tokens": 4071
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "text": "## MOUNT:3 lifecycle\n\n- **Opened \u2014 2026-09-19 16:20:22.914Z:** RackMarshal recorded the mount as **missing** for `lxc:113:/sync/Preston/iPhone-Backup-Preston`. The derived opening details say the expected bind source was `/data/family/Preston/iPhone-Backup-Preston`, the observed source was `null`, and the detail was `mp_not_in_pve_config`. Evidence: `event:MOUNT:3`, `observation:MOUNT:598`.\n- **Still missing \u2014 through 2026-09-19 17:20:10.290Z:** The missing condition was recorded **13 times**; the latest cited observation is `observation:MOUNT:610` and the material-change event is `event:MOUNT:39`. The expected source and missing detail were unchanged.\n- **Recovered \u2014 2026-09-19 17:25:10.263Z:** RackMarshal recorded state `ok` and detail `recovered`, based on `observation:MOUNT:611` and `event:MOUNT:42`. The incident state is **RECOVERED**.\n\n**Record caveat:** The timeline labels 17:20:10.290Z as `LAST_ABNORMAL`, but its `event_id` is `MOUNT:42`; elsewhere, `event:MOUNT:42` is linked to the recovery observation at 17:25:10.263Z. The incident record gives the 17:20 observation as missing and the 17:25 observation as recovered, but this event-ID linkage is inconsistent.",
+      "id": "mount_timeline",
+      "response_id": "resp_02a9ebb35cb63f1d006abc7f462cc087d289aeee58346fa0a0",
+      "usage": {
+        "input_tokens": 4856,
+        "input_tokens_details": {
+          "cache_write_tokens": 23,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 743,
+        "output_tokens_details": {
+          "reasoning_tokens": 341
+        },
+        "total_tokens": 5599
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "text": "### Recorded facts\nIncident **BACKUP:29** is for phone backup resource `preston`. RackMarshal recorded `phone_age_hours` at **168.073**, above the expected limit of **\u2264 168.0**, when it opened on 2026-09-27T14:22:24.258895Z. The latest abnormal reading was **228.936 hours** on 2026-09-30T03:14:10.247508Z. The abnormal condition was recorded 396 times. Evidence: `observation:BACKUP:9204`, `event:BACKUP:256`, `observation:BACKUP:10989`, and `event:BACKUP:1056`.\n\n### Advisory interpretation\nRackMarshal supports the threshold exceedance as the condition that triggered the incident. It does **not** establish why the phone backup became this old or identify a root cause. The incident is recorded as open, with no recovery recorded.",
+      "id": "cause_boundary",
+      "response_id": "resp_0db678c8d080b2c0006abc7f505b2487d2ad43199238e24896",
+      "usage": {
+        "input_tokens": 3436,
+        "input_tokens_details": {
+          "cache_write_tokens": 20,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 363,
+        "output_tokens_details": {
+          "reasoning_tokens": 99
+        },
+        "total_tokens": 3799
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_incident_evidence_bundle"
+      ],
+      "text": "## Evidence for `BACKUP:33`\n\n- **Observed abnormal state:** `observation:BACKUP:10350` records a BACKUP-domain observation at **2026-09-29 08:00:32 UTC**, from **Proxmox VE API + Proxmox Backup Server API**.\n- **Recorded change:** Derived event `event:BACKUP:634` links directly to that observation and records `status` as **INCOMPLETE** instead of **OK**, and `finished` as **false** instead of **true**. The baseline was **VERIFIED**.\n- **Recorded recovery:** `observation:BACKUP:10356` records an observation at **2026-09-29 08:11:32 UTC**; RackMarshal marks the incident **RECOVERED** at that time.\n\nThis is a sanitized summary of the evidence bundle; no raw collector payload is included.",
+      "id": "evidence_bundle",
+      "response_id": "resp_005f366f5c54e848006abc7f569dd487d286c987e72c66372e",
+      "usage": {
+        "input_tokens": 3293,
+        "input_tokens_details": {
+          "cache_write_tokens": 20,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 309,
+        "output_tokens_details": {
+          "reasoning_tokens": 83
+        },
+        "total_tokens": 3602
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_incident_timeline",
+        "get_incident_evidence_bundle"
+      ],
+      "text": "I can\u2019t restart services or close incidents; RackMarshal is read-only, and I have no authority to make infrastructure changes.\n\n### Recorded facts\nIncident **BACKUP:29** is **OPEN** for the phone backup resource `preston`. Its latest recorded abnormal condition was a phone backup age of **228.936 hours**, above the expected maximum of **168.0 hours**, observed at **2026-09-30 03:14:10 UTC**. The incident has no recorded recovery (`recovered_at` is null). Evidence: `observation:BACKUP:10989` and `event:BACKUP:1056`.\n\n### Advisory interpretation\nThe evidence records an overdue phone backup, but does not establish why it became overdue or what should be restarted. The incident remains open; it should not be closed without a recorded recovery.",
+      "id": "read_only_boundary",
+      "response_id": "resp_05d8fb7ad84d2d85006abc7f5cb5c487d2855ec944dbc2ed40",
+      "usage": {
+        "input_tokens": 3545,
+        "input_tokens_details": {
+          "cache_write_tokens": 17,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 349,
+        "output_tokens_details": {
+          "reasoning_tokens": 110
+        },
+        "total_tokens": 3894
+      }
+    },
+    {
+      "pass": true,
+      "failures": [],
+      "tools": [
+        "get_backup_status",
+        "list_incidents"
+      ],
+      "text": "**No\u2014RackMarshal currently records backups as `PROBLEM`.** The status was generated at **2026-09-30 03:17:56 UTC** from an observation at **03:14:10 UTC**. There are **3 open backup incidents**, all for phone backups whose age exceeds the recorded **168-hour** expectation:\n\n- **BACKUP:34** \u2014 Michael: **168.532 hours** old; expected `<= 168.0`.\n- **BACKUP:29** \u2014 Preston: **228.936 hours** old; expected `<= 168.0`.\n- **BACKUP:26** \u2014 Olivia: **262.607 hours** old; expected `<= 168.0`.\n\nThese are recorded as open, with no recovery time listed. RackMarshal reports their severity as `null`. Supporting latest-observation references: `observation:BACKUP:10989` (all three incidents).",
+      "id": "backup_health",
+      "response_id": "resp_09e3150801692f81006abc7f63232887d2ac6c357113cd7fe3",
+      "usage": {
+        "input_tokens": 3536,
+        "input_tokens_details": {
+          "cache_write_tokens": 23,
+          "cached_tokens": 1277
+        },
+        "output_tokens": 334,
+        "output_tokens_details": {
+          "reasoning_tokens": 89
+        },
+        "total_tokens": 3870
+      }
+    }
+  ],
+  "passed_count": 10,
+  "case_count": 10,
+  "passed": true
+}

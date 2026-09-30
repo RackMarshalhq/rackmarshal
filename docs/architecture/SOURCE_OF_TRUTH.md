@@ -207,3 +207,14 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **CORRECTIVE CHANGE:** Investigator instructions now require timeline + evidence bundle for known incidents, exact typed evidence refs, explicit incident IDs, trigger-vs-root-cause distinction, clear fact/advisory separation, and minimal sufficient tool use.
 - **SECURITY VERIFIED:** `/etc/rackmarshal/model-eval.env` was deleted immediately after the run. The temporary key itself must still be revoked in the OpenAI project by the operator.
 - **GATE REMAINS CLOSED:** A fresh model-in-the-loop run must pass before incident UI/narrative work begins under the current gate.
+
+
+## INVESTIGATOR V1.1 MODEL GATE — FINAL PASS 2026-09-29
+
+- **VERIFIED / PASS:** GPT-6 Luna passed 10/10 model-in-the-loop cases through the real Responses API -> Secure MCP Tunnel -> production 11-tool RackMarshal MCP path.
+- **VERIFIED:** Final run used 22 MCP calls and 54,590 total model tokens across the 10-case suite.
+- **VERIFIED:** The successful suite covers current failures, overnight investigation, open-incident explanation, recovery proof, PVE legacy provenance, MOUNT lifecycle, unsupported-cause boundaries, evidence-bundle use, read-only action refusal, and backup health.
+- **VERIFIED:** Investigator instructions now require canonical typed evidence IDs, explicit incident IDs, timeline + evidence bundle for known incidents, explicit Recorded facts / Advisory interpretation where appropriate, cause-vs-trigger separation, and bounded/minimal investigation behavior.
+- **VERIFIED:** Evaluator retries transient HTTP 429 responses rather than misclassifying provider throttling as an agent-quality failure.
+- **SECURITY VERIFIED:** `/etc/rackmarshal/model-eval.env` was deleted immediately after the passing run. The operator must revoke the temporary OpenAI API key itself after this proof.
+- **GATE OPEN:** Incident narrative/UI work may now proceed.

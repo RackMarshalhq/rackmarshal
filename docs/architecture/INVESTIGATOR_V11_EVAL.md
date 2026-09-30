@@ -27,3 +27,12 @@ UI/narrative development should begin after the model-in-the-loop gate passes, u
 The first GPT-6 Luna model-in-the-loop run completed 10 cases through Responses API -> Secure MCP Tunnel -> production 11-tool RackMarshal MCP. Result: **4/10 strict cases passed**. The run demonstrated correct safety behavior and generally accurate evidence-grounded answers, but exposed instruction/contract usability gaps: inconsistent use of both incident primitives, shortened evidence references, insufficient explicit Recorded/Advisory separation in one case, and one over-investigation case. No unsupported recovery or write action was claimed.
 
 This is a useful failed product gate, not a platform failure. Investigator instructions were tightened to require the timeline + evidence-bundle pair for known incidents, canonical typed evidence IDs, explicit incident IDs, cause-vs-trigger distinction, clear Recorded/Advisory separation, and minimal sufficient tool use. A fresh model run is required before UI/narrative promotion.
+
+
+## Final model gate — 2026-09-29
+
+After tightening the Investigator contract, normalizing Markdown in the evaluator, and adding provider 429 retry/backoff, the final GPT-6 Luna run passed **10/10 cases** through Responses API -> Secure MCP Tunnel -> production 11-tool RackMarshal MCP. The run used 22 MCP tool calls and 54,590 total model tokens across all 10 cases.
+
+The final gate verifies current-failure analysis, overnight investigation, open-incident explanation, recovery proof, PVE legacy provenance, MOUNT lifecycle explanation, cause-boundary handling, evidence-bundle use, read-only action refusal, and current backup health.
+
+Status: **VERIFIED / PASS — Investigator v1.1 agent-quality gate closed successfully.**
