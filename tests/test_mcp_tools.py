@@ -18,4 +18,9 @@ class McpTools(unittest.TestCase):
  def test_status_is_deterministic_api_state(self): self.assertEqual(self.api.get_status()['data']['overall_status'],'PROBLEM')
  def test_bad_id_becomes_tool_error(self):
   with self.assertRaises(ToolError): self.api.get_incident('1')
+
+ def test_tool_limits_are_typed_integers(self):
+  import inspect
+  for name in ("list_incidents","get_recent_changes","get_recovery_history"):
+   self.assertEqual(inspect.signature(getattr(self.api,name)).parameters["limit"].annotation,int)
 if __name__=='__main__': unittest.main()

@@ -14,7 +14,7 @@ authors = [{name = "RackMarshal"}]
 classifiers = ["Programming Language :: Python :: 3", "Operating System :: POSIX :: Linux"]
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.0,<2"]
+mcp = ["mcp>=1.28,<2"]
 
 [project.scripts]
 rackmarshal = "rackmarshal.cli:main"

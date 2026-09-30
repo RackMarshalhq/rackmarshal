@@ -79,3 +79,16 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** The tool service is implemented over API v1/service contracts only; it does not access SQLite directly.
 - **VERIFIED:** Five MCP tool-service tests pass, including exact-surface, stable-ID, filtering, deterministic-status, and invalid-ID behavior.
 - **NEXT:** Install the optional official MCP Python SDK in an isolated development environment, inspect the advertised schemas/annotations with MCP Inspector or SDK client tests, then exercise all nine tools against real RackMarshal data before deployment.
+
+
+## MCP V1 PROTOCOL / SECURITY PROOF — 2026-09-29
+
+- **VERIFIED:** Official MCP Python SDK v1.30.0 was installed only in isolated temporary environments; RackMarshal production dependencies were not changed.
+- **VERIFIED:** The actual RackMarshal Streamable HTTP MCP server negotiated protocol `2025-11-25` with an official MCP client against CT 110's real RackMarshal database.
+- **VERIFIED:** The server advertises exactly nine approved read-only tools: health, status, incident list/detail, recent changes, domain status, backup status, evidence, and recovery history.
+- **VERIFIED:** All nine tools were invoked successfully through the MCP protocol against real accumulated data.
+- **VERIFIED:** Every tool advertises `readOnlyHint=true`, `destructiveHint=false`, and `openWorldHint=false`; the server exposes zero resources and zero prompts.
+- **VERIFIED:** Returned evidence contained no raw `payload_json` and no credential/secret-key field names from the audit denylist.
+- **VERIFIED:** MCP argument schemas now explicitly type `limit` as integer; the initial protocol inspection caught and corrected the missing annotations before freeze.
+- **FROZEN:** RackMarshal MCP v1 pins the official SDK compatibility line to `mcp>=1.28,<2`. SDK v2 is a breaking redesign and requires an explicit future migration/re-verification rather than an automatic dependency upgrade.
+- **NEXT:** Add the first read-only RackMarshal Investigator skill/agent behavior over these nine tools. No infrastructure mutation authority is permitted.

@@ -32,3 +32,8 @@ MCP v1 is read-only. No infrastructure mutation tools are permitted in the first
 These nine tools are deliberately goal-oriented rather than a REST mirror. `explain_state` is deferred: explanation is an agent/skill responsibility over authoritative tool results, not a RackMarshal evidence-producing tool. Every v1 tool is annotated read-only, non-destructive, and closed-world. The MCP layer consumes API v1/service contracts and does not query SQLite directly.
 
 The first implementation uses the official Python MCP SDK as an optional dependency and Streamable HTTP transport. Authentication/authorization and deployment exposure must be designed before any non-loopback/public deployment.
+
+
+## SDK compatibility gate — 2026-09-29
+
+RackMarshal MCP v1 is implemented against the official Python MCP SDK v1 compatibility line and SHALL declare `mcp>=1.28,<2`. The official SDK v2 line is a breaking redesign (`FastMCP` -> `MCPServer`) and SHALL NOT be adopted implicitly. Migration to SDK v2 requires a separate reviewed change and full protocol/security re-verification.
