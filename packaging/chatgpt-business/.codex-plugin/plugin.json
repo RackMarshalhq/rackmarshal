@@ -1,0 +1,7 @@
+{
+  "name": "rackmarshal-investigator",
+  "version": "0.1.1",
+  "description": "Read-only operational investigation using RackMarshal evidence.",
+  "skills": "./skills/",
+  "apps": "./.app.json"
+}
