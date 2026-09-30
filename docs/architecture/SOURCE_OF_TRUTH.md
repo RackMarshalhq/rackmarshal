@@ -1,7 +1,20 @@
 # RackMarshal Source of Truth
 
-Date: 2026-09-29
+Date: 2026-09-30
 Status: **AUTHORITATIVE PROJECT SOT**
+
+## CURRENT VERIFIED CHECKPOINT — 2026-09-30
+
+This summary supersedes earlier dated next-step and incident-count snapshots below. Operational counts describe the saved production proof at 17:10–17:11 UTC, not a perpetual system guarantee. The remaining sections preserve the evidence and development history.
+
+- **PRODUCTION:** Read-only API, MCP Investigator and deterministic incident dashboard/detail pages are implemented and live on CT 110. Status, MCP and tunnel services are active. Dashboard: http://192.168.50.110:9110/incidents.
+- **PVE POLICY:** All eight retained LXC containers 117–124 have accepted VERIFIED baseline entries: 117–123 expected stopped, 124 expected running. Existing 20 entries preserved; total baseline 28. Source observation:PVE:11340 and explicit user approval recorded. Operator administration remains separate from read-only Investigator access.
+- **RECORDED RECOVERIES:** PVE:36–PVE:43 recovered through normal collection/processing at 17:05:44.344970 UTC, supported by observation:PVE:11345. PVE status OK, zero open PVE incidents. PBS weekly evidence visibility repaired earlier; BACKUP:38 recovered from observation:BACKUP:11333. No manual incident closure or guest state change.
+- **REMAINING OPEN:** Three phone BACKUP incidents; overall status PROBLEM. Michael backup planned tonight September 30; Olivia and Preston October 5. Plans do not establish recovery or waive the seven-day backup policy. Normal recorded observations must prove subsequent recovery.
+- **QUALIFICATION:** Staging 173 test executions PASS; CT Python 3.11 172 pass/one existing Git-only skip; zero ResourceWarnings. Production HTTP 47 checks PASS, MCP acceptance 18/18 PASS, LAN dashboard/detail sanitization and evidence links PASS. Consistent private baseline backup retained at /var/lib/rackmarshal/deployment-backups/pve-baseline-3edeeage.
+- **SOURCE CHECKPOINT:** Baseline operator implementation 26cb00c209427bc0d86c9366917322e418fd0786; accepted production proof/docs a7f762a84242892b8cf6b9d3d2d9d71ceb8c283e. CT API/MCP package remains the qualified 5d78a4d6e2cd5411d70fdd198df76ac790b414b4 deployment; standalone PBS observer source 5ad27c66b72bd80c9ed3187500ba00938d008876. Baseline adoption required no package redeployment.
+- **NEXT:** Observe phone backup recovery through ordinary evidence. ChatGPT Business connection checklist is prepared; workspace registration, association, permissions and credentials remain unchanged and require explicit setup instructions. UI/Investigator stay local-first, sanitized, read-only and non-AI-dependent, with no remediation controls.
+
 
 ## VERIFIED
 
@@ -29,7 +42,7 @@ Status: **AUTHORITATIVE PROJECT SOT**
 
 The first-class post-1.1 development track is: public API v1 → read-only MCP → provenance/agent contract → investigative agent → controlled actions → agent audit ledger.
 
-## IMPLEMENTATION GATE
+## INITIAL IMPLEMENTATION GATE — HISTORICAL 2026-09-29
 
 No MCP implementation or autonomous-action implementation is authorized by this architecture freeze alone. The next implementation gate is API v1 schema review against the current RackMarshal data model, followed by read-only API implementation and contract tests. Existing RackMarshal 1.1 work remains independent and must not be destabilized by the agent track.
 
