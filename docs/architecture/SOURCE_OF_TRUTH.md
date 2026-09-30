@@ -101,3 +101,12 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **FROZEN:** Investigator synthesis is ADVISORY. RackMarshal Core remains authoritative for observations, incidents, and recovery.
 - **FROZEN:** Investigator v1 has no infrastructure mutation, shell, SQL, incident-closing, or acknowledgement authority.
 - **NEXT:** Package the Investigator as a provider-neutral skill/instruction artifact and connect it to ChatGPT/Codex through the verified MCP server; retain human control and read-only authority.
+
+
+## INVESTIGATOR PACKAGING — 2026-09-29
+
+- **VERIFIED:** Investigator instructions are packaged as a portable skill at `skills/rackmarshal-investigator/SKILL.md`.
+- **VERIFIED:** Repository-level `AGENTS.md` requires Codex/agents to use RackMarshal MCP rather than bypassing the evidence boundary during Investigator work.
+- **VERIFIED:** Plugin manifest and local `.mcp.json` package the skill plus MCP connection for a Codex-capable environment.
+- **EXPECTED:** Hosted ChatGPT connection requires a reachable private MCP path. RackMarshal will use Secure MCP Tunnel rather than exposing CT 110's MCP listener publicly.
+- **BLOCKED:** This current ChatGPT Plus surface cannot directly attach the new local RackMarshal MCP from inside this conversation; the account/UI connection step requires developer-mode/plugin support and a reachable MCP endpoint.
