@@ -510,3 +510,12 @@ Four fresh ChatGPT Work acceptance conversations explicitly selected the install
 Proof receipt: `evals/results/business-policy-acceptance-20260930.json`. Full staging suite: 173 tests PASS with ResourceWarnings treated as errors, zero ResourceWarnings. Package JSON/YAML and canonical policy inclusion validated. No production code changed or redeployed. No workspace publication, credentials, permissions, or tunnel changes occurred. Production remains read-only with three phone backup incidents OPEN at acceptance time; only future recorded observations may establish recovery.
 
 Next useful step: normal private operational use with the skill explicitly selected; optionally qualify implicit activation and a complete paginated inventory when required. Broader workspace distribution still requires explicit instruction.
+
+
+## PRIVATE OPERATIONAL USE CHECKPOINT — 2026-09-30
+
+- **USER FEEDBACK:** User reports deliberately asking about unmonitored systems, receiving coverage limitations and future-expansion planning without invented monitoring, and being very happy with the Investigator. This is user-reported acceptance, not exported tool-trace proof of those additional conversations.
+- **SCOPE:** Continue normal private operational use with the Investigator explicitly selected. Downloads, network, and storage usage monitoring remain deferred; no collector, incident policy, permission expansion, controlled action, or broader workspace distribution is authorized by this checkpoint.
+- **RECORDED MCP SNAPSHOT:** get_status generated_at 2026-09-30T19:01:37.810957Z reports overall PROBLEM, three BACKUP incidents, and PVE/ZFS/HA/HARDWARE/MOUNT OK. list_incidents(state=OPEN, limit=50) generated_at 2026-09-30T19:01:38.560967Z returns BACKUP:34 (michael), BACKUP:29 (preston), BACKUP:26 (olivia), total 3, next_cursor null. All three last abnormal conditions reference observation:BACKUP:11406 at 18:56:12.241080Z. This is a complete OPEN inventory for that response, not a live resource probe or root-cause determination.
+- **EXPECTED / UNVERIFIED:** Michael phone backup planned tonight September 30; Olivia/Preston October 5. Plans do not waive policy or prove recovery. Future normal recorded observations must establish recovery.
+- **CHANGES:** Project documentation only. No production code, containers, incident lifecycle, credentials, tunnel configuration, or workspace permissions changed.
