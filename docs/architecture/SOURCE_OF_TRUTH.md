@@ -119,3 +119,12 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** The Investigator separated recorded facts from advisory interpretation and cited RackMarshal incident/evidence IDs. It correctly reported persistent stale phone-backup incidents `BACKUP:26` and `BACKUP:29`, and did not claim a cause unsupported by evidence.
 - **VERIFIED:** Secure MCP Tunnel remains outbound-only; RackMarshal MCP remains bound to `127.0.0.1:8000`.
 - **OBSERVED:** The successful proof consumed 48,673 total model tokens because `get_recent_changes` returned repeated polling-cycle change records. This is an efficiency issue, not a correctness failure; add investigation-oriented deduplication/bounding before routine agent use.
+
+
+## INVESTIGATION CHANGE COMPACTION — 2026-09-29
+
+- **VERIFIED:** `get_recent_changes` now uses a material-change view rather than returning every polling-cycle event. Raw `/v1/events` remains unchanged for forensic access.
+- **VERIFIED:** Repeated observations of the same condition are collapsed per resource while preserving first/latest event IDs, first/latest evidence refs, first/latest values, timestamps, and repeat count. A transition away and back remains a separate material change.
+- **VERIFIED:** `get_recent_changes` now supports explicit UTC `since` and `until` bounds.
+- **VERIFIED:** Real production data for 2026-09-29 18:00Z through 2026-09-30 02:00Z collapsed 170 raw BACKUP events into 2 material change runs (168 repetitive polling events removed from the agent payload) while preserving the Olivia and Preston stale-backup evidence chain.
+- **VERIFIED:** Full suite passes 48 tests with zero `ResourceWarning` messages.

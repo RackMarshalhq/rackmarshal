@@ -23,4 +23,8 @@ class McpTools(unittest.TestCase):
   import inspect
   for name in ("list_incidents","get_recent_changes","get_recovery_history"):
    self.assertEqual(inspect.signature(getattr(self.api,name)).parameters["limit"].annotation,int)
+ def test_recent_changes_exposes_explicit_until_bound(self):
+  import inspect
+  sig=inspect.signature(self.api.get_recent_changes)
+  self.assertIn('since',sig.parameters); self.assertIn('until',sig.parameters)
 if __name__=='__main__': unittest.main()

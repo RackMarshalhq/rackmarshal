@@ -15,7 +15,7 @@ The MCP server SHALL consume the public RackMarshal API or an equivalent stable 
 - `get_status`
 - `list_incidents`
 - `get_incident`
-- `get_recent_changes`
+- `get_recent_changes` — investigation-oriented material changes; supports explicit UTC `since`/`until` bounds and collapses repeated polling observations without deleting forensic events
 - `get_domain_status`
 - `get_backup_status`
 - `get_evidence`

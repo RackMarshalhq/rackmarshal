@@ -1,5 +1,5 @@
 import sqlite3, unittest
-from rackmarshal.api.v1 import canon, get_evidence, list_incidents, parse_id, route
+from rackmarshal.api.v1 import canon, get_evidence, list_incidents, material_changes, parse_id, route
 
 SCHEMA='''
 CREATE TABLE resource_incidents(id INTEGER PRIMARY KEY,resource_type TEXT,resource_key TEXT,display_name TEXT,incident_type TEXT,incident_state TEXT,baseline_state TEXT,opened_observation_id INTEGER,last_abnormal_observation_id INTEGER,recovered_observation_id INTEGER,opened_at TEXT,last_abnormal_at TEXT,recovered_at TEXT,occurrence_count INTEGER,opening_changes_json TEXT,latest_changes_json TEXT);
@@ -38,4 +38,22 @@ class ApiV1Contract(unittest.TestCase):
   code,payload=route(self.db,'/v1/incidents',{'cursor':'bad!'}); self.assertEqual(code,400); self.assertEqual(payload['error']['code'],'INVALID_CURSOR')
  def test_health_envelope(self):
   code,p=route(self.db,'/v1/health',{}); self.assertEqual((code,p['api_version'],p['data']['database_readable']),(200,'v1',True))
+ def test_material_changes_collapse_repeated_polling_per_resource(self):
+  rows=[
+   (1,101,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:00:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]'),
+   (2,102,'backup_phone','preston','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:01:00Z',None,'[{"field":"phone_age_hours","actual":180,"expected":"<= 168.0"}]'),
+   (3,103,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:05:00Z',None,'[{"field":"phone_age_hours","actual":175,"expected":"<= 168.0"}]'),
+   (4,104,'backup_phone','preston','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:06:00Z',None,'[{"field":"phone_age_hours","actual":185,"expected":"<= 168.0"}]')]
+  self.db.executemany('INSERT INTO backup_events VALUES(?,?,?,?,?,?,?,?,?,?)',rows)
+  items,meta=material_changes(self.db,{'domain':'BACKUP','observed_after':'2026-09-29T20:00:00Z','observed_before':'2026-09-29T21:00:00Z','limit':'20'})
+  self.assertEqual(meta['raw_event_count'],4); self.assertEqual(meta['material_change_count'],2); self.assertEqual(meta['collapsed_event_count'],2)
+  by_key={x['resource_key']:x for x in items}; self.assertEqual(by_key['olivia']['repeat_count'],2); self.assertEqual(by_key['olivia']['first_changes'][0]['actual'],170); self.assertEqual(by_key['olivia']['latest_changes'][0]['actual'],175)
+ def test_material_changes_preserve_transition_away_and_back(self):
+  rows=[
+   (10,110,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:00:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]'),
+   (11,111,'backup_phone','olivia','RECOVERED',None,'VERIFIED','2026-09-29T20:10:00Z',None,'[{"field":"status","actual":"OK","expected":"OK"}]'),
+   (12,112,'backup_phone','olivia','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:20:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]')]
+  self.db.executemany('INSERT INTO backup_events VALUES(?,?,?,?,?,?,?,?,?,?)',rows)
+  items,meta=material_changes(self.db,{'domain':'BACKUP','limit':'20'})
+  self.assertEqual(meta['material_change_count'],3); self.assertEqual([x['event_type'] for x in reversed(items)],['STATUS-CHANGED','RECOVERED','STATUS-CHANGED'])
 if __name__=='__main__': unittest.main()

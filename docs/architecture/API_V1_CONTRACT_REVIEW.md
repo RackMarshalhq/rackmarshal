@@ -43,7 +43,7 @@ Requires canonical ID such as `ZFS:47`. Returns the normalized incident, opening
 Filters: `domain`, `collector`, `observed_after`, `observed_before`, `limit`, `cursor`. Returns metadata by default; raw `payload_json` is not part of the public collection contract.
 
 ### GET /v1/events and /v1/changes
-Filters: `domain`, `resource_type`, `resource_key`, time bounds, `limit`, `cursor`; changes may also filter by `incident_id` when correlation exists. Adapters preserve recorded domain-native meanings and never generate narrative explanations.
+Filters: `domain`, `resource_type`, `resource_key`, `observed_after`, `observed_before`, `limit`, `cursor`. `/v1/events` remains the forensic event stream. `/v1/changes` is investigation-oriented: repeated polling observations of the same condition are collapsed per resource into a material-change run with first/latest timestamps, first/latest values, repeat count, and first/latest evidence references. A transition away from a condition and back creates a new run. The adapter never generates narrative explanations.
 ### GET /v1/evidence/{evidence_ref}
 Accepts typed evidence refs and returns normalized metadata plus structured `content`. Secrets and credentials MUST be redacted. Unknown refs return `404 EVIDENCE_NOT_FOUND`.
 

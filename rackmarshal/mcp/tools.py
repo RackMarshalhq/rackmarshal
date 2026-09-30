@@ -20,8 +20,8 @@ class RackMarshalTools:
  def list_incidents(self,domain: str|None=None,state: str|None=None,resource_type: str|None=None,resource_key: str|None=None,limit: int=20,cursor: str|None=None):
   p={k:v for k,v in locals().items() if k not in ('self',) and v is not None}; return self._call('/v1/incidents',p)
  def get_incident(self,incident_id: str): return self._call('/v1/incidents/'+incident_id)
- def get_recent_changes(self,domain: str|None=None,resource_type: str|None=None,resource_key: str|None=None,since: str|None=None,limit: int=20,cursor: str|None=None):
-  p={'domain':domain,'resource_type':resource_type,'resource_key':resource_key,'observed_after':since,'limit':limit,'cursor':cursor}; return self._call('/v1/changes',{k:v for k,v in p.items() if v is not None})
+ def get_recent_changes(self,domain: str|None=None,resource_type: str|None=None,resource_key: str|None=None,since: str|None=None,until: str|None=None,limit: int=20,cursor: str|None=None):
+  p={'domain':domain,'resource_type':resource_type,'resource_key':resource_key,'observed_after':since,'observed_before':until,'limit':limit,'cursor':cursor}; return self._call('/v1/changes',{k:v for k,v in p.items() if v is not None})
  def get_domain_status(self,domain: str): return self._call('/v1/domains/'+domain)
  def get_backup_status(self): return self._call('/v1/backups/status')
  def get_evidence(self,evidence_ref: str): return self._call('/v1/evidence/'+evidence_ref)

@@ -73,7 +73,7 @@ def normalize_event(domain,row):
     x=dict(row); lid=x["id"]; oid=x.get("observation_id")
     return {"id":canon(domain,lid),"local_id":lid,"domain":domain,"observation_id":canon(domain,oid) if oid else None,"resource_type":x.get("resource_type") or ("hardware_device" if domain=="HARDWARE" else "mount" if domain=="MOUNT" else None),"resource_key":x.get("resource_key") or x.get("serial") or x.get("mount_id"),"event_type":x.get("event_type") or x.get("outcome"),"baseline_state":x.get("baseline_state"),"observed_at":x.get("observed_at") or x.get("detected_at"),"changes":_json(x.get("changes_json")),"authority":"DERIVED","evidence_refs":[evidence("observation",domain,oid)] if oid else []}
 
-def list_events(conn,params):
+def query_events(conn,params):
     domains=[_domain(params["domain"])] if params.get("domain") else list(DOMAINS); out=[]
     for d in domains:
         table=EVENT_TABLES[d]; cols=_table_columns(conn,table); where=[]; vals=[]
@@ -85,7 +85,37 @@ def list_events(conn,params):
         sql=f"SELECT * FROM {table}"+(" WHERE "+" AND ".join(where) if where else "")+f" ORDER BY {tcol} DESC,id DESC"
         out += [normalize_event(d,r) for r in conn.execute(sql,vals)]
     out.sort(key=lambda x:(x.get("observed_at") or "",x["id"]),reverse=True)
-    return paginate(out,params)
+    return out
+
+def list_events(conn,params):
+    return paginate(query_events(conn,params),params)
+
+def _change_signature(item):
+    fields=[]
+    for change in item.get("changes") or []:
+        if isinstance(change,dict): fields.append((change.get("field"),json.dumps(change.get("expected"),sort_keys=True,default=str)))
+        else: fields.append((None,json.dumps(change,sort_keys=True,default=str)))
+    return (item.get("domain"),item.get("resource_type"),item.get("resource_key"),item.get("event_type"),item.get("baseline_state"),tuple(fields))
+
+def material_changes(conn,params):
+    raw=query_events(conn,params)
+    # Collapse repeated polling per resource while preserving genuine transitions for that resource.
+    runs=[]; current={}
+    for item in reversed(raw):
+        sig=_change_signature(item)
+        resource=(item.get("domain"),item.get("resource_type"),item.get("resource_key"))
+        run=current.get(resource)
+        if run is not None and run["_signature"]==sig:
+            run["last_observed_at"]=item.get("observed_at"); run["latest_event_id"]=item.get("id"); run["latest_changes"]=item.get("changes"); run["repeat_count"]+=1
+            run["latest_evidence_refs"]=item.get("evidence_refs") or []
+        else:
+            run={"_signature":sig,"domain":item.get("domain"),"resource_type":item.get("resource_type"),"resource_key":item.get("resource_key"),"event_type":item.get("event_type"),"baseline_state":item.get("baseline_state"),"first_observed_at":item.get("observed_at"),"last_observed_at":item.get("observed_at"),"first_event_id":item.get("id"),"latest_event_id":item.get("id"),"first_changes":item.get("changes"),"latest_changes":item.get("changes"),"repeat_count":1,"first_evidence_refs":item.get("evidence_refs") or [],"latest_evidence_refs":item.get("evidence_refs") or [],"authority":"DERIVED"}
+            runs.append(run); current[resource]=run
+    for run in runs: run.pop("_signature",None)
+    runs.sort(key=lambda x:(x.get("last_observed_at") or "",x.get("latest_event_id") or ""),reverse=True)
+    items,meta=paginate(runs,params)
+    meta["raw_event_count"]=len(raw); meta["material_change_count"]=len(runs); meta["collapsed_event_count"]=len(raw)-len(runs)
+    return items,meta
 
 def normalize_observation(domain,row):
     x=dict(row); lid=x["id"]
@@ -140,7 +170,8 @@ def route(conn,path,params,status_builder=None):
         if path.startswith("/v1/incidents/"):
             item=get_incident(conn,path.rsplit("/",1)[1]); return (200,envelope(item)) if item else error("INCIDENT_NOT_FOUND","incident not found",404)
         if path=="/v1/observations": items,meta=list_observations(conn,params); return 200,envelope(items,**meta)
-        if path in ("/v1/events","/v1/changes"): items,meta=list_events(conn,params); return 200,envelope(items,**meta)
+        if path=="/v1/events": items,meta=list_events(conn,params); return 200,envelope(items,**meta)
+        if path=="/v1/changes": items,meta=material_changes(conn,params); return 200,envelope(items,**meta)
         if path=="/v1/recoveries": items,meta=recoveries(conn,params); return 200,envelope(items,**meta)
         if path.startswith("/v1/evidence/"):
             item=get_evidence(conn,path[len("/v1/evidence/"):]); return (200,envelope(item)) if item else error("EVIDENCE_NOT_FOUND","evidence not found",404)
