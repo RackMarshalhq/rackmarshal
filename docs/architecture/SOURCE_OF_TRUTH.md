@@ -110,3 +110,12 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** Plugin manifest and local `.mcp.json` package the skill plus MCP connection for a Codex-capable environment.
 - **EXPECTED:** Hosted ChatGPT connection requires a reachable private MCP path. RackMarshal will use Secure MCP Tunnel rather than exposing CT 110's MCP listener publicly.
 - **BLOCKED:** This current ChatGPT Plus surface cannot directly attach the new local RackMarshal MCP from inside this conversation; the account/UI connection step requires developer-mode/plugin support and a reachable MCP endpoint.
+
+## END-TO-END AGENT PROOF — 2026-09-29
+
+- **VERIFIED:** OpenAI Responses API using GPT-6 Luna successfully reached the private RackMarshal MCP server through Secure MCP Tunnel `RackMarshal Home` and completed a real evidence-grounded investigation against CT 110's production RackMarshal database.
+- **VERIFIED:** Response `resp_0f55cf71b7a19e54006abc696d4e8c87d2ba505f4f81d16bbc` completed successfully and used only the approved read-only RackMarshal MCP surface.
+- **VERIFIED:** Tool sequence included `get_recent_changes`, `list_incidents`, and `get_recovery_history`; all MCP calls completed successfully through the tunnel.
+- **VERIFIED:** The Investigator separated recorded facts from advisory interpretation and cited RackMarshal incident/evidence IDs. It correctly reported persistent stale phone-backup incidents `BACKUP:26` and `BACKUP:29`, and did not claim a cause unsupported by evidence.
+- **VERIFIED:** Secure MCP Tunnel remains outbound-only; RackMarshal MCP remains bound to `127.0.0.1:8000`.
+- **OBSERVED:** The successful proof consumed 48,673 total model tokens because `get_recent_changes` returned repeated polling-cycle change records. This is an efficiency issue, not a correctness failure; add investigation-oriented deduplication/bounding before routine agent use.
