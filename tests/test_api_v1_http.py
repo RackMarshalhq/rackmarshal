@@ -6,7 +6,8 @@ _db=os.path.join(_tmp.name,"state.db")
 import sqlite3
 con=sqlite3.connect(_db); con.execute("CREATE TABLE observations(id INTEGER PRIMARY KEY)"); con.commit(); con.close()
 _conf=os.path.join(_tmp.name,"rackmarshal.conf")
-open(_conf,"w").write(f"STATE_DB={_db}\nSTATUS_API_LISTEN_ADDRESS=127.0.0.1\nSTATUS_API_LISTEN_PORT=0\n")
+with open(_conf,"w") as f:
+ f.write(f"STATE_DB={_db}\nSTATUS_API_LISTEN_ADDRESS=127.0.0.1\nSTATUS_API_LISTEN_PORT=0\n")
 os.environ["RACKMARSHAL_CONFIG"]=_conf
 from rackmarshal.api import status
 

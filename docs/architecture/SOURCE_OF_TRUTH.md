@@ -62,3 +62,11 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** Real-data checks passed for domain-qualified IDs, nullable severity, incident detail, typed recovery/incident evidence, payload redaction, invalid numeric IDs, invalid cursors, unknown domains, domain filtering, and cursor traversal.
 - **VERIFIED:** Four HTTP-level automated smoke tests were added; full unittest discovery now passes 34 tests.
 - **FROZEN:** API v1 read-only gate is satisfied. MCP v1 may now begin, constrained to read-only goal-oriented tools over API v1.
+
+
+## SQLITE RESOURCE CLEANUP — 2026-09-29
+
+- **VERIFIED:** API v1 HTTP handler now explicitly closes each SQLite connection; transaction context management is no longer mistaken for connection lifetime management.
+- **VERIFIED:** Notification/delivery tests explicitly close their in-memory SQLite connections.
+- **VERIFIED:** Test-owned temporary directories/files now have explicit cleanup.
+- **VERIFIED:** Full suite passes 34 tests under `PYTHONWARNINGS=always::ResourceWarning` with tracemalloc enabled and produces zero `ResourceWarning` messages.

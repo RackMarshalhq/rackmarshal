@@ -948,8 +948,11 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/v1/"):
             params = {k: v[-1] for k, v in parse_qs(parsed.query, keep_blank_values=True).items()}
             try:
-                with connect_db() as conn:
+                conn = connect_db()
+                try:
                     status_code, payload = route_v1(conn, path, params, build_status)
+                finally:
+                    conn.close()
                 self.send_json(status_code, payload)
             except Exception as exc:
                 self.send_json(500, {"api_version":"v1","generated_at":utc_now(),"error":{"code":"INTERNAL_ERROR","message":str(exc)}})

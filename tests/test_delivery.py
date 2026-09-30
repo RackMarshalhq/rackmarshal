@@ -1,6 +1,7 @@
+import atexit
 import os, sqlite3, tempfile, unittest
 from pathlib import Path
-_td=tempfile.TemporaryDirectory(); _c=Path(_td.name)/'c'; _c.write_text(f'STATE_DB={_td.name}/x.db\nLOCAL_AI_ENABLED=false\n'); os.environ['RACKMARSHAL_CONFIG']=str(_c)
+_td=tempfile.TemporaryDirectory(); atexit.register(_td.cleanup); _c=Path(_td.name)/'c'; _c.write_text(f'STATE_DB={_td.name}/x.db\nLOCAL_AI_ENABLED=false\n'); os.environ['RACKMARSHAL_CONFIG']=str(_c)
 from rackmarshal.notifications.delivery import deliver_one
 class DeliveryTests(unittest.TestCase):
  def test_failed_delivery_is_persisted_and_retryable(self):
@@ -13,3 +14,4 @@ class DeliveryTests(unittest.TestCase):
   self.assertEqual(result['result'],'FAILED')
   state=con.execute('select delivery_state,attempt_count,last_error from incident_notifications where id=1').fetchone()
   self.assertEqual(state[0],'FAILED'); self.assertEqual(state[1],1); self.assertTrue(state[2])
+  con.close()

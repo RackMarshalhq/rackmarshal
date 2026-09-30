@@ -10,3 +10,4 @@ class NotificationRetryTests(unittest.TestCase):
   row=c.execute('select * from incident_notifications').fetchone(); self.assertEqual(row['delivery_state'],'FAILED'); self.assertEqual(row['attempt_count'],1)
   with patch('rackmarshal.notifications.delivery.send_ha',return_value=None): self.assertEqual(deliver_one(c,row,'http://fixture','token','unused','test')['result'],'SENT')
   row=c.execute('select * from incident_notifications').fetchone(); self.assertEqual(row['delivery_state'],'SENT'); self.assertEqual(row['attempt_count'],2); self.assertIsNone(row['last_error']); self.assertIsNotNone(row['delivered_at'])
+  c.close()
