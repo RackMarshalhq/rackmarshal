@@ -42,3 +42,13 @@ RackMarshal 1.0.0 is the first stable public release.
 - remaining legacy project identifiers in staged Python and migration content were renamed for RackMarshal.
 
 The pre-release engineering record above documents the qualification work that led to the 1.0.0 release.
+
+
+## Development — 2026-09-30
+
+- Improve deterministic incident dashboard/detail presentation with domain open
+  counts, exact lifecycle timestamps, occurrence/repeat counts, context, and
+  clearer historical recovery, evidence, provenance, and authority language.
+- Fix dashboard completeness beyond 200 incident records per domain.
+- Add narrative regressions, repeatable real-data HTTP proof, and a prepared
+  ChatGPT Business Investigator connection guide; no workspace changes made.

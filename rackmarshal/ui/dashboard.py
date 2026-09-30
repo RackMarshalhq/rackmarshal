@@ -2,6 +2,7 @@
 import html
 from urllib.parse import quote
 from rackmarshal.api.v1 import DOMAINS, INCIDENT_TABLES, list_incidents
+from rackmarshal.ui.narrative import timestamp, occurrences, state_sentence, domain_name
 
 def _e(value):
     return html.escape("" if value is None else str(value), quote=True)
@@ -12,8 +13,13 @@ def dashboard_data(conn,recent_limit=20):
     for domain in DOMAINS:
         if INCIDENT_TABLES[domain] not in tables:
             continue
-        items,_=list_incidents(conn,{"domain":domain,"limit":"200"})
-        incidents.extend(items)
+        params={"domain":domain,"limit":"200"}
+        while True:
+            items,meta=list_incidents(conn,params)
+            incidents.extend(items)
+            if not meta.get("next_cursor"):
+                break
+            params["cursor"]=meta["next_cursor"]
     open_items=[x for x in incidents if x.get("state")=="OPEN"]
     open_items.sort(key=lambda x:(x.get("opened_at") or "",x["id"]),reverse=True)
     recovered=[x for x in incidents if x.get("state")=="RECOVERED" and x.get("recovered_at")]
@@ -23,20 +29,30 @@ def dashboard_data(conn,recent_limit=20):
         "recent_recoveries":recovered[:recent_limit],
         "open_count":len(open_items),
         "recent_recovery_count":min(len(recovered),recent_limit),
+        "open_by_domain":{d:sum(x["domain"]==d for x in open_items) for d in DOMAINS},
+        "available_domains":[d for d in DOMAINS if INCIDENT_TABLES[d] in tables],
         "authority":"DERIVED",
     }
 
 def _incident_row(item,time_field,label):
-    iid=_e(item["id"])
     href="/incidents/"+quote(item["id"],safe=":")
-    resource=item.get("display_name") or item.get("resource_key") or "unknown resource"
+    resource=item.get("display_name") or item.get("resource_key") or "Unknown resource"
+    state_class=item.get("state") if item.get("state") in ("OPEN","RECOVERED") else ""
+    lifecycle=f"<div>Opened: {timestamp(item.get('opened_at'))}</div>"
+    lifecycle+=f"<div>Last abnormal: {timestamp(item.get('last_abnormal_at'))}</div>"
+    if item.get("state")=="RECOVERED":
+        lifecycle+=f"<div>Recovered: {timestamp(item.get('recovered_at'))}</div>"
     return (
         "<tr>"
-        f"<td><a class='incident-id' href='{_e(href)}'>{iid}</a></td>"
-        f"<td>{_e(item.get('domain'))}</td>"
-        f"<td><code>{_e(item.get('resource_type'))}</code><br>{_e(resource)}</td>"
-        f"<td><span class='badge {_e(item.get('state'))}'>{_e(item.get('state'))}</span></td>"
-        f"<td><span class='muted'>{_e(label)}</span><br><time>{_e(item.get(time_field))}</time></td>"
+        f"<td><a class='incident-id' href='{_e(href)}'>{_e(item['id'])}</a>"
+        f"<div class='muted'>{_e(item.get('incident_type') or 'Incident type not recorded')}</div></td>"
+        f"<td>{_e(item.get('domain'))}<div class='muted'>{_e(domain_name(item.get('domain')))}</div></td>"
+        f"<td>{_e(resource)}<div class='muted'>Type: <code>{_e(item.get('resource_type') or 'Not recorded')}</code>"
+        f"<br>Key: <code>{_e(item.get('resource_key') or 'Not recorded')}</code></div></td>"
+        f"<td><span class='badge {state_class}'>{_e(item.get('state'))}</span>"
+        f"<div class='muted'>{_e(state_sentence(item))}</div>"
+        f"<div>{_e(occurrences(item.get('occurrence_count')))}</div></td>"
+        f"<td>{lifecycle}</td>"
         "</tr>"
     )
 
@@ -46,7 +62,7 @@ def _table(items,time_field,label,empty_text):
     rows="".join(_incident_row(x,time_field,label) for x in items)
     return (
         "<div class='table-wrap'><table><thead><tr>"
-        "<th>Incident</th><th>Domain</th><th>Resource</th><th>State</th><th>Time</th>"
+        "<th>Incident</th><th>Domain</th><th>Resource</th><th>State</th><th>Recorded lifecycle</th>"
         f"</tr></thead><tbody>{rows}</tbody></table></div>"
     )
 
@@ -54,6 +70,11 @@ def render_incident_index(conn,recent_limit=20):
     data=dashboard_data(conn,recent_limit)
     open_html=_table(data["open_incidents"],"opened_at","Opened","No open incidents.")
     recovered_html=_table(data["recent_recoveries"],"recovered_at","Recovered","No recorded recoveries.")
+    domain_html="".join(
+        f"<li><strong>{_e(d)}</strong> · {_e(domain_name(d))}: {data['open_by_domain'][d]} open</li>"
+        for d in data["available_domains"])
+    missing=[d for d in DOMAINS if d not in data["available_domains"]]
+    coverage_html=("<p class='muted'>Incident ledgers unavailable: "+_e(", ".join(missing))+". Counts cover available ledgers only.</p>") if missing else ""
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -63,9 +84,10 @@ def render_incident_index(conn,recent_limit=20):
 </head><body><main>
 <div class="muted">RackMarshal · read-only incident ledger</div>
 <h1>Incidents</h1>
-<p class="muted">Open incidents are shown first. Recent recovery history is ordered by recorded recovery time. Select an incident for its deterministic summary, timeline, evidence, and provenance.</p>
+<p class="muted">Recorded OPEN incidents have no recovery recorded. Recent recoveries are historical lifecycle records; they do not establish current resource health. Select an incident for its summary, timeline, evidence, and provenance.</p>
 <div class="stats"><div class="stat"><div class="number">{data['open_count']}</div><div class="muted">Open incidents</div></div><div class="stat"><div class="number">{data['recent_recovery_count']}</div><div class="muted">Recent recoveries shown</div></div></div>
+<section aria-label="Domain summary"><h2>Open incidents by domain</h2><ul>{domain_html}</ul>{coverage_html}</section>
 <section><h2>Open incidents</h2>{open_html}</section>
-<section><h2>Recent recoveries</h2>{recovered_html}</section>
-<p class="muted">Authority: {data['authority']}. This dashboard is deterministic and read-only; it does not invoke an AI model.</p>
+<section><h2>Recent recoveries</h2><p class="muted">Showing up to {recent_limit} most recent recorded recoveries, newest first. Occurrences count recorded abnormal occurrences within one incident, not separate incidents.</p>{recovered_html}</section>
+<p class="muted">Authority: {data['authority']} — presentation derived from authoritative RackMarshal incident ledgers. Lifecycle times are shown exactly as recorded, including their timezone; missing values are labeled. OPEN is a recorded lifecycle state, not a live probe. This dashboard is deterministic and read-only; it does not invoke an AI model. <a href="/v1/incidents">Incident records (JSON)</a> · <a href="/v1/status">Recorded domain status (JSON)</a>.</p>
 </main></body></html>"""

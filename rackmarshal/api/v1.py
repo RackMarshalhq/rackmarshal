@@ -269,9 +269,9 @@ def incident_summary(conn,incident_id):
     resource=incident.get("display_name") or incident.get("resource_key") or "unknown resource"
     headline=f"{incident_id} is {incident['state']} for {resource}."
     opened_detail=_change_sentence((opened or {}).get("changes"))
-    opened_statement=f"Opened at {incident.get('opened_at')}" + (f" with {opened_detail}." if opened_detail else ".")
+    opened_statement=(f"Opened at {incident['opened_at']}" if incident.get('opened_at') else "Opening time is not recorded") + (f" with {opened_detail}." if opened_detail else ".")
     latest_detail=_change_sentence((latest or {}).get("changes"))
-    latest_statement=f"Latest abnormal state was recorded at {incident.get('last_abnormal_at')}" + (f" with {latest_detail}." if latest_detail else ".")
+    latest_statement=(f"Latest abnormal state was recorded at {incident['last_abnormal_at']}" if incident.get('last_abnormal_at') else "Latest abnormal time is not recorded") + (f" with {latest_detail}." if latest_detail else ".")
     if incident.get("state")=="RECOVERED" and incident.get("recovered_at"):
         recovery_statement=f"Recovery was recorded at {incident['recovered_at']}."
     else:
@@ -280,7 +280,7 @@ def incident_summary(conn,incident_id):
     for item in timeline["items"]:
         for ref in item.get("evidence_refs") or []:
             if ref not in refs: refs.append(ref)
-    return {"incident_id":incident_id,"domain":incident.get("domain"),"resource_type":incident.get("resource_type"),"resource_key":incident.get("resource_key"),"state":incident.get("state"),"headline":headline,"opened_statement":opened_statement,"latest_statement":latest_statement,"recovery_statement":recovery_statement,"cause_statement":"RackMarshal does not establish root cause from the recorded incident evidence.","evidence_refs":refs,"provenance":bundle.get("provenance"),"authority":"DERIVED"}
+    return {"incident_id":incident_id,"domain":incident.get("domain"),"resource_type":incident.get("resource_type"),"resource_key":incident.get("resource_key"),"state":incident.get("state"),"display_name":incident.get("display_name"),"incident_type":incident.get("incident_type"),"opened_at":incident.get("opened_at"),"last_abnormal_at":incident.get("last_abnormal_at"),"recovered_at":incident.get("recovered_at"),"occurrence_count":incident.get("occurrence_count"),"headline":headline,"opened_statement":opened_statement,"latest_statement":latest_statement,"recovery_statement":recovery_statement,"cause_statement":"RackMarshal does not establish root cause from the recorded incident evidence.","evidence_refs":refs,"provenance":bundle.get("provenance"),"authority":"DERIVED"}
 
 def route(conn,path,params,status_builder=None):
     try:
