@@ -125,3 +125,15 @@ SOURCE_OF_TRUTH.md. No incident, baseline, phone policy or workspace was changed
 
 The user's backup plan is Michael tonight September 30, Olivia and Preston on
 October 5. This is planned operator work, not recovery evidence.
+
+
+## Subsequent PBS evidence resolution — 2026-09-30, 12:47 PM local
+
+BACKUP:38 is now RECOVERED from observation:BACKUP:11333 through normal independent
+collection/processing. Development diagnostics proved the exact weekly OK job
+was at task position 133, beyond the cache helper's 100-task query. Pinned helper
+5ad27c6 changes that supported query limit to 1000; no verification run or job
+configuration was changed. HTTP 46 checks/MCP 18 cases pass. Eleven OPEN incidents
+remain: three planned phone backups and eight PVE inventory incidents. See
+PBS_WEEKLY_VERIFICATION_RECORDING.md and Source of Truth for authority, rollback
+and bounded-history limits. The original review above remains a dated snapshot.

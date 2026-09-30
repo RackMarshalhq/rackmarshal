@@ -1,0 +1,752 @@
+{
+  "checked_at": "2026-09-30T16:48:27.652832+00:00",
+  "source": "actual read-only production MCP",
+  "calls": [
+    {
+      "tool": "get_status",
+      "arguments": {}
+    },
+    {
+      "tool": "list_incidents",
+      "arguments": {
+        "domain": "BACKUP",
+        "state": "OPEN",
+        "limit": 100
+      }
+    },
+    {
+      "tool": "get_incident_timeline",
+      "arguments": {
+        "incident_id": "BACKUP:38"
+      }
+    },
+    {
+      "tool": "get_incident_evidence_bundle",
+      "arguments": {
+        "incident_id": "BACKUP:38"
+      }
+    }
+  ],
+  "get_status": {
+    "api_version": "v1",
+    "generated_at": "2026-09-30T16:48:27.790489Z",
+    "data": {
+      "overall_status": "PROBLEM",
+      "domains": [
+        {
+          "domain": "PVE",
+          "status": "PROBLEM",
+          "open_incident_count": 8,
+          "last_observation": {
+            "id": 11334,
+            "observed_at": "2026-09-30T16:47:53.389437Z",
+            "source": "Proxmox VE API",
+            "schema_version": 1,
+            "tls_verified": 1,
+            "resource_count": 28
+          },
+          "authority": "DERIVED"
+        },
+        {
+          "domain": "ZFS",
+          "status": "OK",
+          "open_incident_count": 0,
+          "last_observation": {
+            "id": 5349,
+            "observed_at": "2026-09-30T16:48:12.703803Z",
+            "recorded_at": "2026-09-30T16:48:12.729Z",
+            "source": "ms01:/usr/sbin/zpool status -j -p via forced-command SSH",
+            "schema_version": 1
+          },
+          "authority": "DERIVED"
+        },
+        {
+          "domain": "BACKUP",
+          "status": "PROBLEM",
+          "open_incident_count": 3,
+          "last_observation": {
+            "id": 11333,
+            "observed_at": "2026-09-30T16:47:09.364907Z",
+            "source": "Proxmox VE API + Proxmox Backup Server API",
+            "schema_version": 1,
+            "tls_verified": 1,
+            "resource_count": 14
+          },
+          "authority": "DERIVED"
+        },
+        {
+          "domain": "HA",
+          "status": "OK",
+          "open_incident_count": 0,
+          "last_observation": {
+            "id": 11335,
+            "observed_at": "2026-09-30T16:48:12.294273Z",
+            "source": "Home Assistant REST API",
+            "schema_version": 1,
+            "tls_verified": 0,
+            "resource_count": 2
+          },
+          "authority": "DERIVED"
+        },
+        {
+          "domain": "HARDWARE",
+          "status": "OK",
+          "open_incident_count": 0,
+          "last_observation": {
+            "id": 9566,
+            "observed_at": "2026-09-30T16:48:12.759482Z",
+            "source": "hardware_observations",
+            "collector": "hardware_temperature",
+            "device_count": 2,
+            "resource_count": 2,
+            "statuses": {
+              "OK": 2,
+              "HOT": 0,
+              "URGENT": 0,
+              "MISSING": 0
+            }
+          },
+          "authority": "DERIVED"
+        },
+        {
+          "domain": "MOUNT",
+          "status": "OK",
+          "open_incident_count": 0,
+          "last_observation": {
+            "id": 3724,
+            "observed_at": "2026-09-30T16:47:42.195Z",
+            "source": "rackmarshal-mount-m4.2",
+            "collector": "mount_catalog",
+            "schema_version": 1,
+            "catalog_version": "2026-09-17",
+            "checked_count": 23,
+            "ok_count": 23,
+            "problem_count": 0,
+            "resource_count": 23
+          },
+          "authority": "DERIVED"
+        }
+      ],
+      "open_incident_count": 11,
+      "generated_from": "rackmarshal-ledgers"
+    },
+    "meta": {}
+  },
+  "list_incidents": {
+    "api_version": "v1",
+    "generated_at": "2026-09-30T16:48:27.800439Z",
+    "data": [
+      {
+        "id": "BACKUP:34",
+        "local_id": 34,
+        "domain": "BACKUP",
+        "resource_type": "backup_phone",
+        "resource_key": "michael",
+        "display_name": "Phone backup (michael)",
+        "incident_type": "STATUS-CHANGED",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-30T02:46:32.914439Z",
+        "last_abnormal_at": "2026-09-30T16:47:09.364907Z",
+        "recovered_at": null,
+        "occurrence_count": 155,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:10974",
+          "observation:BACKUP:11333"
+        ],
+        "opening_changes": [
+          {
+            "actual": 168.072,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": 182.082,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ]
+      },
+      {
+        "id": "BACKUP:29",
+        "local_id": 29,
+        "domain": "BACKUP",
+        "resource_type": "backup_phone",
+        "resource_key": "preston",
+        "display_name": "Phone backup (preston)",
+        "incident_type": "STATUS-CHANGED",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-27T14:22:24.258895Z",
+        "last_abnormal_at": "2026-09-30T16:47:09.364907Z",
+        "recovered_at": null,
+        "occurrence_count": 545,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:9204",
+          "observation:BACKUP:11333"
+        ],
+        "opening_changes": [
+          {
+            "actual": 168.073,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": 242.485,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ]
+      },
+      {
+        "id": "BACKUP:26",
+        "local_id": 26,
+        "domain": "BACKUP",
+        "resource_type": "backup_phone",
+        "resource_key": "olivia",
+        "display_name": "Phone backup (olivia)",
+        "incident_type": "STATUS-CHANGED",
+        "state": "OPEN",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-26T05:25:00.647837Z",
+        "last_abnormal_at": "2026-09-30T16:47:09.364907Z",
+        "recovered_at": null,
+        "occurrence_count": 576,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:8389",
+          "observation:BACKUP:11333"
+        ],
+        "opening_changes": [
+          {
+            "actual": 168.788,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": 276.157,
+            "expected": "<= 168.0",
+            "field": "phone_age_hours"
+          }
+        ]
+      }
+    ],
+    "meta": {
+      "limit": 100,
+      "next_cursor": null,
+      "total": 3
+    }
+  },
+  "get_incident_timeline": {
+    "api_version": "v1",
+    "generated_at": "2026-09-30T16:48:27.805733Z",
+    "data": {
+      "incident_id": "BACKUP:38",
+      "domain": "BACKUP",
+      "resource_type": "backup_host_verify",
+      "resource_key": "pbs-native-weekly",
+      "state": "RECOVERED",
+      "opened_at": "2026-09-30T06:12:42.254015Z",
+      "last_abnormal_at": "2026-09-30T16:43:12.282966Z",
+      "recovered_at": "2026-09-30T16:47:09.364907Z",
+      "items": [
+        {
+          "kind": "INCIDENT_OPENED",
+          "timestamp": "2026-09-30T06:12:42.254015Z",
+          "authority": "DERIVED",
+          "event_id": "BACKUP:1153",
+          "observation_id": "BACKUP:11057",
+          "changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "evidence_refs": [
+            "event:BACKUP:1153",
+            "observation:BACKUP:11057"
+          ]
+        },
+        {
+          "kind": "MATERIAL_CHANGE",
+          "timestamp": "2026-09-30T16:43:12.282966Z",
+          "authority": "DERIVED",
+          "event_id": "BACKUP:1622",
+          "observation_id": "BACKUP:11332",
+          "changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "repeat_count": 118,
+          "first_observed_at": "2026-09-30T06:12:42.254015Z",
+          "evidence_refs": [
+            "observation:BACKUP:11057",
+            "observation:BACKUP:11332"
+          ]
+        },
+        {
+          "kind": "LAST_ABNORMAL",
+          "timestamp": "2026-09-30T16:43:12.282966Z",
+          "authority": "DERIVED",
+          "event_id": "BACKUP:1622",
+          "observation_id": "BACKUP:11332",
+          "changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "evidence_refs": [
+            "event:BACKUP:1622",
+            "observation:BACKUP:11332"
+          ]
+        },
+        {
+          "kind": "INCIDENT_RECOVERED",
+          "timestamp": "2026-09-30T16:47:09.364907Z",
+          "authority": "DERIVED",
+          "event_id": null,
+          "observation_id": "BACKUP:11333",
+          "changes": null,
+          "evidence_refs": [
+            "observation:BACKUP:11333"
+          ]
+        }
+      ],
+      "authority": "DERIVED",
+      "provenance": {
+        "linkage_mode": "DIRECT_EVENT_IDS",
+        "direct_event_linkage": true
+      }
+    },
+    "meta": {}
+  },
+  "get_incident_evidence_bundle": {
+    "api_version": "v1",
+    "generated_at": "2026-09-30T16:48:27.812491Z",
+    "data": {
+      "incident": {
+        "id": "BACKUP:38",
+        "local_id": 38,
+        "domain": "BACKUP",
+        "resource_type": "backup_host_verify",
+        "resource_key": "pbs-native-weekly",
+        "display_name": "PBS native weekly verification",
+        "incident_type": "STATUS-CHANGED",
+        "state": "RECOVERED",
+        "severity": null,
+        "baseline_state": "VERIFIED",
+        "opened_at": "2026-09-30T06:12:42.254015Z",
+        "last_abnormal_at": "2026-09-30T16:43:12.282966Z",
+        "recovered_at": "2026-09-30T16:47:09.364907Z",
+        "occurrence_count": 118,
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:11057",
+          "observation:BACKUP:11332",
+          "observation:BACKUP:11333"
+        ],
+        "opening_changes": [
+          {
+            "actual": null,
+            "expected": "OK",
+            "field": "status"
+          },
+          {
+            "actual": "weekly_verification_task_not_found",
+            "expected": "none",
+            "field": "probe_errors"
+          },
+          {
+            "actual": null,
+            "expected": "<= 192.0",
+            "field": "age_hours"
+          }
+        ],
+        "latest_changes": [
+          {
+            "actual": null,
+            "expected": "OK",
+            "field": "status"
+          },
+          {
+            "actual": "weekly_verification_task_not_found",
+            "expected": "none",
+            "field": "probe_errors"
+          },
+          {
+            "actual": null,
+            "expected": "<= 192.0",
+            "field": "age_hours"
+          }
+        ]
+      },
+      "timeline": {
+        "incident_id": "BACKUP:38",
+        "domain": "BACKUP",
+        "resource_type": "backup_host_verify",
+        "resource_key": "pbs-native-weekly",
+        "state": "RECOVERED",
+        "opened_at": "2026-09-30T06:12:42.254015Z",
+        "last_abnormal_at": "2026-09-30T16:43:12.282966Z",
+        "recovered_at": "2026-09-30T16:47:09.364907Z",
+        "items": [
+          {
+            "kind": "INCIDENT_OPENED",
+            "timestamp": "2026-09-30T06:12:42.254015Z",
+            "authority": "DERIVED",
+            "event_id": "BACKUP:1153",
+            "observation_id": "BACKUP:11057",
+            "changes": [
+              {
+                "actual": null,
+                "expected": "OK",
+                "field": "status"
+              },
+              {
+                "actual": "weekly_verification_task_not_found",
+                "expected": "none",
+                "field": "probe_errors"
+              },
+              {
+                "actual": null,
+                "expected": "<= 192.0",
+                "field": "age_hours"
+              }
+            ],
+            "evidence_refs": [
+              "event:BACKUP:1153",
+              "observation:BACKUP:11057"
+            ]
+          },
+          {
+            "kind": "MATERIAL_CHANGE",
+            "timestamp": "2026-09-30T16:43:12.282966Z",
+            "authority": "DERIVED",
+            "event_id": "BACKUP:1622",
+            "observation_id": "BACKUP:11332",
+            "changes": [
+              {
+                "actual": null,
+                "expected": "OK",
+                "field": "status"
+              },
+              {
+                "actual": "weekly_verification_task_not_found",
+                "expected": "none",
+                "field": "probe_errors"
+              },
+              {
+                "actual": null,
+                "expected": "<= 192.0",
+                "field": "age_hours"
+              }
+            ],
+            "repeat_count": 118,
+            "first_observed_at": "2026-09-30T06:12:42.254015Z",
+            "evidence_refs": [
+              "observation:BACKUP:11057",
+              "observation:BACKUP:11332"
+            ]
+          },
+          {
+            "kind": "LAST_ABNORMAL",
+            "timestamp": "2026-09-30T16:43:12.282966Z",
+            "authority": "DERIVED",
+            "event_id": "BACKUP:1622",
+            "observation_id": "BACKUP:11332",
+            "changes": [
+              {
+                "actual": null,
+                "expected": "OK",
+                "field": "status"
+              },
+              {
+                "actual": "weekly_verification_task_not_found",
+                "expected": "none",
+                "field": "probe_errors"
+              },
+              {
+                "actual": null,
+                "expected": "<= 192.0",
+                "field": "age_hours"
+              }
+            ],
+            "evidence_refs": [
+              "event:BACKUP:1622",
+              "observation:BACKUP:11332"
+            ]
+          },
+          {
+            "kind": "INCIDENT_RECOVERED",
+            "timestamp": "2026-09-30T16:47:09.364907Z",
+            "authority": "DERIVED",
+            "event_id": null,
+            "observation_id": "BACKUP:11333",
+            "changes": null,
+            "evidence_refs": [
+              "observation:BACKUP:11333"
+            ]
+          }
+        ],
+        "authority": "DERIVED",
+        "provenance": {
+          "linkage_mode": "DIRECT_EVENT_IDS",
+          "direct_event_linkage": true
+        }
+      },
+      "opening_evidence": {
+        "observation": {
+          "id": "observation:BACKUP:11057",
+          "kind": "observation",
+          "domain": "BACKUP",
+          "authority": "OBSERVED",
+          "content": {
+            "id": "BACKUP:11057",
+            "local_id": 11057,
+            "domain": "BACKUP",
+            "collector": "backup_domain",
+            "observed_at": "2026-09-30T06:12:42.254015Z",
+            "recorded_at": "2026-09-30T06:12:50.380Z",
+            "source": "Proxmox VE API + Proxmox Backup Server API",
+            "schema_version": 1,
+            "authority": "OBSERVED",
+            "evidence_ref": "observation:BACKUP:11057"
+          }
+        },
+        "event": {
+          "id": "event:BACKUP:1153",
+          "kind": "event",
+          "domain": "BACKUP",
+          "authority": "DERIVED",
+          "content": {
+            "id": "BACKUP:1153",
+            "local_id": 1153,
+            "domain": "BACKUP",
+            "observation_id": "BACKUP:11057",
+            "resource_type": "backup_host_verify",
+            "resource_key": "pbs-native-weekly",
+            "event_type": "STATUS-CHANGED",
+            "baseline_state": "VERIFIED",
+            "observed_at": "2026-09-30T06:12:42.254015Z",
+            "changes": [
+              {
+                "actual": null,
+                "expected": "OK",
+                "field": "status"
+              },
+              {
+                "actual": "weekly_verification_task_not_found",
+                "expected": "none",
+                "field": "probe_errors"
+              },
+              {
+                "actual": null,
+                "expected": "<= 192.0",
+                "field": "age_hours"
+              }
+            ],
+            "authority": "DERIVED",
+            "evidence_refs": [
+              "observation:BACKUP:11057"
+            ]
+          }
+        }
+      },
+      "latest_abnormal_evidence": {
+        "observation": {
+          "id": "observation:BACKUP:11332",
+          "kind": "observation",
+          "domain": "BACKUP",
+          "authority": "OBSERVED",
+          "content": {
+            "id": "BACKUP:11332",
+            "local_id": 11332,
+            "domain": "BACKUP",
+            "collector": "backup_domain",
+            "observed_at": "2026-09-30T16:43:12.282966Z",
+            "recorded_at": "2026-09-30T16:43:20.203Z",
+            "source": "Proxmox VE API + Proxmox Backup Server API",
+            "schema_version": 1,
+            "authority": "OBSERVED",
+            "evidence_ref": "observation:BACKUP:11332"
+          }
+        },
+        "event": {
+          "id": "event:BACKUP:1622",
+          "kind": "event",
+          "domain": "BACKUP",
+          "authority": "DERIVED",
+          "content": {
+            "id": "BACKUP:1622",
+            "local_id": 1622,
+            "domain": "BACKUP",
+            "observation_id": "BACKUP:11332",
+            "resource_type": "backup_host_verify",
+            "resource_key": "pbs-native-weekly",
+            "event_type": "STATUS-CHANGED",
+            "baseline_state": "VERIFIED",
+            "observed_at": "2026-09-30T16:43:12.282966Z",
+            "changes": [
+              {
+                "actual": null,
+                "expected": "OK",
+                "field": "status"
+              },
+              {
+                "actual": "weekly_verification_task_not_found",
+                "expected": "none",
+                "field": "probe_errors"
+              },
+              {
+                "actual": null,
+                "expected": "<= 192.0",
+                "field": "age_hours"
+              }
+            ],
+            "authority": "DERIVED",
+            "evidence_refs": [
+              "observation:BACKUP:11332"
+            ]
+          }
+        }
+      },
+      "recovery_evidence": {
+        "observation": {
+          "id": "observation:BACKUP:11333",
+          "kind": "observation",
+          "domain": "BACKUP",
+          "authority": "OBSERVED",
+          "content": {
+            "id": "BACKUP:11333",
+            "local_id": 11333,
+            "domain": "BACKUP",
+            "collector": "backup_domain",
+            "observed_at": "2026-09-30T16:47:09.364907Z",
+            "recorded_at": "2026-09-30T16:47:17.729Z",
+            "source": "Proxmox VE API + Proxmox Backup Server API",
+            "schema_version": 1,
+            "authority": "OBSERVED",
+            "evidence_ref": "observation:BACKUP:11333"
+          }
+        },
+        "event": null
+      },
+      "material_changes": [
+        {
+          "domain": "BACKUP",
+          "resource_type": "backup_host_verify",
+          "resource_key": "pbs-native-weekly",
+          "event_type": "STATUS-CHANGED",
+          "baseline_state": "VERIFIED",
+          "first_observed_at": "2026-09-30T06:12:42.254015Z",
+          "last_observed_at": "2026-09-30T16:43:12.282966Z",
+          "first_event_id": "BACKUP:1153",
+          "latest_event_id": "BACKUP:1622",
+          "first_changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "latest_changes": [
+            {
+              "actual": null,
+              "expected": "OK",
+              "field": "status"
+            },
+            {
+              "actual": "weekly_verification_task_not_found",
+              "expected": "none",
+              "field": "probe_errors"
+            },
+            {
+              "actual": null,
+              "expected": "<= 192.0",
+              "field": "age_hours"
+            }
+          ],
+          "repeat_count": 118,
+          "first_evidence_refs": [
+            "observation:BACKUP:11057"
+          ],
+          "latest_evidence_refs": [
+            "observation:BACKUP:11332"
+          ],
+          "authority": "DERIVED"
+        }
+      ],
+      "provenance": {
+        "linkage_mode": "DIRECT_EVENT_IDS",
+        "authoritative_ids": {
+          "opened_observation_id": 11057,
+          "last_abnormal_observation_id": 11332,
+          "recovered_observation_id": 11333,
+          "opened_event_id": 1153,
+          "last_event_id": 1622
+        },
+        "limitations": []
+      },
+      "authority": "DERIVED"
+    },
+    "meta": {}
+  },
+  "result": "PASS"
+}

@@ -1,0 +1,19 @@
+{
+  "revision": "5ad27c66b72bd80c9ed3187500ba00938d008876",
+  "backup": "/var/lib/homelab-monitor/pbs-cache-window-ie06au2w",
+  "started_at": "2026-09-30T16:47:08.044025+00:00",
+  "old_sha256": "1cdc4cd961254ad71a33b0040219aa020feffdaf6ceb74dd2e96a84f47cb03b9",
+  "new_sha256": "194555aca0a8b3f05abd84e2d592b65322125c6c6c6b2ae696fbb3c6318f97d7",
+  "state": "ACCEPTED",
+  "timer_previously_active": true,
+  "cache_result": {
+    "job_id": "weekly-homelab",
+    "datastore": "homelab-backups",
+    "status": "OK",
+    "starttime": 1790497800,
+    "endtime": 1790498219,
+    "age_hours": 80.169,
+    "errors": []
+  },
+  "timer_restored": true
+}

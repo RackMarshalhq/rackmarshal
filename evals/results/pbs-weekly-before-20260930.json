@@ -1,0 +1,128 @@
+{
+  "source": "actual read-only production MCP",
+  "incident": {
+    "id": "BACKUP:38",
+    "local_id": 38,
+    "domain": "BACKUP",
+    "resource_type": "backup_host_verify",
+    "resource_key": "pbs-native-weekly",
+    "display_name": "PBS native weekly verification",
+    "incident_type": "STATUS-CHANGED",
+    "state": "OPEN",
+    "severity": null,
+    "baseline_state": "VERIFIED",
+    "opened_at": "2026-09-30T06:12:42.254015Z",
+    "last_abnormal_at": "2026-09-30T16:32:10.662338Z",
+    "recovered_at": null,
+    "occurrence_count": 116,
+    "authority": "DERIVED",
+    "evidence_refs": [
+      "observation:BACKUP:11057",
+      "observation:BACKUP:11326"
+    ],
+    "opening_changes": [
+      {
+        "actual": null,
+        "expected": "OK",
+        "field": "status"
+      },
+      {
+        "actual": "weekly_verification_task_not_found",
+        "expected": "none",
+        "field": "probe_errors"
+      },
+      {
+        "actual": null,
+        "expected": "<= 192.0",
+        "field": "age_hours"
+      }
+    ],
+    "latest_changes": [
+      {
+        "actual": null,
+        "expected": "OK",
+        "field": "status"
+      },
+      {
+        "actual": "weekly_verification_task_not_found",
+        "expected": "none",
+        "field": "probe_errors"
+      },
+      {
+        "actual": null,
+        "expected": "<= 192.0",
+        "field": "age_hours"
+      }
+    ]
+  },
+  "latest_abnormal_evidence": {
+    "observation": {
+      "id": "observation:BACKUP:11326",
+      "kind": "observation",
+      "domain": "BACKUP",
+      "authority": "OBSERVED",
+      "content": {
+        "id": "BACKUP:11326",
+        "local_id": 11326,
+        "domain": "BACKUP",
+        "collector": "backup_domain",
+        "observed_at": "2026-09-30T16:32:10.662338Z",
+        "recorded_at": "2026-09-30T16:32:18.621Z",
+        "source": "Proxmox VE API + Proxmox Backup Server API",
+        "schema_version": 1,
+        "authority": "OBSERVED",
+        "evidence_ref": "observation:BACKUP:11326"
+      }
+    },
+    "event": {
+      "id": "event:BACKUP:1614",
+      "kind": "event",
+      "domain": "BACKUP",
+      "authority": "DERIVED",
+      "content": {
+        "id": "BACKUP:1614",
+        "local_id": 1614,
+        "domain": "BACKUP",
+        "observation_id": "BACKUP:11326",
+        "resource_type": "backup_host_verify",
+        "resource_key": "pbs-native-weekly",
+        "event_type": "STATUS-CHANGED",
+        "baseline_state": "VERIFIED",
+        "observed_at": "2026-09-30T16:32:10.662338Z",
+        "changes": [
+          {
+            "actual": null,
+            "expected": "OK",
+            "field": "status"
+          },
+          {
+            "actual": "weekly_verification_task_not_found",
+            "expected": "none",
+            "field": "probe_errors"
+          },
+          {
+            "actual": null,
+            "expected": "<= 192.0",
+            "field": "age_hours"
+          }
+        ],
+        "authority": "DERIVED",
+        "evidence_refs": [
+          "observation:BACKUP:11326"
+        ]
+      }
+    }
+  },
+  "recovery_evidence": null,
+  "provenance": {
+    "linkage_mode": "DIRECT_EVENT_IDS",
+    "authoritative_ids": {
+      "opened_observation_id": 11057,
+      "last_abnormal_observation_id": 11326,
+      "recovered_observation_id": null,
+      "opened_event_id": 1153,
+      "last_event_id": 1614
+    },
+    "limitations": []
+  }
+}

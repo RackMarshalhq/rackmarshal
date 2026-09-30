@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-09-30T16:49:39.474044+00:00",
+  "checks": [
+    {
+      "path": "/incidents",
+      "http_status": 200,
+      "security": "PASS"
+    },
+    {
+      "path": "/incidents/BACKUP:38",
+      "http_status": 200,
+      "security": "PASS"
+    }
+  ],
+  "result": "PASS"
+}
