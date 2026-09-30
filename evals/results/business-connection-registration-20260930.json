@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-30",
+  "workspace": "RackMarshal Business",
+  "workspace_id": "7a12a28c-ed93-4d70-be81-0a459c667e1a",
+  "tunnel_id": "tunnel_6abc5a3cf2588191ad000444eb1164b3",
+  "association": "SAVED_AND_UI_VERIFIED",
+  "existing_platform_organization_preserved": true,
+  "registered_plugin_id": "plugin_asdk_app_6abd4868c4e481919c3900f583f35322",
+  "plugin_url": "https://chatgpt.com/plugins/plugin_asdk_app_6abd4868c4e481919c3900f583f35322",
+  "connection_state": "Connected",
+  "ui_tool_category": "Read",
+  "tools": [
+    "get_backup_status",
+    "get_domain_status",
+    "get_evidence",
+    "get_health",
+    "get_incident",
+    "get_incident_evidence_bundle",
+    "get_incident_timeline",
+    "get_recent_changes",
+    "get_recovery_history",
+    "get_status",
+    "list_incidents"
+  ],
+  "workspace_smoke": {
+    "chat_url": "https://chatgpt.com/c/6abd48d0-ee68-83ea-902d-7aee3d5c3523",
+    "chat_title": "RackMarshal Acceptance Test",
+    "model_ui": "GPT-6.1 Sol Medium",
+    "used_plugin_ui": true,
+    "visible_call_titles": [
+      "Listing Open Incidents",
+      "Checking RackMarshal operational health",
+      "Assessing Domain States and Incidents"
+    ],
+    "response_reported_generated_at": {
+      "get_health": "2026-09-30T17:37:44.276686Z",
+      "get_status": "2026-09-30T17:37:44.791110Z",
+      "list_incidents": "2026-09-30T17:37:44.181702Z"
+    },
+    "reported_open_incidents": [
+      "BACKUP:34",
+      "BACKUP:29",
+      "BACKUP:26"
+    ],
+    "reported_health": "OK",
+    "reported_overall_status": "PROBLEM",
+    "facts_advisory_separated": true,
+    "raw_request_response_export": "PENDING"
+  },
+  "pending": [
+    "packaged skill binding",
+    "full workspace acceptance",
+    "audience/admin controls verification"
+  ],
+  "public_ingress_added": false,
+  "credentials_created": false,
+  "production_code_redeployed": false
+}
