@@ -70,3 +70,12 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** Notification/delivery tests explicitly close their in-memory SQLite connections.
 - **VERIFIED:** Test-owned temporary directories/files now have explicit cleanup.
 - **VERIFIED:** Full suite passes 34 tests under `PYTHONWARNINGS=always::ResourceWarning` with tracemalloc enabled and produces zero `ResourceWarning` messages.
+
+
+## MCP V1 READ-ONLY TOOL SURFACE — 2026-09-29
+
+- **FROZEN:** MCP v1 contains exactly nine goal-oriented tools: `get_health`, `get_status`, `list_incidents`, `get_incident`, `get_recent_changes`, `get_domain_status`, `get_backup_status`, `get_evidence`, and `get_recovery_history`.
+- **FROZEN:** `explain_state` is not an MCP v1 tool; explanation belongs in the agent/skill layer and must remain distinguishable from RackMarshal evidence.
+- **VERIFIED:** The tool service is implemented over API v1/service contracts only; it does not access SQLite directly.
+- **VERIFIED:** Five MCP tool-service tests pass, including exact-surface, stable-ID, filtering, deterministic-status, and invalid-ID behavior.
+- **NEXT:** Install the optional official MCP Python SDK in an isolated development environment, inspect the advertised schemas/annotations with MCP Inspector or SDK client tests, then exercise all nine tools against real RackMarshal data before deployment.

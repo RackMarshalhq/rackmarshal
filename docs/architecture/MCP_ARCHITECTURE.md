@@ -1,6 +1,6 @@
 # RackMarshal MCP Architecture
 
-Status: **DESIGN BASELINE**
+Status: **MCP V1 TOOL SURFACE FROZEN / IMPLEMENTATION STARTED**
 Date: 2026-09-29
 
 ## Principle
@@ -11,19 +11,24 @@ The MCP server SHALL consume the public RackMarshal API or an equivalent stable 
 
 ## Phase 1: read-only tools
 
-- `rackmarshal_get_health`
-- `rackmarshal_get_status`
-- `rackmarshal_list_incidents`
-- `rackmarshal_get_incident`
-- `rackmarshal_get_recent_changes`
-- `rackmarshal_get_domain_status`
-- `rackmarshal_get_backup_status`
-- `rackmarshal_get_evidence`
-- `rackmarshal_get_recovery_history`
-- `rackmarshal_explain_state`
+- `get_health`
+- `get_status`
+- `list_incidents`
+- `get_incident`
+- `get_recent_changes`
+- `get_domain_status`
+- `get_backup_status`
+- `get_evidence`
+- `get_recovery_history`
 
 ## Tool response requirements
 
 Every tool response SHALL preserve provenance, observed time, authority level, source identifiers, and uncertainty where applicable.
 
 MCP v1 is read-only. No infrastructure mutation tools are permitted in the first release.
+
+## Selection and safety contract
+
+These nine tools are deliberately goal-oriented rather than a REST mirror. `explain_state` is deferred: explanation is an agent/skill responsibility over authoritative tool results, not a RackMarshal evidence-producing tool. Every v1 tool is annotated read-only, non-destructive, and closed-world. The MCP layer consumes API v1/service contracts and does not query SQLite directly.
+
+The first implementation uses the official Python MCP SDK as an optional dependency and Streamable HTTP transport. Authentication/authorization and deployment exposure must be designed before any non-loopback/public deployment.
