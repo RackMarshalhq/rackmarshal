@@ -164,3 +164,13 @@ No MCP implementation or autonomous-action implementation is authorized by this 
 - **VERIFIED:** Full suite passes 64 tests with zero `ResourceWarning` messages.
 - **GATE HELD:** Updated service code is installed in the MCP integration runtime, but MCP protocol discovery still advertises exactly the original 9 read-only tools. `get_incident_timeline` and `get_incident_evidence_bundle` are NOT exposed yet.
 - **NEXT:** Design/freeze the two goal-oriented MCP tool contracts over these now-proven API/service surfaces, then protocol-test them before expanding the public MCP surface from 9 to 11 tools.
+
+
+## RACKMARSHAL 1.1A MCP CONTRACT FREEZE — 2026-09-29
+
+- **FROZEN:** The next MCP expansion contains exactly two goal-oriented tools: `get_incident_timeline` and `get_incident_evidence_bundle`.
+- **FROZEN:** `get_incident_timeline` accepts only required canonical `incident_id`. `get_incident_evidence_bundle` accepts required canonical `incident_id` plus optional integer `limit` (default 50; range 1–50).
+- **FROZEN:** Both tools remain read-only/non-destructive/closed-world and expose only the proven API v1.1 deterministic incident surfaces. No SQL, filesystem paths, commands, URLs, arbitrary query expressions, raw payloads, or write authority are accepted/exposed.
+- **FROZEN:** Invalid IDs/limits and missing incidents fail as tool errors; no fallback search or synthesized incident data is permitted.
+- **GATE HELD:** Public MCP remains exactly 9 tools. The two additions are not registered until an isolated candidate MCP server passes protocol discovery/schema/annotation/call/error/sanitization tests against the real RackMarshal database.
+- **PROMOTION TARGET:** After that proof, public MCP discovery must expose exactly 11 tools and no additional capability.
