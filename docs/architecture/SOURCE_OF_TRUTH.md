@@ -519,3 +519,11 @@ Next useful step: normal private operational use with the skill explicitly selec
 - **RECORDED MCP SNAPSHOT:** get_status generated_at 2026-09-30T19:01:37.810957Z reports overall PROBLEM, three BACKUP incidents, and PVE/ZFS/HA/HARDWARE/MOUNT OK. list_incidents(state=OPEN, limit=50) generated_at 2026-09-30T19:01:38.560967Z returns BACKUP:34 (michael), BACKUP:29 (preston), BACKUP:26 (olivia), total 3, next_cursor null. All three last abnormal conditions reference observation:BACKUP:11406 at 18:56:12.241080Z. This is a complete OPEN inventory for that response, not a live resource probe or root-cause determination.
 - **EXPECTED / UNVERIFIED:** Michael phone backup planned tonight September 30; Olivia/Preston October 5. Plans do not waive policy or prove recovery. Future normal recorded observations must establish recovery.
 - **CHANGES:** Project documentation only. No production code, containers, incident lifecycle, credentials, tunnel configuration, or workspace permissions changed.
+
+
+## USER-APPROVED ROADMAP REVISION — 2026-09-30
+
+- **IMPLEMENTED:** Architecture roadmap updated after September 29 discussion and today's qualifications. Prior API/MCP/provenance/Investigator goals are recorded as demonstrated within their tested scope, not new public releases.
+- **PRIORITIES:** Sustained reliability and evidence quality; independent reproducible experience and hands-on testers; deferred downloads/network/storage expansion; audit and policy foundations before controlled actions; additional runtimes and optional specialist agents later. Unsupported-resource/coverage honesty is an explicit acceptance goal.
+- **EXPECTED:** Monthly last-morning roadmap review beginning October 31, America/New_York, plus milestone reviews during active work. Automation creation is a separate confirmation; this entry alone does not prove scheduling. Reviews recommend changes and do not grant action authority or expand production scope.
+- **BOUNDARIES:** Documentation only; no collector, incident policy, production runtime, workspace permission, or public release changed.
