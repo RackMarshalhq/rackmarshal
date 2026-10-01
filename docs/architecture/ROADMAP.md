@@ -16,7 +16,7 @@ API/MCP, deterministic provenance and lifecycle evidence, incident UI, cycle rec
 
 ## 1.1 qualification and 1.2 development
 
-1.1 RC1 is published; 1.0.0 remains stable. Apply [internal release acceptance](RELEASE_ACCEPTANCE.md) before promoting 1.1. Develop 1.2 in parallel: guided setup and explicit monitoring coverage, then better deterministic investigation summaries. First increment: read-only setup planning and enabled/disabled/historical domain selection. No new monitoring domain or action authority is enabled.
+1.1 RC1 is published; 1.0.0 remains stable. Apply [internal release acceptance](RELEASE_ACCEPTANCE.md) before promoting 1.1. Develop 1.2 in parallel: guided setup and explicit monitoring coverage, deterministic investigation summaries and missing-evidence explanations. Implemented development increments: read-only setup planning, enabled/disabled/historical domain selection, and deterministic incident explanations with evidence gaps and lifecycle conflict review. No new monitoring domain or action authority is enabled.
 
 ## Revised priorities and completion evidence
 

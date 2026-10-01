@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rackmarshal"
-version = "1.2.0.dev1"
+version = "1.2.0.dev2"
 description = "Local-first infrastructure operations and incident management for self-hosted systems."
 readme = "README.md"
 requires-python = ">=3.11"
