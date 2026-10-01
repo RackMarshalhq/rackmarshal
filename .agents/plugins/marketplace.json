@@ -1,0 +1,20 @@
+{
+  "name": "rackmarshal",
+  "interface": {
+    "displayName": "RackMarshal"
+  },
+  "plugins": [
+    {
+      "name": "rackmarshal-investigator",
+      "source": {
+        "source": "local",
+        "path": "./packaging/chatgpt-business"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
