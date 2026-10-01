@@ -1,6 +1,6 @@
 # RackMarshal™
 
-**Development: 1.2.0rc1.** Setup/coverage improvements are under qualification; published RC1 remains a separate artifact.
+**Development: 1.2.0rc2.** Setup/coverage improvements are under qualification; published RC1 remains a separate artifact.
 
 Local-first infrastructure operations and incident management for self-hosted systems.
 

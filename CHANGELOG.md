@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.2.0rc1 — Qualification candidate (not published)
+## 1.2.0rc2 — Qualification candidate (not published)
 
+- Prevent mount recovery from missing/unknown observation rows; require an explicit healthy mount result and retain accurate OPEN counts.
 - Add deterministic incident explanations for opening/latest abnormal conditions, recovery references, missing evidence and conflicting lifecycle records; no root cause or current health inferred.
 - Add read-only `rackmarshal setup-plan` guidance with fixed configuration key/file readiness results, no secret values and no target probes.
 - Identify enabled/disabled domain selection on dashboard and detail coverage; preserve disabled-domain records as historical evidence and explicitly state unsupported monitoring coverage.

@@ -7,7 +7,7 @@ Core works without AI. Investigator is optional and read-only. A connection chec
 Install the exact candidate wheel using the installer. Install its optional MCP dependencies into the same environment:
 
 ```bash
-sudo /opt/rackmarshal/venv/bin/pip install '/path/to/rackmarshal-1.2.0rc1-py3-none-any.whl[mcp]'
+sudo /opt/rackmarshal/venv/bin/pip install '/path/to/rackmarshal-1.2.0rc2-py3-none-any.whl[mcp]'
 sudo RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf /opt/rackmarshal/venv/bin/rackmarshal-mcp
 ```
 
