@@ -20,7 +20,7 @@ These are demonstrated capabilities in the qualified environment, not new public
 
 ## 1.1 qualification and 1.2 development
 
-1.1 RC1 is published and download-verified; 1.0.0 remains stable. Apply [internal release acceptance](RELEASE_ACCEPTANCE.md) before promotion. Continue 1.2 development in parallel: guided setup, explicit monitoring coverage, then clearer deterministic investigation summaries. First increment implemented on development/1.2-setup-coverage, development version 1.2.0.dev1; not deployed to production or released.
+1.1 RC1 is published and download-verified; 1.0.0 remains stable. Apply [internal release acceptance](RELEASE_ACCEPTANCE.md) before promotion. Continue 1.2 development in parallel: guided setup, explicit monitoring coverage, then clearer deterministic investigation summaries. Setup/coverage and deterministic incident explanation increments implemented on development/1.2-setup-coverage, development version 1.2.0.dev2; not deployed to production or released.
 
 ## Revised priorities and completion evidence
 
