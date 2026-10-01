@@ -81,4 +81,4 @@ Read this roadmap and current SOURCE_OF_TRUTH.md before reviewing. Compare verif
 
 ## 1.2 checkpoint — 2026-10-01
 
-All five implementation goals are present in candidate1.2.0rc2. Exact-artifact install/upgrade/rollback and scoped CLI/private Work Investigator qualification passed. The72-hour synthetic operation window is running; production routine-use qualification, desktop/implicit activation and broader audience controls remain separate/unqualified. See SOURCE_OF_TRUTH.md and the private qualification receipt for retained evidence. No action authority or new monitoring domain is enabled.
+All five implementation goals are present in candidate 1.2.0rc2. Exact-artifact install/upgrade/rollback and scoped CLI/private Work Investigator qualification passed. The 72-hour synthetic operation window is running; production routine-use qualification, desktop/implicit activation and broader audience controls remain separate/unqualified. See SOURCE_OF_TRUTH.md and the private qualification receipt for retained evidence. No action authority or new monitoring domain is enabled.
