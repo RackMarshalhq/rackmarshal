@@ -26,7 +26,7 @@ def _changes(changes):
             rows.append(f"<li>{_e(c)}</li>")
     return "<ul class='changes'>"+"".join(rows)+"</ul>"
 
-def render_incident_page(conn,incident_id,freshness_builder=None):
+def render_incident_page(conn,incident_id,freshness_builder=None,enabled_domains=None):
     summary=incident_summary(conn,incident_id)
     if summary is None:
         return None
@@ -50,7 +50,7 @@ def render_incident_page(conn,incident_id,freshness_builder=None):
             f"<div class='refs'>{refs}</div>"
             "</article>"
         )
-    collection_html=render_collection_coverage(conn,freshness_builder,summary["domain"])
+    collection_html=render_collection_coverage(conn,freshness_builder,summary["domain"],enabled_domains=enabled_domains)
     all_refs=" ".join(_ref_link(r) for r in summary.get("evidence_refs") or [])
     provenance=summary.get("provenance") or {}
     limitations=provenance.get("limitations") or []

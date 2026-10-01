@@ -1,7 +1,7 @@
 # RackMarshal Architecture Roadmap
 
 Status: **ACTIVE ROADMAP**
-Updated: 2026-09-30
+Updated: 2026-10-01
 Basis: September 29 architecture decisions, September 30 recorded qualification, and user-approved priority revision.
 
 ## Long-term purpose
@@ -14,6 +14,10 @@ AI may investigate, explain, correlate, and recommend within its granted capabil
 
 API/MCP, deterministic provenance and lifecycle evidence, incident UI, cycle recording, and read-only Investigator behavior are implemented. Qualification applies only to tested scope; release status and supported deployments follow the exact artifact acceptance gates. Private deployment receipts are excluded from this public tree.
 
+## 1.1 qualification and 1.2 development
+
+1.1 RC1 is published; 1.0.0 remains stable. Apply [internal release acceptance](RELEASE_ACCEPTANCE.md) before promoting 1.1. Develop 1.2 in parallel: guided setup and explicit monitoring coverage, then better deterministic investigation summaries. First increment: read-only setup planning and enabled/disabled/historical domain selection. No new monitoring domain or action authority is enabled.
+
 ## Revised priorities and completion evidence
 
 ### 1. Sustained reliability and evidence quality — NOW
@@ -24,13 +28,13 @@ Maintain acceptance cases for unsupported resources and coverage questions. Answ
 
 Gate: a documented observation period and representative failure/recovery cases with retained evidence, declared gaps, and no unresolved correctness or authority violations. Passing a one-time acceptance suite alone does not complete this milestone.
 
-### 2. Reproducible product experience and hands-on testers — NEXT
+### 2. Reproducible product experience — ACTIVE, WITHOUT EXTERNAL DEPENDENCY
 
 Qualify the current experience on an independent disposable installation: install, configure, connect, investigate, upgrade, preserve history, and roll back. Reconcile public documentation and supported platform boundaries against exact final artifacts. Qualify policy binding and access/audience controls; independently test any combined cloud package or implicit activation before advertising it.
 
-Recruit hands-on testers to find installation and operational failures. Broader ecosystem/creator outreach follows reproducible installation and mature integrations; broad launch follows product qualification.
+Advance internal qualification and 1.2 development now. External tester feedback supplements retained internal evidence; it is not a release prerequisite. Recruit hands-on testers to find installation and operational failures. Broader ecosystem/creator outreach follows reproducible installation and mature integrations; broad launch follows product qualification.
 
-Gate: installer-only acceptance, upgrade/rollback and security/publication checks on the exact artifacts, plus actionable independent tester feedback. Existing historical gates remain evidence only for their tested scope.
+Gate: installer-only acceptance, upgrade/rollback and security/publication checks on the exact artifacts, plus evidence-backed internal routine-use qualification. Independent tester feedback is additive. Existing historical gates remain evidence only for their tested scope.
 
 ### 3. Deliberate monitoring expansion — DEFERRED
 

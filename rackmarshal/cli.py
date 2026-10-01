@@ -7,6 +7,14 @@ from rackmarshal.core.config import ConfigError, load_config, require
 DOMAINS=("pve","zfs","backup","ha","hardware","mount")
 ROOT = Path(__file__).resolve().parent
 
+DOMAIN_REQUIREMENTS={
+      "pve":("PVE_API_ENV","PVE_CA_FILE"),
+      "backup":("PVE_API_ENV","PVE_CA_FILE","PBS_API_ENV","PBS_CA_FILE","PVE_NODE"),
+      "ha":("HA_CREDENTIAL_FILE",),
+      "zfs":("SITE_NAME","ZFS_SSH_HOST","ZFS_SSH_USER","ZFS_SSH_KEY","ZFS_KNOWN_HOSTS"),
+      "hardware":("SITE_NAME","HARDWARE_SSH_HOST","HARDWARE_SSH_USER","HARDWARE_SSH_KEY","HARDWARE_KNOWN_HOSTS","HARDWARE_NVME_SERIALS","HARDWARE_HOT_THRESHOLD_C","HARDWARE_HOT_REQUIRED_SAMPLES","HARDWARE_URGENT_THRESHOLD_C","HARDWARE_RECOVERY_THRESHOLD_C","HARDWARE_RECOVERY_REQUIRED_SAMPLES"),
+      "mount":("PVE_API_ENV","PVE_CA_FILE","PVE_NODE","MOUNT_CATALOG_FILE","MOUNT_SSH_HOST","MOUNT_SSH_USER","MOUNT_SSH_KEY","MOUNT_KNOWN_HOSTS")}
+
 def _enabled(c):
     raw=c.get("ENABLED_DOMAINS", "").strip()
     return [] if not raw else [x.strip().lower() for x in raw.split(",") if x.strip()]
@@ -20,15 +28,9 @@ def validate(path):
     enabled=_enabled(c)
     bad=sorted(set(enabled)-set(DOMAINS))
     if bad: errors.append("unknown enabled domains: "+", ".join(bad))
-    requirements={
-      "pve":("PVE_API_ENV","PVE_CA_FILE"),
-      "backup":("PVE_API_ENV","PVE_CA_FILE","PBS_API_ENV","PBS_CA_FILE","PVE_NODE"),
-      "ha":("HA_CREDENTIAL_FILE",),
-      "zfs":("SITE_NAME","ZFS_SSH_HOST","ZFS_SSH_USER","ZFS_SSH_KEY","ZFS_KNOWN_HOSTS"),
-      "hardware":("SITE_NAME","HARDWARE_SSH_HOST","HARDWARE_SSH_USER","HARDWARE_SSH_KEY","HARDWARE_KNOWN_HOSTS","HARDWARE_NVME_SERIALS","HARDWARE_HOT_THRESHOLD_C","HARDWARE_HOT_REQUIRED_SAMPLES","HARDWARE_URGENT_THRESHOLD_C","HARDWARE_RECOVERY_THRESHOLD_C","HARDWARE_RECOVERY_REQUIRED_SAMPLES"),
-      "mount":("PVE_API_ENV","PVE_CA_FILE","PVE_NODE","MOUNT_CATALOG_FILE","MOUNT_SSH_HOST","MOUNT_SSH_USER","MOUNT_SSH_KEY","MOUNT_KNOWN_HOSTS")}
+
     for d in enabled:
-      for k in requirements.get(d,()):
+      for k in DOMAIN_REQUIREMENTS.get(d,()):
         if not c.get(k,"").strip(): errors.append(f"{d}: missing {k}")
     for k in ("PVE_API_ENV","PBS_API_ENV","HA_CREDENTIAL_FILE","ZFS_SSH_KEY","HARDWARE_SSH_KEY","MOUNT_SSH_KEY","PVE_CA_FILE","PBS_CA_FILE","ZFS_KNOWN_HOSTS","HARDWARE_KNOWN_HOSTS","MOUNT_KNOWN_HOSTS","MOUNT_CATALOG_FILE"):
       v=c.get(k,"").strip()
@@ -63,10 +65,15 @@ def main(argv=None):
     p=argparse.ArgumentParser(prog="rackmarshal"); p.add_argument("--version",action="version",version=__version__)
     s=p.add_subparsers(dest="cmd",required=True); v=s.add_parser("validate-config"); v.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
     s.add_parser("domains")
+    guide=s.add_parser("setup-plan",help="Read-only setup guidance; does not enable collection")
+    guide.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
     d=s.add_parser("diagnostic"); d.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
     m=s.add_parser("migrate"); m.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf")); m.add_argument("--apply",action="store_true")
     a=p.parse_args(argv)
     if a.cmd=="domains": print("\n".join(DOMAINS)); return 0
+    if a.cmd=="setup-plan":
+      from rackmarshal.core.setup import setup_plan
+      report=setup_plan(a.config); print(json.dumps(report,indent=2)); return 2 if report["configuration_status"]=="INVALID" else 0
     if a.cmd=="diagnostic": print(json.dumps(diagnostic(a.config),indent=2)); return 0
     if a.cmd=="migrate":
       from rackmarshal.db.migrations.migrate import main as migration_main

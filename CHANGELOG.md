@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0.dev1 — In development
+
+- Add read-only `rackmarshal setup-plan` guidance with fixed configuration key/file readiness results, no secret values and no target probes.
+- Identify enabled/disabled domain selection on dashboard and detail coverage; preserve disabled-domain records as historical evidence and explicitly state unsupported monitoring coverage.
+- External tester feedback is additive; internal evidence and exact-artifact gates decide release promotion.
+
+
 ## 1.1.0rc1 — 2026-09-30 (tester preview)
 
 ### Added
