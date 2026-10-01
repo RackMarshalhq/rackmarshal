@@ -1,10 +1,12 @@
 # Changelog
 
-## 1.2.0.dev2 — In development
+## 1.2.0rc1 — Qualification candidate (not published)
 
 - Add deterministic incident explanations for opening/latest abnormal conditions, recovery references, missing evidence and conflicting lifecycle records; no root cause or current health inferred.
 - Add read-only `rackmarshal setup-plan` guidance with fixed configuration key/file readiness results, no secret values and no target probes.
 - Identify enabled/disabled domain selection on dashboard and detail coverage; preserve disabled-domain records as historical evidence and explicitly state unsupported monitoring coverage.
+- Add deterministic local marketplace/private hosted package construction, synchronized metadata and explicit private-binding isolation.
+- Add bounded read-only Investigator connection/authority checks with sanitized failure reasons.
 - External tester feedback is additive; internal evidence and exact-artifact gates decide release promotion.
 
 

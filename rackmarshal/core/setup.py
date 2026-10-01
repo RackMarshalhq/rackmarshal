@@ -23,7 +23,7 @@ def file_readiness(value):
         return "PRESENT"
     except FileNotFoundError:
         return "MISSING"
-    except OSError:
+    except (OSError, ValueError):
         return "UNAVAILABLE"
 
 

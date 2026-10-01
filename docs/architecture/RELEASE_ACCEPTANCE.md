@@ -20,4 +20,14 @@ Qualification records must label PASS, FAIL, PENDING and scope limits. The 72-ho
 
 Advance in parallel with 1.1 qualification: guided setup and explicit domain/resource coverage first; improve deterministic incident summaries and missing-evidence explanations next. Investigator remains read-only. Downloads, network and storage usage remain deferred until a separately reviewed observation/incident/recovery policy and disposable proof exists.
 
-The first increment is `setup-plan` plus enabled/disabled/historical coverage presentation. It changes no collector or incident policy, writes no setup configuration and starts no services. Development version 1.2.0.dev1 is not a published release.
+The 1.2 candidate includes read-only setup planning, honest domain/historical coverage, deterministic incident explanations, reproducible local/private hosted Investigator packaging and a bounded read-only connection check. These changes grant no action authority and enable no new monitoring domain.
+
+Candidate completion requires:
+- All correctness, lifecycle, notification retry, collector failure/freshness, missing evidence, unsupported-resource, pagination and authority cases pass.
+- Fresh install/reboot, upgrade from stable, rollback/reupgrade, state/config preservation and invalid-wheel rejection pass against exact candidate bytes.
+- Local client installation/cached-policy integrity, MCP connection/contract, and private hosted import/explicit-selection acceptance are separately retained.
+- Expanded artifact privacy scans, dependency audit and static-analysis review are retained with their limits.
+- A 72-hour consecutive evidence-backed disposable synthetic operation window is complete. Record configured fixture scope, cycle evidence, sample gaps, artifact hashes and injected failure/recovery separately. This proves fixture operation only; production routine-use qualification remains a separate gate.
+- No unresolved correctness, privacy or authority defect remains.
+
+Desktop activation, implicit selection and broader audience distribution are unsupported until separately tested. Public release/stable promotion requires the completion matrix to show PASS for supported scope. Time gates remain PENDING until actual evidence exists; a scheduled assessment is not a passed gate.
