@@ -138,6 +138,10 @@ class PackagePromotion(unittest.TestCase):
         def copy(source, target, metadata=None):
             nonlocal failed
             if target == (self.roots["mcp"] / self.relative).resolve() and not failed:
+                # This must exercise a partial write, not a failure before any
+                # installation changed; both copies must subsequently roll back.
+                self.assertEqual((self.roots["status"] / self.relative).read_text(), "VALUE = 'new'\n")
+                self.assertEqual(target.read_text(), "VALUE = 'old'\n")
                 failed = True
                 raise OSError("Fixture write failure")
             return original(source, target, metadata)

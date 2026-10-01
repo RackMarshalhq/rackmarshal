@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import re
 import sqlite3
 import tempfile
 import unittest
@@ -69,6 +70,10 @@ class SetupSafetyTests(unittest.TestCase):
                 with self.subTest(domain=domain):
                     report = self.plan(domain)
                     self.assertEqual(report["configuration_status"], "VALID")
+                    self.assertEqual([row["domain"] for row in report["domains"] if row["enabled"]],
+                                     [domain.upper()])
+                    self.assertTrue(all(row["setup_state"] == "DISABLED"
+                                        for row in report["domains"] if not row["enabled"]))
                     self.assertEqual(self.domain(report, domain)["setup_state"], "CONFIGURATION_COMPLETE")
                     self.assertTrue(report["read_only"])
                     self.assertEqual(report["authority"], "DERIVED")
@@ -179,9 +184,16 @@ class CoverageSafetyTests(unittest.TestCase):
                                                  enabled_domains=selected)
                     # The fixture has both open and recovered incidents. Neither
                     # selection nor a fresh observation grants lifecycle authority.
-                    self.assertIn("/incidents/BACKUP:1", page)
-                    self.assertIn("/incidents/PVE:2", page)
-                    self.assertIn("/incidents/HARDWARE:3", page)
+                    rows = re.findall(r"<tr>(.*?)</tr>", page, flags=re.DOTALL)
+                    for incident_id, state in (("BACKUP:1", "RECOVERED"),
+                                               ("PVE:2", "OPEN"), ("HARDWARE:3", "OPEN")):
+                        matching = [row for row in rows if f"href='/incidents/{incident_id}'" in row]
+                        self.assertEqual(len(matching), 1)
+                        self.assertIn(f"class='badge {state}'>{state}</span>", matching[0])
+                        if state == "OPEN":
+                            self.assertNotIn("Recovered:", matching[0])
+                        else:
+                            self.assertIn("Recovered:", matching[0])
                     self.assertIn('data-freshness="' + freshness + '"', page)
                     self.assertIn("Fresh observations do not prove a cycle completed successfully or an incident recovered", page)
                     if selected == []:
