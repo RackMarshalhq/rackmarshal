@@ -25,7 +25,7 @@ Return a deterministic, ordered lifecycle for one RackMarshal incident without g
   "incident_id": "BACKUP:29",
   "domain": "BACKUP",
   "resource_type": "backup_phone",
-  "resource_key": "preston",
+  "resource_key": "user_c",
   "state": "OPEN",
   "opened_at": "2026-09-27T14:22:24.258895Z",
   "last_abnormal_at": "2026-09-30T02:08:32.908707Z",

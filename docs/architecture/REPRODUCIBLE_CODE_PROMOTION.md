@@ -152,20 +152,3 @@ Actual systemd stop/start and mutation remain unexercised in production until th
 next independently qualified code patch is ready for promotion.
 
 
-### Qualification snapshot — 2026-09-30
-
-- Staging Python 3.13: 134 tests pass, publication gate PASS, zero ResourceWarnings.
-- CT 110 Python 3.11: 134 tests run, 133 pass, one staging-only Git preparation test skipped, zero ResourceWarnings. No Git installation is required on the target.
-- Thirteen new regressions cover the transaction and real disposable installations.
-- Read-only production plan compares api/v1.py from commit 28534ba293a4aece9b67410c797aaae03a2d1008 against both installed packages: zero differences.
-- Existing service snapshot covers 26 units; readiness passes. No stop/start was invoked.
-- Pinned acceptance scripts executed from the prepared bundle: 37 HTTP checks and 18/18 MCP cases pass at approximately 11:21 AM EDT.
-- Qualification metadata and script/test SHA-256s are in evals/results/package-promotion-qualification-20260930.json; HTTP/MCP proof artifacts accompany it.
-- No production source was copied, no dependency installed, and no production rollback or maintenance stop/start was performed in this qualification. Those remain the next real deployment's validation boundary.
-
-
-### First production use — 2026-09-30
-
-The collection-coverage UI patch was promoted from source d219b51b6d5ac62fc062a9a0b2e45d914b44f41e. Plan review exposed missing shared UI modules in the older MCP installation, so ui/__init__.py and ui/narrative.py were explicitly included with api/status.py, ui/dashboard.py, and ui/incidents.py before application. Existing unchanged modules were skipped; eight package files changed.
-
-Transaction /var/lib/rackmarshal/deployment-backups/d219b51b6d5a-9hvaylv0 is ACCEPTED. Both installation hashes, bounded readiness, 45 pinned HTTP checks, and 18/18 MCP cases passed. All 12 previously active timers were restored, application services and tunnel are active, and a separate LAN proof passed for dashboard/detail security and collection coverage. Actual production stop/start, replacement, and restoration are now exercised; failure/rollback paths remain qualified through disposable regressions rather than deliberately inducing production failure. The acceptance journal and originals remain available for explicit code rollback.

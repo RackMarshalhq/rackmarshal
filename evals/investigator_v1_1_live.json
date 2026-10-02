@@ -58,7 +58,7 @@
     },
     {
       "id": "open_backup_current",
-      "goal": "Explain the current Michael phone backup incident.",
+      "goal": "Explain the current User A phone backup incident.",
       "calls": [
         [
           "list_incidents",
@@ -90,7 +90,7 @@
     },
     {
       "id": "open_backup_long_running",
-      "goal": "Why is Preston's backup incident still open?",
+      "goal": "Why is User C's backup incident still open?",
       "calls": [
         [
           "get_incident_timeline",
@@ -183,7 +183,7 @@
     },
     {
       "id": "mount_rich_timeline",
-      "goal": "Show the Preston iPhone mount incident lifecycle.",
+      "goal": "Show the User C iPhone mount incident lifecycle.",
       "calls": [
         [
           "get_incident_timeline",

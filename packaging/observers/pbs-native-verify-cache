@@ -1,17 +1,48 @@
 #!/usr/bin/env python3
-import json, subprocess, time
+"""Read a bounded PBS verification task history through explicitly configured QGA."""
+import argparse
+import json
+import subprocess
+import time
 from pathlib import Path
-OUT=Path('/var/lib/homelab-monitor/pbs-native-verify.json')
-result={'job_id':'weekly-homelab','datastore':'homelab-backups','status':None,'starttime':None,'endtime':None,'age_hours':None,'errors':[]}
-py="import json,subprocess; a=json.loads(subprocess.check_output(['proxmox-backup-manager','task','list','--all','--limit','1000','--output-format','json'],text=True)); x=[r for r in a if r.get('worker_type')=='verificationjob' and r.get('worker_id')=='homelab-backups:weekly-homelab']; print(json.dumps(x[0] if x else {}))"
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--vmid", type=int, required=True)
+parser.add_argument("--datastore", required=True)
+parser.add_argument("--job", required=True)
+parser.add_argument("--output", type=Path, required=True)
+args = parser.parse_args()
+if args.vmid <= 0 or not args.datastore or not args.job:
+    parser.error("positive VM identity, datastore, and job are required")
+OUT = args.output
+result = {"job_id": args.job, "datastore": args.datastore, "status": None,
+          "starttime": None, "endtime": None, "age_hours": None, "errors": []}
+worker_id = args.datastore + ":" + args.job
+py = ("import json,subprocess; "
+      "a=json.loads(subprocess.check_output(['proxmox-backup-manager','task','list','--all','--limit','1000','--output-format','json'],text=True)); "
+      "x=[r for r in a if r.get('worker_type')=='verificationjob' and r.get('worker_id')==" + repr(worker_id) + "]; "
+      "print(json.dumps(x[0] if x else {}))")
 try:
-    q=subprocess.run(['/usr/sbin/qm','guest','exec','104','--','python3','-c',py],capture_output=True,text=True,timeout=30,check=False)
-    if q.returncode: result['errors'].append(f"qga_rc={q.returncode}:{(q.stderr or q.stdout)[:160]}")
+    q = subprocess.run(['/usr/sbin/qm', 'guest', 'exec', str(args.vmid), '--', 'python3', '-c', py],
+                       capture_output=True, text=True, timeout=30, check=False)
+    if q.returncode:
+        result['errors'].append(f"qga_rc={q.returncode}:{(q.stderr or q.stdout)[:160]}")
     else:
-        wrapper=json.loads(q.stdout); task=json.loads(wrapper.get('out-data') or '{}')
-        if not task: result['errors'].append('weekly_verification_task_not_found')
+        wrapper = json.loads(q.stdout)
+        if wrapper.get('exitcode', 0) != 0:
+            result['errors'].append(f"guest_rc={wrapper.get('exitcode')}")
         else:
-            for k in ('status','starttime','endtime'): result[k]=task.get(k)
-            if result['endtime']: result['age_hours']=round((time.time()-float(result['endtime']))/3600.0,3)
-except Exception as exc: result['errors'].append(str(exc)[:200])
-tmp=OUT.with_suffix('.tmp'); tmp.write_text(json.dumps(result,separators=(',',':'))+'\n'); tmp.chmod(0o644); tmp.replace(OUT)
+            task = json.loads(wrapper.get('out-data') or '{}')
+            if not task:
+                result['errors'].append('weekly_verification_task_not_found')
+            else:
+                for k in ('status', 'starttime', 'endtime'):
+                    result[k] = task.get(k)
+                if result['endtime']:
+                    result['age_hours'] = round((time.time() - float(result['endtime'])) / 3600.0, 3)
+except Exception as exc:
+    result['errors'].append(str(exc)[:200])
+tmp = OUT.with_suffix('.tmp')
+tmp.write_text(json.dumps(result, separators=(',', ':')) + '\n')
+tmp.chmod(0o640)
+tmp.replace(OUT)

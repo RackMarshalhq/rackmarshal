@@ -8,7 +8,7 @@
       "name": "rackmarshal-investigator",
       "source": {
         "source": "local",
-        "path": "./packaging/chatgpt-business"
+        "path": "./"
       },
       "policy": {
         "installation": "AVAILABLE",

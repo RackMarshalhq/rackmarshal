@@ -1,34 +1,19 @@
 # RackMarshal Architecture
 
-This directory contains the frozen architecture baseline for RackMarshal's API, MCP, and agent integration work.
+RackMarshal Core remains authoritative and usable without AI. Agents consume recorded evidence through read-only APIs and MCP; their interpretation is advisory.
 
-## Documents
-
-- [Core Principles](CORE_PRINCIPLES.md)
-- [API Architecture](API_ARCHITECTURE.md)
-- [API v1 Schema](API_V1_SCHEMA.md)
-- [API v1 Contract Review](API_V1_CONTRACT_REVIEW.md)
-- [Agent Architecture](AGENT_ARCHITECTURE.md)
-- [Agent Contract](AGENT_CONTRACT.md)
-- [MCP Architecture](MCP_ARCHITECTURE.md)
-- [Security Model](SECURITY_MODEL.md)
+- [Core principles](CORE_PRINCIPLES.md)
+- [API architecture](API_ARCHITECTURE.md)
+- [API v1 schema](API_V1_SCHEMA.md)
+- [Agent architecture](AGENT_ARCHITECTURE.md)
+- [Agent contract](AGENT_CONTRACT.md)
+- [MCP architecture](MCP_ARCHITECTURE.md)
+- [Security model](SECURITY_MODEL.md)
 - [Roadmap](ROADMAP.md)
-- [Source of Truth](SOURCE_OF_TRUTH.md)
+- [Investigator](INVESTIGATOR.md)
+- [Cycle result recording](CYCLE_RESULT_RECORDING.md)
+- [Code promotion](REPRODUCIBLE_CODE_PROMOTION.md)
+- [PVE baseline adoption](PVE_BASELINE_ADOPTION.md)
+- [PBS verification recording](PBS_WEEKLY_VERIFICATION_RECORDING.md)
 
-## Status semantics
-
-**FROZEN** means implementation should conform to the documented contract unless an explicit architecture revision is made.
-
-**DESIGN BASELINE** means the direction is adopted but implementation details may evolve without violating the core principles.
-
-The architecture is intentionally provider-neutral. OpenAI/ChatGPT/Codex may be first-class clients, but RackMarshal Core must remain fully functional without them.
-
-- [RackMarshal Investigator](INVESTIGATOR.md)
-
-- [Investigator v1 Evaluation Suite](INVESTIGATOR_EVALS.md)
-
-- [RackMarshal 1.1A Timeline/Evidence Implementation Proof](API_V11_TIMELINE_EVIDENCE.md)
-
-- [Investigator v1.1 Evaluation Gate](INVESTIGATOR_V11_EVAL.md)
-
-- [Incident Summary and Detail Page Contract](../../contracts/ui-v1.1/INCIDENT_SUMMARY_PAGE.md)
+Private operational receipts and workspace identifiers are not distributed.

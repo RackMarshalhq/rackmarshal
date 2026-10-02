@@ -4,12 +4,13 @@ import io
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 SOURCE = Path("packaging/observers/pbs-native-verify-cache")
-CACHE = "/var/lib/homelab-monitor/pbs-native-verify.json"
+CACHE = "/var/lib/rackmarshal/pbs-verification.json"
 
 class PbsNativeVerifyCacheTests(unittest.TestCase):
     def run_cache(self, rows, wrapper_exit=0, host_exit=0):
@@ -27,12 +28,12 @@ class PbsNativeVerifyCacheTests(unittest.TestCase):
                 return subprocess.CompletedProcess(argv, host_exit, json.dumps(envelope), "fixture host error" if host_exit else "")
             def path(name):
                 return output if str(name) == CACHE else Path(name)
-            with patch("subprocess.run", side_effect=guest), patch("pathlib.Path", side_effect=path), patch("time.time", return_value=20000):
+            with patch.object(sys, "argv", [str(SOURCE), "--vmid", "900", "--datastore", "example-store", "--job", "example-weekly", "--output", CACHE]), patch("subprocess.run", side_effect=guest), patch("pathlib.Path", side_effect=path), patch("time.time", return_value=20000):
                 exec(compile(SOURCE.read_text(), str(SOURCE), "exec"), {})
             return json.loads(output.read_text())
 
     def weekly(self, status="OK", end=10000):
-        return {"worker_type":"verificationjob", "worker_id":"homelab-backups:weekly-homelab", "status":status,"starttime":9000,"endtime":end}
+        return {"worker_type":"verificationjob", "worker_id":"example-store:example-weekly", "status":status,"starttime":9000,"endtime":end}
 
     def test_weekly_job_after_first_hundred_tasks_is_observed(self):
         unrelated = [{"worker_type":"backup","worker_id":"fixture","status":"OK"} for _ in range(132)]
@@ -42,7 +43,7 @@ class PbsNativeVerifyCacheTests(unittest.TestCase):
         self.assertEqual(result["errors"], [])
 
     def test_snapshot_success_is_not_weekly_job_evidence(self):
-        result = self.run_cache([dict(self.weekly(), worker_type="verify"), dict(self.weekly(),worker_id="other:weekly-homelab")])
+        result = self.run_cache([dict(self.weekly(), worker_type="verify"), dict(self.weekly(),worker_id="other:example-weekly")])
         self.assertIsNone(result["status"])
         self.assertIn("weekly_verification_task_not_found",result["errors"])
 
@@ -60,3 +61,8 @@ class PbsNativeVerifyCacheTests(unittest.TestCase):
         result = self.run_cache([self.weekly()],host_exit=1)
         self.assertIsNone(result["status"])
         self.assertTrue(result["errors"])
+
+    def test_guest_execution_error_never_reports_success(self):
+        result = self.run_cache([self.weekly()], wrapper_exit=7)
+        self.assertIsNone(result["status"])
+        self.assertIn("guest_rc=7", result["errors"])

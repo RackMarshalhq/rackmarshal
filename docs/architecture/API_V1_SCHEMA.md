@@ -68,7 +68,7 @@ Operational facts exposed through v1 SHALL carry one of:
   "domain": "ZFS",
   "collector": "zfs",
   "observed_at": "2026-09-29T21:15:00Z",
-  "source": "ms01",
+  "source": "observer-host",
   "authority": "OBSERVED"
 }
 ```

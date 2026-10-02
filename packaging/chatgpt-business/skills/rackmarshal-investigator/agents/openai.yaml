@@ -1,5 +1,0 @@
-dependencies:
-  tools:
-    - type: "mcp"
-      value: "asdk_app_6abd4868c4e481919c3900f583f35322"
-      description: "Existing read-only RackMarshal Investigator Business connection"
