@@ -3,6 +3,8 @@ import io
 from pathlib import Path
 import subprocess
 import sqlite3
+import stat
+import tarfile
 import sys
 import tempfile
 import unittest
@@ -70,3 +72,70 @@ class ReleasePrivacyTests(unittest.TestCase):
     def test_documentation_mentioning_sqlite_header_is_not_a_database(self):
         result = self.check({"README.md": "SQLite format 3 is a database format."})
         self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_literal_bang_does_not_hide_private_paths(self):
+        for name in ('internal/evidence!notes.txt', '.git/object!notes.txt',
+                     'chatgpt-business/binding!notes.txt', '../outside!notes.txt'):
+            with self.subTest(name=name):
+                self.assertNotEqual(self.check({name: 'generic fixture'}).returncode, 0)
+
+    def test_renamed_and_uppercase_zip_contents_are_scanned(self):
+        for name in ('nested.ZIP', 'cache.bin'):
+            for member, content in (('cache.bin', b'SQLite format 3\x00fixture'),
+                                    ('binding.txt', ('asdk_'+'app_'+'a'*32).encode())):
+                inner = io.BytesIO()
+                with zipfile.ZipFile(inner, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+                    archive.writestr(member, content)
+                with self.subTest(name=name, member=member):
+                    self.assertNotEqual(self.check({name: inner.getvalue()}).returncode, 0)
+
+    def test_zip_symlinks_fail_including_directory_named_links(self):
+        for name in ('link', 'link/'):
+            inner = io.BytesIO()
+            with zipfile.ZipFile(inner, 'w') as archive:
+                entry = zipfile.ZipInfo(name)
+                entry.create_system = 3
+                entry.external_attr = (stat.S_IFLNK | 0o777) << 16
+                archive.writestr(entry, '../../outside')
+            result = self.check({'nested.bin': inner.getvalue()})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('archive link', result.stdout)
+
+    def test_tar_links_remain_rejected(self):
+        for kind in (tarfile.SYMTYPE, tarfile.LNKTYPE):
+            inner = io.BytesIO()
+            with tarfile.open(fileobj=inner, mode='w:gz') as archive:
+                entry = tarfile.TarInfo('link')
+                entry.type = kind
+                entry.linkname = '../../outside'
+                archive.addfile(entry)
+            result = self.check({'nested.tgz': inner.getvalue()})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('archive link', result.stdout)
+
+    def test_corrupt_archive_fails_without_traceback(self):
+        result = self.check({'nested.ZIP': b'PK\x03\x04broken'})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('unreadable archive', result.stdout)
+        self.assertNotIn('Traceback', result.stderr)
+
+    def test_generic_renamed_zip_passes(self):
+        inner = io.BytesIO()
+        with zipfile.ZipFile(inner, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('README.md', 'generic fictional installation')
+        self.assertEqual(self.check({'cache.bin': inner.getvalue()}).returncode, 0)
+
+    def test_corrupt_compressed_payload_fails_without_traceback(self):
+        for compression, extra_offset, corrupt_byte in ((zipfile.ZIP_DEFLATED, 0, 6),
+                                                        (zipfile.ZIP_LZMA, 4, 255)):
+            inner = io.BytesIO()
+            with zipfile.ZipFile(inner, 'w', compression=compression) as archive:
+                archive.writestr('fixture.txt', 'generic fixture content')
+            data = bytearray(inner.getvalue())
+            offset = 30 + int.from_bytes(data[26:28], 'little') + int.from_bytes(data[28:30], 'little')
+            data[offset + extra_offset] = corrupt_byte  # Leave the central directory valid.
+            result = self.check({'nested.bin': bytes(data)})
+            with self.subTest(compression=compression):
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('unreadable archive', result.stdout)
+                self.assertNotIn('Traceback', result.stderr)
