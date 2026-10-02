@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0rc3 — Local qualification candidate (not published)
+
+- Integrate setup safety regression coverage and deterministic health acceptance fixtures.
+- Require the exact eleven-entry MCP tool contract, rejecting duplicate names.
+- Strengthen source/artifact privacy checks for renamed databases and archives, links, literal member paths, and public website attribution boundaries.
+- Retain public-tree privacy cleanup and generic provider-neutral packaging.
+- Fresh exact-artifact installation, lifecycle, security, client, and sustained synthetic qualification remain required; rc2 evidence is not transferred.
+
 ## 1.2.0rc2 — Qualification candidate (not published)
 
 - Prevent mount recovery from missing/unknown observation rows; require an explicit healthy mount result and retain accurate OPEN counts.
