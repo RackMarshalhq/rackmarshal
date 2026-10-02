@@ -25,3 +25,13 @@ class ConnectionCheckTests(unittest.TestCase):
             report = connection_check()
         self.assertNotIn("secret", str(report))
         self.assertEqual(report["reason"], "CONNECTION_OR_PROTOCOL_ERROR")
+
+    def test_duplicate_names_never_satisfy_exact_contract(self):
+        tools = [NS(name=n, annotations=NS(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+                 for n in sorted(EXPECTED_TOOLS)]
+        self.assertTrue(inspect_tools(tools))
+        for duplicate in tools:
+            with self.subTest(name=duplicate.name):
+                self.assertFalse(inspect_tools(tools + [duplicate]))
+        # Exactly eleven entries can still have one missing name and a duplicate.
+        self.assertFalse(inspect_tools(tools[:-1] + [tools[0]]))

@@ -24,7 +24,7 @@ def validate_url(url):
     return url
 
 def inspect_tools(tools):
-    if {t.name for t in tools} != EXPECTED_TOOLS:
+    if len(tools) != len(EXPECTED_TOOLS) or {t.name for t in tools} != EXPECTED_TOOLS:
         return False
     return all(t.annotations and t.annotations.readOnlyHint is True
         and t.annotations.destructiveHint is False
