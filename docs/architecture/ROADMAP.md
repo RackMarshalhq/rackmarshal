@@ -10,17 +10,13 @@ RackMarshal is an open-source, local-first operational truth layer for heterogen
 
 AI may investigate, explain, correlate, and recommend within its granted capabilities. Its synthesis is ADVISORY. Read authority and action authority remain separate. No agent may invent evidence or declare recovery without an independent RackMarshal observation.
 
-## Demonstrated foundation and qualification limits
+## Candidate foundation
 
-The September 29 roadmap's API, read-only MCP, provenance, and investigative-agent milestones now have implemented and tested evidence. The six-domain production deployment, incident dashboard/detail pages, collection freshness presentation, current-unit cycle recording, evidence compaction, PBS history visibility fix, and scoped PVE baseline adoption are recorded in SOURCE_OF_TRUTH.md.
-
-The private ChatGPT Business Investigator has eleven read tools and passed explicit-skill acceptance for incident lifecycle, evidence references, facts/advisory separation, uncertainty, bounded summaries, and write refusal. User-reported tests of unmonitored resources support normal private use. Raw workspace tool arguments/results, implicit activation, broader audience controls and implicit activation remain separate qualification items. Exact RC1 disposable install/upgrade/rollback and private combined cloud packaging have now passed within their recorded scopes.
-
-These are demonstrated capabilities in the qualified environment, not new public release declarations or universal deployment guarantees. Milestones below express sequencing; release version numbers require their own gates.
+API/MCP, deterministic provenance and lifecycle evidence, incident UI, cycle recording, and read-only Investigator behavior are implemented. Qualification applies only to tested scope; release status and supported deployments follow the exact artifact acceptance gates. Private deployment receipts are excluded from this public tree.
 
 ## 1.1 qualification and 1.2 development
 
-1.1 RC1 is published and download-verified; 1.0.0 remains stable. Apply [internal release acceptance](RELEASE_ACCEPTANCE.md) before promotion. Continue 1.2 development in parallel: guided setup, explicit monitoring coverage, then clearer deterministic investigation summaries. Setup/coverage and deterministic incident explanation increments implemented on development/1.2-setup-coverage, development version 1.2.0.dev2; not deployed to production or released.
+1.1 RC1 is published; 1.0.0 remains stable. Apply [internal release acceptance](RELEASE_ACCEPTANCE.md) before promoting 1.1. Develop 1.2 in parallel: guided setup and explicit monitoring coverage, deterministic investigation summaries and missing-evidence explanations. Implemented development increments: read-only setup planning, enabled/disabled/historical domain selection, and deterministic incident explanations with evidence gaps and lifecycle conflict review. Reproducible versioned local/private hosted packaging and bounded connection checks are also implemented in the 1.2 candidate. Exact-artifact qualification and sustained fixture operation remain release gates. No new monitoring domain or action authority is enabled.
 
 ## Revised priorities and completion evidence
 
@@ -36,9 +32,9 @@ Gate: a documented observation period and representative failure/recovery cases 
 
 Qualify the current experience on an independent disposable installation: install, configure, connect, investigate, upgrade, preserve history, and roll back. Reconcile public documentation and supported platform boundaries against exact final artifacts. Qualify policy binding and access/audience controls; independently test any combined cloud package or implicit activation before advertising it.
 
-Continue internal qualification and 1.2 development without waiting for others. External tester feedback supplements evidence and is not a release prerequisite. Recruit hands-on testers to find installation and operational failures. Broader ecosystem/creator outreach follows reproducible installation and mature integrations; broad launch follows product qualification.
+Advance internal qualification and 1.2 development now. External tester feedback supplements retained internal evidence; it is not a release prerequisite. Recruit hands-on testers to find installation and operational failures. Broader ecosystem/creator outreach follows reproducible installation and mature integrations; broad launch follows product qualification.
 
-Gate: installer-only acceptance, upgrade/rollback and security/publication checks on the exact artifacts, plus evidence-backed internal routine-use qualification. Independent feedback is additive. Existing historical gates remain evidence only for their tested scope.
+Gate: installer-only acceptance, upgrade/rollback and security/publication checks on the exact artifacts, plus evidence-backed internal routine-use qualification. Independent tester feedback is additive. Existing historical gates remain evidence only for their tested scope.
 
 ### 3. Deliberate monitoring expansion — DEFERRED
 
@@ -70,15 +66,8 @@ Gate: cross-runtime acceptance and demonstrated operational benefit. Multiple ag
 
 Reevaluate monthly, on the last morning of each month in America/New_York, beginning October 31, 2026. Also reevaluate during an active work session after a major release, significant evidence/authority defect, new deployment, or proposed action-capability change. Only the monthly review is scheduled; milestone-triggered reviews are a workflow practice.
 
-Read this roadmap and current SOURCE_OF_TRUTH.md before reviewing. Compare verified progress with each gate, identify stale assumptions and missing evidence, and recommend whether to continue, reorder, or defer work. Keep reviews concise and use the smallest sufficient read-only evidence set. Recommend changes for Michael to review; do not automatically expand scope, grant authority, deploy code, or publish the workspace experience.
+Read this roadmap and current release qualification records before reviewing. Compare verified progress with each gate, identify stale assumptions and missing evidence, and recommend whether to continue, reorder, or defer work. Keep reviews concise and use the smallest sufficient read-only evidence set. Recommend changes for the project maintainer to review; do not automatically expand scope, grant authority, deploy code, or publish the workspace experience.
 
 ## Evidence sources
 
-- SOURCE_OF_TRUTH.md — authoritative implementation and qualification checkpoints.
-- AGENT_ARCHITECTURE.md and CORE_PRINCIPLES.md — architecture and deterministic authority.
-- SECURITY_MODEL.md — capability and audit requirements.
-- evals/results/business-policy-acceptance-20260930.json — scoped workspace acceptance receipt.
-
-## 1.2 checkpoint — 2026-10-01
-
-All five implementation goals are present in candidate 1.2.0rc2. Exact-artifact install/upgrade/rollback and scoped CLI/private Work Investigator qualification passed. The 72-hour synthetic operation window is running; production routine-use qualification, desktop/implicit activation and broader audience controls remain separate/unqualified. See SOURCE_OF_TRUTH.md and the private qualification receipt for retained evidence. No action authority or new monitoring domain is enabled.
+Use the published release qualification summary, versioned contracts, and generic evaluation fixtures. Production observations, site bindings, and private workspace receipts are intentionally excluded.

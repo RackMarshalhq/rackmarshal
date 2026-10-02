@@ -31,16 +31,3 @@ merely to undo eight baseline entries: that would erase unrelated later evidence
 The private full snapshot is retained for recovery/reference, never committed or
 returned to Investigator. Already recorded observations/recoveries stay history.
 
-2026-09-30 authorized scope: keep LXC 117–124. Planned source
-observation:PVE:11340 (16:58:32.889191 UTC), expected stopped for 117–123 and running
-for 124. Existing 20 baseline entries are preserved; the batch adds eight.
-The user’s direct request is retained in the approval note/Source of Truth.
-
-
-## Retained PVE baseline and recorded recovery — September 30
-
-The user explicitly approved keeping LXC 117–124 and creating a baseline. Operator source 26cb00c added eight VERIFIED entries atomically from observation:PVE:11340: 117–123 expected stopped, 124 expected running. The existing 20 entries and all guest states were preserved. Consistent private backup: /var/lib/rackmarshal/deployment-backups/pve-baseline-3edeeage. Investigator remains read-only.
-
-Normal processing independently recovered PVE:36–PVE:43 at 17:05:44.344970 UTC from observation:PVE:11345. Latest abnormal evidence remains observation:PVE:11344; all eight retain 153 recorded occurrences and explicit legacy correlation provenance. These were NEW inventory conditions resolved by accepting intended policy, not guest faults repaired. No incident was manually closed.
-
-Production proof: PVE OK, zero PVE incidents open, three phone BACKUP incidents open; HTTP 47 checks and Investigator 18/18 pass. Status, MCP, tunnel and PVE timer active. Qualification: 173 staging test executions pass; target 172 pass/one Git-only skip; zero ResourceWarnings. Planned phone backups remain Michael tonight September 30 and Olivia/Preston October 5, with ordinary evidence-based recovery required. Business workspace setup remains pending explicit instructions.

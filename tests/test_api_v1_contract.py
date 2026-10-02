@@ -41,9 +41,9 @@ class ApiV1Contract(unittest.TestCase):
  def test_material_changes_collapse_repeated_polling_per_resource(self):
   rows=[
    (1,101,'backup_phone','fictional-user','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:00:00Z',None,'[{"field":"phone_age_hours","actual":170,"expected":"<= 168.0"}]'),
-   (2,102,'backup_phone','preston','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:01:00Z',None,'[{"field":"phone_age_hours","actual":180,"expected":"<= 168.0"}]'),
+   (2,102,'backup_phone','user_c','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:01:00Z',None,'[{"field":"phone_age_hours","actual":180,"expected":"<= 168.0"}]'),
    (3,103,'backup_phone','fictional-user','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:05:00Z',None,'[{"field":"phone_age_hours","actual":175,"expected":"<= 168.0"}]'),
-   (4,104,'backup_phone','preston','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:06:00Z',None,'[{"field":"phone_age_hours","actual":185,"expected":"<= 168.0"}]')]
+   (4,104,'backup_phone','user_c','STATUS-CHANGED',None,'VERIFIED','2026-09-29T20:06:00Z',None,'[{"field":"phone_age_hours","actual":185,"expected":"<= 168.0"}]')]
   self.db.executemany('INSERT INTO backup_events VALUES(?,?,?,?,?,?,?,?,?,?)',rows)
   items,meta=material_changes(self.db,{'domain':'BACKUP','observed_after':'2026-09-29T20:00:00Z','observed_before':'2026-09-29T21:00:00Z','limit':'20'})
   self.assertEqual(meta['raw_event_count'],4); self.assertEqual(meta['material_change_count'],2); self.assertEqual(meta['collapsed_event_count'],2)
