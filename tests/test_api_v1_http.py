@@ -24,6 +24,17 @@ class ApiV1HttpSmoke(unittest.TestCase):
   try:
    with urllib.request.urlopen(self.base+path,timeout=5) as r:return r.status,json.load(r)
   except urllib.error.HTTPError as e:return e.code,json.load(e)
+ def test_dashboard_uses_configured_domain_selection_over_http(self):
+  from unittest.mock import patch
+  with patch.dict(status.CONFIG,{"ENABLED_DOMAINS":" pve "}):
+   with urllib.request.urlopen(self.base+'/incidents',timeout=5) as response:
+    page=response.read().decode()
+    self.assertEqual(response.status,200)
+    self.assertEqual(response.headers['X-Content-Type-Options'],'nosniff')
+    self.assertIn('Enabled in configuration',page)
+    self.assertIn('Disabled in configuration',page)
+    self.assertIn('Historical records only',page)
+    self.assertIn('rackmarshal setup-plan',page)
  def test_v1_health_over_http(self):
   code,p=self.get('/v1/health'); self.assertEqual(code,200); self.assertEqual(p['api_version'],'v1'); self.assertTrue(p['data']['database_readable'])
  def test_legacy_health_unchanged(self):

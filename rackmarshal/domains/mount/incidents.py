@@ -287,7 +287,10 @@ def process(con: sqlite3.Connection) -> dict:
         mid, itype = key
         if mid in problems and STATE_TO_TYPE[problems[mid]["state"]] == itype:
             continue
-        recover_one(con, inc, oid, observed_at, ok_by_id.get(mid))
+        # Missing/unknown telemetry is not independent positive recovery evidence.
+        if mid not in ok_by_id:
+            continue
+        recover_one(con, inc, oid, observed_at, ok_by_id[mid])
         recovered += 1
 
     con.execute(
@@ -302,7 +305,7 @@ def process(con: sqlite3.Connection) -> dict:
         "opened": opened,
         "updated": updated,
         "recovered": recovered,
-        "open_problems": len(problems),
+        "open_problems": con.execute("SELECT COUNT(*) FROM mount_incidents WHERE incident_state='OPEN'").fetchone()[0],
     }
 
 

@@ -64,3 +64,15 @@ curl http://127.0.0.1:9110/health
 ```
 
 The health endpoint should return an HTTP 200 response. See [CONFIGURATION.md](CONFIGURATION.md) before enabling infrastructure collectors.
+
+
+## Read-only setup guidance (1.2 development)
+
+Run `rackmarshal setup-plan --config /etc/rackmarshal/rackmarshal.conf` to see supported domain selection, missing required key names, and credential/certificate/catalog file readiness. Output omits configuration values, paths and credential contents. It writes nothing and performs no network or service actions. Exit 2 indicates invalid/incomplete configuration; exit 0 means these configuration checks pass, including a valid base install with all domains disabled. It is not a resource-health check.
+
+A complete configuration still requires explicit collector setup and recorded observations. The dashboard distinguishes enabled selection, disabled historical records and unavailable selection; none of those labels proves current resource health. Domain support does not imply every resource is monitored. Downloads, general network monitoring and storage capacity are not covered.
+
+
+## Optional Investigator
+
+See [Investigator installation and verification](docs/architecture/INVESTIGATOR_INSTALLATION.md) for exact-wheel MCP setup, local marketplace installation, private hosted packaging and client qualification limits.
