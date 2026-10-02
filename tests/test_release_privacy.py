@@ -2,6 +2,7 @@
 import io
 from pathlib import Path
 import subprocess
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -36,3 +37,36 @@ class ReleasePrivacyTests(unittest.TestCase):
         self.assertNotEqual(result.returncode,0)
         self.assertIn("secret pattern",result.stdout)
         self.assertIn("forbidden file type",result.stdout)
+
+    def test_sqlite_extensions_and_sidecars_fail(self):
+        for name in ("state.sqlite3", "state.SQLITE3", "state.sqlite3-wal",
+                     "state.sqlite-shm", "state.sqlite-journal", "state.db-wal",
+                     "state.db-shm", "state.db-journal"):
+            with self.subTest(name=name):
+                result = self.check({name: "synthetic retained data"})
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("forbidden file type", result.stdout)
+
+    def test_renamed_sqlite_database_fails_without_disclosing_rows(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "fixture"
+            with sqlite3.connect(path) as connection:
+                connection.execute("CREATE TABLE fixture(value TEXT)")
+                connection.execute("INSERT INTO fixture VALUES (?)", ("private-row-do-not-print",))
+            connection.close()
+            result = self.check({"cache.bin": path.read_bytes()})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("SQLite database content", result.stdout)
+        self.assertNotIn("private-row-do-not-print", result.stdout + result.stderr)
+
+    def test_nested_sqlite_database_extension_fails(self):
+        inner = io.BytesIO()
+        with zipfile.ZipFile(inner, "w") as archive:
+            archive.writestr("state.sqlite3", "synthetic retained data")
+        result = self.check({"package.zip": inner.getvalue()})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("package.zip!state.sqlite3", result.stdout)
+
+    def test_documentation_mentioning_sqlite_header_is_not_a_database(self):
+        result = self.check({"README.md": "SQLite format 3 is a database format."})
+        self.assertEqual(result.returncode, 0, result.stdout)

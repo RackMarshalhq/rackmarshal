@@ -23,8 +23,11 @@ def scan(name, data):
         errors.append((name, 'unsafe member path'))
     if any(x in parts for x in ('.git', 'chatgpt-business', 'internal')) or 'evals/results/' in name:
         errors.append((name, 'private path'))
-    if Path(name).suffix in ('.env', '.pem', '.key', '.db', '.sqlite'):
+    suffix = Path(member).suffix.lower()
+    if suffix in ('.env', '.pem', '.key', '.db', '.db-wal', '.db-shm', '.db-journal') or suffix.startswith('.sqlite'):
         errors.append((name, 'forbidden file type'))
+    if data.startswith(b'SQLite format 3\x00'):
+        errors.append((name, 'SQLite database content'))
     if SECRET.search(data): errors.append((name, 'secret pattern'))
     if Path(name).name not in ('release-privacy-gate.py', 'publication-gate.sh') and PRIVATE.search(data):
         errors.append((name, 'site/workspace pattern'))
