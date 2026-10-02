@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.1.0rc1 — 2026-09-30 (tester preview)
+
+### Added
+- Stable read-only API v1 and eleven goal-oriented MCP tools.
+- Deterministic incident timelines/evidence bundles with typed references, explicit authority/provenance, pagination, and recovery history.
+- Incident dashboard/detail pages with lifecycle timestamps, counts, evidence links, and observation freshness distinct from incident state.
+- Durable exact-unit cycle result recording through systemd drop-ins.
+- Portable read-only Investigator policy and optional edge clients/evaluations; core remains usable without AI.
+- Pinned package promotion and bounded operator-only PVE baseline adoption tools.
+- Standalone PBS verification-cache observer source with bounded task-history selection and explicit site arguments; failed guest execution remains UNKNOWN.
+
+### Fixed
+- Dashboard completeness beyond 200 incident rows per domain.
+- PVE lifecycle evidence compaction when event detection trails observation time.
+- Missing PBS weekly-job visibility within the previous 100-task window; the helper now searches up to 1000 tasks and retains UNKNOWN when unmatched.
+
+### Boundaries
+- No infrastructure-write MCP tools or automatic incident closure.
+- PBS helper and operator tools require explicit site setup; the base installer does not deploy them automatically.
+- Optional MCP dependencies and hosted connection/policy setup are separate from the base installer.
+- Private workspace bindings and production operational evidence are excluded from public assets.
+- Combined cloud plugin installation is not yet qualified. A generic local plugin is included; hosted users configure their own private connection and policy.
+- Downloads, network monitoring, and storage capacity/growth collectors remain deferred.
+
+
 ## 1.0.0
 
 - Added the supported `rackmarshal` CLI with version, domain listing, configuration validation, migration, and diagnostic commands.

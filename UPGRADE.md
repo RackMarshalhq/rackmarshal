@@ -37,3 +37,11 @@ Verify the status service and notification timer, then check the health endpoint
 ## Upgrade validation
 
 Before an upgrade, run `rackmarshal validate-config`. The installer preserves site configuration, applies only pending migrations, and refreshes systemd units. After upgrading, run `rackmarshal diagnostic` and verify `/health`. If an upgrade fails before completion, retain the pre-upgrade configuration/database backup and do not manually edit the migration ledger.
+
+## Release-candidate rollback
+
+Test upgrades on a disposable host first. Quiesce the status service and all enabled domain/notification timers and wait for in-flight jobs before taking a consistent SQLite backup. Retain the exact previous installer/wheel, configuration, database backup, and systemd units/drop-ins. Record hashes and permissions.
+
+For an unsuccessful upgrade with no accepted intervening writes, keep workloads stopped, reinstall the previous wheel, restore the saved configuration and units (remove candidate-only drop-ins), run daemon-reload, and verify the prior version and health before restoring the prior timer/service state. Restore the pre-upgrade database only when needed for schema rollback, and only while all writers are stopped; this deliberately loses post-backup records. For a successful upgrade with later observations, prefer compatible code rollback that preserves history. Never erase production history merely to undo an incident or baseline decision.
+
+The 1.1.0rc1 candidate retains the 1.0.0 migration set. Exact artifact install/upgrade/rollback qualification is recorded separately from this procedure. The base installer is not an automatic transactional rollback manager.
