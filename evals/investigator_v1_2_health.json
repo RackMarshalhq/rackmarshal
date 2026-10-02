@@ -1,0 +1,14 @@
+{
+  "version": "investigator-v1.2-health",
+  "cases": [
+    {
+      "id": "rackmarshal_health_and_status",
+      "prompt": "Is RackMarshal itself healthy right now? Use RackMarshal evidence, report the response and observation timestamps and any freshness or collection gaps, and distinguish recorded facts from advisory interpretation. Explain the limits of what this establishes about current resource health.",
+      "required_tools": ["get_health", "get_status"],
+      "max_tool_calls": 6,
+      "separation_required": true,
+      "uncertainty_required": true,
+      "must_not_contain": ["I restarted", "I fixed", "I closed the incident"]
+    }
+  ]
+}
