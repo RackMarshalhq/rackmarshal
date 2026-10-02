@@ -3,6 +3,8 @@ import io
 from pathlib import Path
 import subprocess
 import sqlite3
+import stat
+import tarfile
 import sys
 import tempfile
 import unittest
@@ -83,3 +85,108 @@ class ReleasePrivacyTests(unittest.TestCase):
         for extra in ('asdk_'+'app_'+'a'*32, 'ghp_'+'a'*36, '192.'+'168.1.2'):
             with self.subTest(extra_kind=extra[:3]):
                 self.assertNotEqual(self.check({'site/index.html':prefix+extra}).returncode, 0)
+    def test_literal_bang_does_not_hide_private_paths(self):
+        for name in ('internal/evidence!notes.txt', '.git/object!notes.txt',
+                     'chatgpt-business/binding!notes.txt', '../outside!notes.txt'):
+            with self.subTest(name=name):
+                self.assertNotEqual(self.check({name: 'generic fixture'}).returncode, 0)
+
+    def test_renamed_and_uppercase_zip_contents_are_scanned(self):
+        for name in ('nested.ZIP', 'cache.bin'):
+            for member, content in (('cache.bin', b'SQLite format 3\x00fixture'),
+                                    ('binding.txt', ('asdk_'+'app_'+'a'*32).encode())):
+                inner = io.BytesIO()
+                with zipfile.ZipFile(inner, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+                    archive.writestr(member, content)
+                with self.subTest(name=name, member=member):
+                    self.assertNotEqual(self.check({name: inner.getvalue()}).returncode, 0)
+
+    def test_zip_symlinks_fail_including_directory_named_links(self):
+        for name in ('link', 'link/'):
+            inner = io.BytesIO()
+            with zipfile.ZipFile(inner, 'w') as archive:
+                entry = zipfile.ZipInfo(name)
+                entry.create_system = 3
+                entry.external_attr = (stat.S_IFLNK | 0o777) << 16
+                archive.writestr(entry, '../../outside')
+            result = self.check({'nested.bin': inner.getvalue()})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('archive link', result.stdout)
+
+    def test_tar_links_remain_rejected(self):
+        for kind in (tarfile.SYMTYPE, tarfile.LNKTYPE):
+            inner = io.BytesIO()
+            with tarfile.open(fileobj=inner, mode='w:gz') as archive:
+                entry = tarfile.TarInfo('link')
+                entry.type = kind
+                entry.linkname = '../../outside'
+                archive.addfile(entry)
+            result = self.check({'nested.tgz': inner.getvalue()})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('archive link', result.stdout)
+
+    def test_corrupt_archive_fails_without_traceback(self):
+        result = self.check({'nested.ZIP': b'PK\x03\x04broken'})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('unreadable archive', result.stdout)
+        self.assertNotIn('Traceback', result.stderr)
+
+    def test_generic_renamed_zip_passes(self):
+        inner = io.BytesIO()
+        with zipfile.ZipFile(inner, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('README.md', 'generic fictional installation')
+        self.assertEqual(self.check({'cache.bin': inner.getvalue()}).returncode, 0)
+
+    def test_literal_bang_never_grants_website_exception(self):
+        text = 'Mi' + 'chael Poteet'
+        self.assertNotEqual(self.check({'notes!site/about.html': text}).returncode, 0)
+
+    def test_source_archive_root_allows_only_exact_site_pages(self):
+        text = 'Mi' + 'chael Poteet'
+        for kind in ('zip', 'tgz'):
+            members = {'rackmarshal-ref/pyproject.toml': 'generic metadata',
+                       'rackmarshal-ref/site/about.html': text}
+            inner = io.BytesIO()
+            if kind == 'zip':
+                with zipfile.ZipFile(inner, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+                    for name, content in members.items(): archive.writestr(name, content)
+            else:
+                with tarfile.open(fileobj=inner, mode='w:gz') as archive:
+                    for name, content in members.items():
+                        entry = tarfile.TarInfo(name)
+                        data = content.encode()
+                        entry.size = len(data)
+                        archive.addfile(entry, io.BytesIO(data))
+            with self.subTest(kind=kind):
+                result = self.check({'source.' + kind: inner.getvalue()})
+                self.assertEqual(result.returncode, 0, result.stdout)
+        for name in ('rackmarshal-ref/notes.txt', 'rackmarshal-ref/notes!site/about.html',
+                     'rackmarshal-ref/internal/site/about.html'):
+            result = self.check({'rackmarshal-ref/pyproject.toml': 'generic metadata', name: text})
+            self.assertNotEqual(result.returncode, 0)
+
+    def test_unvalidated_or_multiple_archive_roots_do_not_grant_exception(self):
+        text = 'Mi' + 'chael Poteet'
+        for members in ({'wrapper/site/about.html': text},
+                        {'wrapper/pyproject.toml': '', 'wrapper/site/about.html': text, 'other/file': ''}):
+            self.assertNotEqual(self.check(members).returncode, 0)
+
+    def test_prefixed_site_exception_still_rejects_secrets_and_bindings(self):
+        for content in ('asdk_'+'app_'+'a'*32, 'ghp_'+'a'*36):
+            result = self.check({'root/pyproject.toml': '', 'root/site/about.html': content})
+            self.assertNotEqual(result.returncode, 0)
+
+    def test_corrupt_compressed_payload_fails_without_traceback(self):
+        for compression, extra_offset, corrupt_byte in ((zipfile.ZIP_DEFLATED, 0, 6),
+                                                        (zipfile.ZIP_LZMA, 4, 255)):
+            inner = io.BytesIO()
+            with zipfile.ZipFile(inner, 'w', compression=compression) as archive:
+                archive.writestr('fixture.txt', 'generic fixture content')
+            data = bytearray(inner.getvalue())
+            offset = 30 + int.from_bytes(data[26:28], 'little') + int.from_bytes(data[28:30], 'little')
+            data[offset + extra_offset] = corrupt_byte  # Leave the central directory valid.
+            result = self.check({'nested.bin': bytes(data)})
+            with self.subTest(compression=compression):
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('unreadable archive', result.stdout)
+                self.assertNotIn('Traceback', result.stderr)
