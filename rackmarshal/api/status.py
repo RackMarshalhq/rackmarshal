@@ -962,7 +962,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 conn = connect_db()
                 try:
-                    markup = render_incident_index(conn, freshness_builder=build_freshness)
+                    markup = render_incident_index(conn, freshness_builder=build_freshness, enabled_domains=CONFIG.get("ENABLED_DOMAINS", "").split(","))
                 finally:
                     conn.close()
                 self.send_html(200, markup)
@@ -975,7 +975,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 conn = connect_db()
                 try:
-                    markup = render_incident_page(conn, incident_id, freshness_builder=build_freshness)
+                    markup = render_incident_page(conn, incident_id, freshness_builder=build_freshness, enabled_domains=CONFIG.get("ENABLED_DOMAINS", "").split(","))
                 finally:
                     conn.close()
                 if markup is None:

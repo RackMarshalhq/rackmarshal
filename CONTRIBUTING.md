@@ -17,6 +17,16 @@ At minimum, Python changes should compile cleanly and relevant smoke/installatio
 
 Changes affecting installation, migrations, systemd units, configuration preservation, upgrade, or uninstall behavior should be validated on a disposable clean host.
 
+The setup/coverage safety regressions can be run without collectors, credentials, or a live installation:
+
+```sh
+python3 -W error::ResourceWarning -m unittest discover -s tests -p 'test_setup*.py' -v
+```
+
+These cases cover all supported domain setup requirements, credential-content privacy, file readiness, disabled/unknown selection, and retained incident history under changing freshness labels. They use temporary files and in-memory databases. The full `./scripts/publication-gate.sh` also starts localhost HTTP fixture servers; allow local socket binding when running it in a sandbox. The script validates the tree and does not publish it.
+
+Test results are development evidence. They do not replace the exact-artifact installation or sustained-operation gates in [release acceptance](docs/architecture/RELEASE_ACCEPTANCE.md), and do not expand the supported client or platform matrix.
+
 ## Publication safety
 
 Before release, the intended public tree and built artifacts are scanned for private addresses, personal/site names, legacy project identifiers, site storage paths, private-key material, likely credential assignments, databases, and prohibited secret-bearing file types.

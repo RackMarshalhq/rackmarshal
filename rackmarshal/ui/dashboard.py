@@ -36,7 +36,7 @@ def dashboard_data(conn,recent_limit=20):
     }
 
 
-def collection_data(conn, freshness_builder=None):
+def collection_data(conn, freshness_builder=None, enabled_domains=None):
     """Read bounded observation metadata and stored cycle results; no host probes."""
     tables={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     observations={}
@@ -70,7 +70,7 @@ def collection_data(conn, freshness_builder=None):
     for domain in DOMAINS:
         unit="rackmarshal-domain@"+domain.lower()+".service"
         current_units.add(unit)
-        rows.append({"domain":domain,"observation":observations[domain],"freshness":freshness.get(domain),"unit":unit,"cycle":cycles.get(unit)})
+        rows.append({"domain":domain,"observation":observations[domain],"freshness":freshness.get(domain),"enabled":None if enabled_domains is None else domain.lower() in {str(d).strip().lower() for d in enabled_domains},"unit":unit,"cycle":cycles.get(unit)})
     return {"domains":rows,"evaluated_at":evaluated_at.isoformat().replace('+00:00','Z'),
             "other_cycles":[cycles[key] for key in sorted(cycles) if key not in current_units]}
 
@@ -90,8 +90,8 @@ def _cycle_result(cycle):
     return result
 
 
-def render_collection_coverage(conn, freshness_builder=None, domain=None):
-    data=collection_data(conn,freshness_builder)
+def render_collection_coverage(conn, freshness_builder=None, domain=None, enabled_domains=None):
+    data=collection_data(conn,freshness_builder,enabled_domains)
     rows=[]
     for item in data["domains"]:
         if domain and item["domain"]!=domain:
@@ -100,16 +100,18 @@ def render_collection_coverage(conn, freshness_builder=None, domain=None):
         fresh=item["freshness"] or {}
         state=fresh.get("state")
         label={"OK":"Fresh observation", "STALE":"Stale observation", "MISSING":"No usable observation time"}.get(state,"Freshness unavailable")
+        selection={True:"Enabled in configuration",False:"Disabled in configuration",None:"Domain selection unavailable"}[item["enabled"]]
+        selection_note=" Historical records only; collection is disabled." if item["enabled"] is False else " Selection alone does not prove active collection."
         cycle_state=(item["cycle"] or {}).get("health_state", "NOT_RECORDED")
         reference=observation.get("evidence_ref")
         evidence_html=(f'<a href="/v1/evidence/{_e(quote(reference,safe=":"))}">{_e(reference)}</a>' if reference else "Observation not recorded")
         threshold=fresh.get("stale_after_seconds")
         policy=(f"<div>Stale after {_e(threshold)} seconds</div>" if threshold is not None else "<div>Freshness policy unavailable</div>")
-        rows.append(f'<tr data-domain="{_e(item["domain"])}" data-observation-id="{_e(observation.get("id"))}" data-freshness="{_e(state or "UNKNOWN")}" data-cycle-state="{_e(cycle_state)}"><td><strong>{_e(item["domain"])}</strong><div>{_e(domain_name(item["domain"]))}</div></td><td><strong>{_e(label)}</strong><div>Observed: {timestamp(observation.get("observed_at"))}</div>{policy}<div>{evidence_html}</div><a href="/v1/domains/{_e(item["domain"])}">Domain record (JSON)</a></td><td>{_cycle_result(item["cycle"])}<div><code>{_e(item["unit"])}</code></div></td></tr>')
+        rows.append(f'<tr data-domain="{_e(item["domain"])}" data-observation-id="{_e(observation.get("id"))}" data-freshness="{_e(state or "UNKNOWN")}" data-cycle-state="{_e(cycle_state)}"><td><strong>{_e(item["domain"])}</strong><div>{_e(domain_name(item["domain"]))}</div><div>{_e(selection)}</div><div>{_e(selection_note)}</div></td><td><strong>{_e(label)}</strong><div>Observed: {timestamp(observation.get("observed_at"))}</div>{policy}<div>{evidence_html}</div><a href="/v1/domains/{_e(item["domain"])}">Domain record (JSON)</a></td><td>{_cycle_result(item["cycle"])}<div><code>{_e(item["unit"])}</code></div></td></tr>')
     other=""
     if not domain and data["other_cycles"]:
         other='<details><summary>Other recorded cycle units (historical records)</summary><ul>'+''.join(f'<li><code>{_e(c["unit_name"])}</code>: {_cycle_result(c)}</li>' for c in data["other_cycles"])+"</ul></details>"
-    return '<section aria-label="Collection coverage"><h2>Observation freshness and recorded cycle results</h2><p class="muted">Freshness evaluated at '+timestamp(data["evaluated_at"])+'. Fresh observations do not prove a cycle completed successfully or an incident recovered. Cycle results are stored historical records, not a live service probe; absent current-unit results are not inferred from older unit names.</p><div class="table-wrap"><table><thead><tr><th>Domain</th><th>Latest recorded observation</th><th>Recorded cycle result</th></tr></thead><tbody>'+''.join(rows)+"</tbody></table></div>"+other+'<p><a href="/status">Collection and self-watch record (JSON)</a></p></section>'
+    return '<section aria-label="Collection coverage"><h2>Monitoring coverage, observation freshness and recorded cycle results</h2><p class="muted">Freshness evaluated at '+timestamp(data["evaluated_at"])+'. Only configured resources within an enabled domain are potential monitoring targets. Downloads, general network monitoring and storage capacity are not covered by this release. Use <code>rackmarshal setup-plan</code> for read-only setup guidance. Fresh observations do not prove a cycle completed successfully or an incident recovered. Cycle results are stored historical records, not a live service probe; absent current-unit results are not inferred from older unit names.</p><div class="table-wrap"><table><thead><tr><th>Domain</th><th>Latest recorded observation</th><th>Recorded cycle result</th></tr></thead><tbody>'+''.join(rows)+"</tbody></table></div>"+other+'<p><a href="/status">Collection and self-watch record (JSON)</a></p></section>'
 
 
 def _incident_row(item,time_field,label):
@@ -144,9 +146,9 @@ def _table(items,time_field,label,empty_text):
         f"</tr></thead><tbody>{rows}</tbody></table></div>"
     )
 
-def render_incident_index(conn,recent_limit=20,freshness_builder=None):
+def render_incident_index(conn,recent_limit=20,freshness_builder=None,enabled_domains=None):
     data=dashboard_data(conn,recent_limit)
-    collection_html=render_collection_coverage(conn,freshness_builder)
+    collection_html=render_collection_coverage(conn,freshness_builder,enabled_domains=enabled_domains)
     open_html=_table(data["open_incidents"],"opened_at","Opened","No open incidents.")
     recovered_html=_table(data["recent_recoveries"],"recovered_at","Recovered","No recorded recoveries.")
     domain_html="".join(

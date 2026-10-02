@@ -22,6 +22,10 @@ class IncidentLifecycleTests(unittest.TestCase):
   con=sqlite3.connect(self.db); con.row_factory=sqlite3.Row; now='2026-01-01T00:00:00Z'
   bad={'results':[{'id':'fictional-mount','guest_kind':'host','guest_id':'','mountpoint':'/mnt/fictional','state':'missing','severity_missing':'critical','optional':False,'expected_source':'fictional:/share','observed_source':None,'fstype':'nfs'}]}
   con.execute('insert into mount_observations(observed_at,source,schema_version,checked_count,ok_count,problem_count,payload_json) values(?,?,?,?,?,?,?)',(now,'fictional',1,1,0,1,json.dumps(bad))); con.commit(); r=m.process(con); self.assertEqual(r['opened'],1)
+  for index, missing in enumerate(({'results':[]}, {'results':[{'id':'fictional-mount','state':'unknown'}]})):
+   con.execute('insert into mount_observations(observed_at,source,schema_version,checked_count,ok_count,problem_count,payload_json) values(?,?,?,?,?,?,?)',(f'2026-01-01T00:0{index+1}:00Z','fictional',1,0,0,0,json.dumps(missing)));con.commit()
+   r=m.process(con);self.assertEqual(r['recovered'],0);self.assertEqual(r['open_problems'],1)
+   self.assertEqual(con.execute("select count(*) from mount_incidents where incident_state='OPEN'").fetchone()[0],1)
   good={'results':[{'id':'fictional-mount','guest_kind':'host','guest_id':'','mountpoint':'/mnt/fictional','state':'ok','optional':False,'expected_source':'fictional:/share','observed_source':'fictional:/share','fstype':'nfs'}]}
   con.execute('insert into mount_observations(observed_at,source,schema_version,checked_count,ok_count,problem_count,payload_json) values(?,?,?,?,?,?,?)',('2026-01-01T00:05:00Z','fictional',1,1,1,0,json.dumps(good))); con.commit(); r=m.process(con); self.assertEqual(r['recovered'],1); self.assertEqual(con.execute("select count(*) from mount_incidents where incident_state='OPEN'").fetchone()[0],0); con.close()
  def test_hardware_open_recover(self):

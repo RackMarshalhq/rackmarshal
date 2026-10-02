@@ -137,13 +137,18 @@ class PackagePromotion(unittest.TestCase):
         failed = False
         def copy(source, target, metadata=None):
             nonlocal failed
-            if target == self.roots["mcp"] / self.relative and not failed:
+            if target == (self.roots["mcp"] / self.relative).resolve() and not failed:
+                # This must exercise a partial write, not a failure before any
+                # installation changed; both copies must subsequently roll back.
+                self.assertEqual((self.roots["status"] / self.relative).read_text(), "VALUE = 'new'\n")
+                self.assertEqual(target.read_text(), "VALUE = 'old'\n")
                 failed = True
                 raise OSError("Fixture write failure")
             return original(source, target, metadata)
         with patch.object(promotion, "replace_file", side_effect=copy):
             with self.assertRaisesRegex(RuntimeError, "ROLLED_BACK"):
                 self.apply()
+        self.assertTrue(failed, "The intended partial-copy failure must be injected")
         for root in self.roots.values():
             self.assertEqual((root / self.relative).read_text(), "VALUE = 'old'\n")
 

@@ -1,7 +1,20 @@
 {
   "name": "rackmarshal-investigator",
-  "version": "1.1.0-rc1",
+  "version": "1.2.0-rc2",
   "description": "Read-only operational investigation using RackMarshal evidence.",
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./.mcp.json",
+  "author": {
+    "name": "RackMarshal"
+  },
+  "interface": {
+    "displayName": "RackMarshal Investigator",
+    "shortDescription": "Investigate recorded incidents",
+    "longDescription": "Read-only investigation using RackMarshal recorded evidence and explicit authority limits.",
+    "developerName": "RackMarshal",
+    "category": "Productivity",
+    "capabilities": [
+      "Read"
+    ]
+  }
 }
