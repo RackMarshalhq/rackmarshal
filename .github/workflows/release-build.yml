@@ -15,7 +15,7 @@ jobs:
       - run: python -m build
       - run: ./scripts/build-installer-bundle.sh
       - run: sha256sum dist/* | tee SHA256SUMS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: rackmarshal-release-candidate
           path: |
