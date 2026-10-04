@@ -43,6 +43,15 @@ class ArchiveReviewTests(unittest.TestCase):
             data=inner.getvalue()
             if where=='trailer': data+=('asdk_'+'app_'+'a'*32).encode()
             self.assertNotEqual(self.check({'metadata.zip':data}).returncode,0)
+    def test_zip_lzma_without_memory_limit_is_rejected(self):
+        import zipfile
+        inner=io.BytesIO()
+        with zipfile.ZipFile(inner,'w',compression=zipfile.ZIP_LZMA) as z:z.writestr('generic.txt','generic')
+        self.assertNotEqual(self.check({'limited.zip':inner.getvalue()}).returncode,0)
+    def test_xz_dictionary_memory_and_trailing_data_fail_closed(self):
+        large_dictionary=lzma.compress(b'generic', filters=[{'id':lzma.FILTER_LZMA2,'dict_size':128*1024*1024}])
+        self.assertNotEqual(self.check({'large-dictionary.xz':large_dictionary}).returncode,0)
+        self.assertNotEqual(self.check({'trailing.xz':lzma.compress(b'generic')+b'extra'}).returncode,0)
     def test_total_budget_latches_before_later_reads(self):
         script=(Path(__file__).resolve().parents[1]/'scripts/release-privacy-gate.py').read_text()
         namespace={};exec(compile(script.split('parser=argparse.ArgumentParser')[0],'<scanner>','exec'),namespace)

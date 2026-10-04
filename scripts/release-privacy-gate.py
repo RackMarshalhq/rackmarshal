@@ -118,12 +118,24 @@ def scan(member, data, label=None, root=None, depth=0):
                         errors.append((child_label, 'archive link'))
                     elif not entry.is_dir():
                         if entry.file_size > MAX_MEMBER_BYTES: raise ScanLimit('member size')
+                        # zipfile exposes no LZMA decoder memory limit; fail closed.
+                        if entry.compress_type == zipfile.ZIP_LZMA: raise ValueError('unsupported ZIP compression')
                         with z.open(entry) as stream:
                             scan(entry.filename, bounded_read(stream), child_label, child_root, depth + 1)
         elif compression or expected_compression:
             if expected_compression and compression != expected_compression: raise ValueError('compression mismatch')
-            opener = {'gz': gzip.open, 'bz2': bz2.BZ2File, 'xz': lzma.LZMAFile}[compression]
-            with opener(io.BytesIO(data), mode='rb') as stream: expanded = bounded_read(stream)
+            if compression == 'xz':
+                # Bound both output and the XZ dictionary allocation. A plain
+                # LZMAFile output limit alone would not bound decoder memory.
+                remaining = min(MAX_MEMBER_BYTES, MAX_TOTAL_BYTES - expanded_bytes)
+                if budget_exhausted or remaining <= 0: raise ScanLimit('scan resource limit')
+                decoder = lzma.LZMADecompressor(memlimit=MAX_MEMBER_BYTES)
+                expanded = decoder.decompress(data, max_length=remaining + 1)
+                if len(expanded) > remaining: raise ScanLimit('scan resource limit')
+                if not decoder.eof or decoder.unused_data: raise ValueError('incomplete or trailing XZ stream')
+            else:
+                opener = {'gz': gzip.open, 'bz2': bz2.BZ2File}[compression]
+                with opener(io.BytesIO(data), mode='rb') as stream: expanded = bounded_read(stream)
             child = member.rsplit('.', 1)[0] if '.' in member else member + '.expanded'
             if lower.endswith(('.tgz', '.tbz', '.tbz2', '.txz')): child += '.tar'
             scan(child, expanded, name + '!expanded', root, depth + 1)
