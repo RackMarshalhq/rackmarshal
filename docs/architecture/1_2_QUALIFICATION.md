@@ -1,8 +1,18 @@
 # 1.2 candidate qualification
 
-## Current preparation: 1.2.0rc4
+## Current preparation: 1.2.0rc5
 
-Status: **LOCAL PREPARATION; unpublished; fresh qualification PENDING**.
+Status: **LOCAL HEALTH-POLICY FIX; unpublished; fresh qualification PENDING**.
+
+A live local rc4 client loaded the exact packaged policy and successfully called get_health, but omitted the get_status call required by HEALTH_ACCEPTANCE. The shipped policy did not express that requirement, and its runtime health plan selected only get_health. The failed receipt is retained privately; installation/cache checks and the independent rc4 synthetic run are separate evidence.
+
+This source aligns the runtime instructions, canonical packaged skill and deterministic health plan with the existing dual-tool acceptance contract. It does not change the acceptance prompt or relax the gate. Deterministic tests cannot establish live model compliance. Local and private hosted client acceptance, exact artifact lifecycle/privacy/security checks and a separate sustained window remain PENDING for rc5. Frozen rc4 files and its sampler are unchanged; no receipt transfers to changed bytes.
+
+## Frozen qualification: 1.2.0rc4
+
+Status: **UNPUBLISHED; independent synthetic window RUNNING; local health acceptance FAIL**.
+
+The window began October 4, 2026 and cannot complete before October 7. Actual successful samples and bounded gaps remain required. Its exact frozen artifacts and sampler are unchanged by this policy fix; client acceptance remains a separate release blocker.
 
 This source fixes release gating, compressed-asset inspection, narrow scanner exemptions, recovery-summary wording and offset-aware material-change bounds. Development tests and artifact build receipts do not qualify changed runtime bytes. Frozen rc2 and rc3 runs, their artifacts and their owners remain unchanged. No evidence from those runs is promoted to rc4 qualification.
 
