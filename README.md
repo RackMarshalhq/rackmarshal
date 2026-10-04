@@ -1,6 +1,6 @@
 # RackMarshal™
 
-**Development: 1.2.0rc3.** Local candidate preparation only; fresh exact-artifact qualification is pending. Frozen rc2 and published RC1 remain separate artifacts.
+**Development: 1.2.0rc4.** Local candidate preparation only; fresh exact-artifact qualification is pending. Frozen rc2 and published RC1 remain separate artifacts.
 
 Local-first infrastructure operations and incident management for self-hosted systems.
 

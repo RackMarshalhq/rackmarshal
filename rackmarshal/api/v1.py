@@ -8,6 +8,17 @@ EVENT_TABLES = {"PVE":"resource_events","ZFS":"zfs_events","BACKUP":"backup_even
 OBS_TABLES = {"PVE":"observations","ZFS":"zfs_observations","BACKUP":"observations","HA":"observations","HARDWARE":"hardware_observations","MOUNT":"mount_observations"}
 COLLECTORS = {"PVE":"pve_cluster_resources","BACKUP":"backup_domain","HA":"home_assistant"}
 
+def _instant(value):
+    """Parse an aware instant without inventing a timezone for unknown evidence."""
+    if not isinstance(value, str) or not value: return None
+    try:
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return parsed.astimezone(timezone.utc) if parsed.utcoffset() is not None else None
+    except (ValueError, OverflowError): return None
+
+def _time_key(value):
+    return _instant(value) or datetime.min.replace(tzinfo=timezone.utc)
+
 def now(): return datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
 def envelope(data, **meta): return {"api_version":"v1","generated_at":now(),"data":data,"meta":meta}
 def error(code, message, status=400): return status,{"api_version":"v1","generated_at":now(),"error":{"code":code,"message":message}}
@@ -86,11 +97,16 @@ def query_events(conn,params):
             key_col="resource_key" if "resource_key" in cols else "serial" if "serial" in cols else "mount_id" if "mount_id" in cols else None
             if key_col: where.append(f"{key_col}=?"); vals.append(params["resource_key"])
         tcol="observed_at" if "observed_at" in cols else "detected_at"
-        if params.get("observed_after"): where.append(f"{tcol}>=?"); vals.append(params["observed_after"])
-        if params.get("observed_before"): where.append(f"{tcol}<?"); vals.append(params["observed_before"])
         sql=f"SELECT * FROM {table}"+(" WHERE "+" AND ".join(where) if where else "")+f" ORDER BY {tcol} DESC,id DESC"
         out += [normalize_event(d,r) for r in conn.execute(sql,vals)]
-    out.sort(key=lambda x:(x.get("observed_at") or "",x["id"]),reverse=True)
+    for key, inclusive in (("observed_after", True), ("observed_before", False)):
+        if key in params:
+            bound = _instant(params[key])
+            if bound is None: raise ValueError("INVALID_TIMESTAMP")
+            out = [item for item in out if _instant(item.get("observed_at")) is not None and
+                   ((_instant(item["observed_at"]) >= bound) if inclusive else
+                    (_instant(item["observed_at"]) < bound))]
+    out.sort(key=lambda x:(_time_key(x.get("observed_at")),x["id"]),reverse=True)
     return out
 
 def list_events(conn,params):
@@ -116,7 +132,7 @@ def _compact_events(raw):
             run={"_signature":sig,"domain":item.get("domain"),"resource_type":item.get("resource_type"),"resource_key":item.get("resource_key"),"event_type":item.get("event_type"),"baseline_state":item.get("baseline_state"),"first_observed_at":item.get("observed_at"),"last_observed_at":item.get("observed_at"),"first_event_id":item.get("id"),"latest_event_id":item.get("id"),"first_changes":item.get("changes"),"latest_changes":item.get("changes"),"repeat_count":1,"first_evidence_refs":item.get("evidence_refs") or [],"latest_evidence_refs":item.get("evidence_refs") or [],"authority":"DERIVED"}
             runs.append(run); current[resource]=run
     for run in runs: run.pop("_signature",None)
-    runs.sort(key=lambda x:(x.get("last_observed_at") or "",x.get("latest_event_id") or ""),reverse=True)
+    runs.sort(key=lambda x:(_time_key(x.get("last_observed_at")),x.get("latest_event_id") or ""),reverse=True)
     return runs
 
 def material_changes(conn,params):
@@ -190,7 +206,7 @@ def _event_for_observation(conn,domain,resource_key,observation_id,resource_type
     row=conn.execute(f"SELECT * FROM {table} WHERE {where} ORDER BY id LIMIT 1",values).fetchone()
     return normalize_event(domain,row) if row else None
 
-def _incident_events(conn,domain,row):
+def _incident_events(conn,domain,row,gaps=None):
     resource_type,resource_key=_incident_resource(domain,row)
     if domain == "PVE":
         # PVE events use detection time, while incident times are observation
@@ -207,12 +223,22 @@ def _incident_events(conn,domain,row):
             (resource_type, resource_key, row.get("incident_type"), lower, upper),
         )
         return [normalize_event(domain, event) for event in rows]
-    params={"domain":domain,"resource_type":resource_type,"resource_key":resource_key,"observed_after":row.get("opened_at")}
-    events=query_events(conn,params)
-    upper=row.get("recovered_at") or row.get("last_abnormal_at")
-    if upper:
-        events=[e for e in events if not e.get("observed_at") or e["observed_at"]<=upper]
-    return events
+    gaps = gaps if gaps is not None else []
+    lower = _instant(row.get("opened_at"))
+    upper_value = row.get("recovered_at") if row.get("incident_state") == "RECOVERED" else row.get("last_abnormal_at")
+    upper = _instant(upper_value)
+    if lower is None or upper is None or lower > upper:
+        gaps.append("Material changes omitted: lifecycle bounds are missing, invalid, timezone-naive or reversed.")
+        return []
+    # SQL TEXT bounds would discard valid instants with different UTC offsets.
+    events = query_events(conn,{"domain":domain,"resource_type":resource_type,"resource_key":resource_key})
+    selected = []
+    for event in events:
+        at = _instant(event.get("observed_at"))
+        if at is None:
+            gaps.append("Event " + event["id"] + " omitted from material changes: timestamp is missing, invalid or timezone-naive.")
+        elif lower <= at <= upper: selected.append(event)
+    return selected
 
 def _obs_evidence(conn,domain,observation_id):
     return get_evidence(conn,evidence("observation",domain,observation_id)) if observation_id is not None else None
@@ -244,7 +270,8 @@ def incident_timeline(conn,incident_id):
     items=[]
     items.append({"kind":"INCIDENT_OPENED","timestamp":row.get("opened_at"),"authority":"DERIVED","event_id":opened_event.get("id") if opened_event else None,"observation_id":canon(domain,row["opened_observation_id"]) if row.get("opened_observation_id") else None,"changes":incident.get("opening_changes") or (opened_event.get("changes") if opened_event else None),"evidence_refs":[r for r in [evidence("event",domain,opened_event["local_id"]) if opened_event else None,evidence("observation",domain,row["opened_observation_id"]) if row.get("opened_observation_id") else None] if r]})
     lifecycle_ids={x.get("id") for x in (opened_event,last_event,recovered_event) if x}
-    for run in reversed(_compact_events(_incident_events(conn,domain,row))):
+    timestamp_gaps=[]
+    for run in reversed(_compact_events(_incident_events(conn,domain,row,timestamp_gaps))):
         if run.get("repeat_count",1)<=1 and run.get("first_event_id") in lifecycle_ids and run.get("latest_event_id") in lifecycle_ids: continue
         items.append({"kind":"MATERIAL_CHANGE","timestamp":run.get("last_observed_at"),"authority":"DERIVED","event_id":run.get("latest_event_id"),"observation_id":((run.get("latest_evidence_refs") or [None])[0].split(":",1)[1] if (run.get("latest_evidence_refs") or [None])[0] else None),"changes":run.get("latest_changes"),"repeat_count":run.get("repeat_count"),"first_observed_at":run.get("first_observed_at"),"evidence_refs":list(dict.fromkeys((run.get("first_evidence_refs") or [])+(run.get("latest_evidence_refs") or [])))})
     if row.get("last_abnormal_observation_id")!=row.get("opened_observation_id") or row.get("last_abnormal_at")!=row.get("opened_at"):
@@ -252,8 +279,8 @@ def incident_timeline(conn,incident_id):
     if row.get("recovered_observation_id") is not None and row.get("recovered_at") is not None:
         items.append({"kind":"INCIDENT_RECOVERED","timestamp":row.get("recovered_at"),"authority":"DERIVED","event_id":recovered_event.get("id") if recovered_event else None,"observation_id":canon(domain,row["recovered_observation_id"]),"changes":recovered_event.get("changes") if recovered_event else None,"evidence_refs":[r for r in [evidence("event",domain,recovered_event["local_id"]) if recovered_event else None,evidence("observation",domain,row["recovered_observation_id"])] if r]})
     order={"INCIDENT_OPENED":0,"MATERIAL_CHANGE":1,"LAST_ABNORMAL":2,"INCIDENT_RECOVERED":3}
-    items.sort(key=lambda x:(x.get("timestamp") or "",order.get(x["kind"],9),x.get("event_id") or "",x.get("observation_id") or ""))
-    return {"incident_id":incident["id"],"domain":domain,"resource_type":incident["resource_type"],"resource_key":incident["resource_key"],"state":incident["state"],"opened_at":incident["opened_at"],"last_abnormal_at":incident["last_abnormal_at"],"recovered_at":incident["recovered_at"],"items":items,"authority":"DERIVED","provenance":{"linkage_mode":linkage_mode,"direct_event_linkage":direct}}
+    items.sort(key=lambda x:(_time_key(x.get("timestamp")),order.get(x["kind"],9),x.get("event_id") or "",x.get("observation_id") or ""))
+    return {"incident_id":incident["id"],"domain":domain,"resource_type":incident["resource_type"],"resource_key":incident["resource_key"],"state":incident["state"],"opened_at":incident["opened_at"],"last_abnormal_at":incident["last_abnormal_at"],"recovered_at":incident["recovered_at"],"items":items,"gaps":timestamp_gaps,"authority":"DERIVED","provenance":{"linkage_mode":linkage_mode,"direct_event_linkage":direct}}
 def _evidence_pair(conn,domain,resource_key,observation_id,event_id=None,resource_type=None):
     event_item=_event_by_id(conn,domain,event_id) if event_id is not None else _event_for_observation(conn,domain,resource_key,observation_id,resource_type)
     return {"observation":_obs_evidence(conn,domain,observation_id),"event":_event_evidence(conn,domain,event_item)}
@@ -271,6 +298,7 @@ def incident_evidence_bundle(conn,incident_id,limit=50):
     changes=_compact_events(events)[:limit]
     direct="opened_event_id" in row
     provenance={"linkage_mode":"DIRECT_EVENT_IDS" if direct else "LEGACY_RESOURCE_TIME_CORRELATION","authoritative_ids":{"opened_observation_id":row.get("opened_observation_id"),"last_abnormal_observation_id":row.get("last_abnormal_observation_id"),"recovered_observation_id":row.get("recovered_observation_id"),"opened_event_id":row.get("opened_event_id"),"last_event_id":row.get("last_event_id")},"limitations":[] if direct else ["PVE legacy incident rows do not store opened_event_id/last_event_id; event correlation uses resource identity, lifecycle bounds, and authoritative observation IDs."]}
+    provenance["limitations"].extend(timeline.get("gaps", []))
     opening=_evidence_pair(conn,domain,resource_key,row.get("opened_observation_id"),row.get("opened_event_id") if direct else None,resource_type=_incident_resource(domain,row)[0])
     last_abnormal_event=_last_abnormal_event(conn,domain,row,resource_key)
     latest={"observation":_obs_evidence(conn,domain,row.get("last_abnormal_observation_id")),"event":_event_evidence(conn,domain,last_abnormal_event)}
@@ -303,8 +331,13 @@ def incident_summary(conn,incident_id):
     opened_statement=(f"Opened at {incident['opened_at']}" if incident.get('opened_at') else "Opening time is not recorded") + (f" with {opened_detail}." if opened_detail else ".")
     latest_detail=_change_sentence((latest or {}).get("changes"))
     latest_statement=(f"Latest abnormal state was recorded at {incident['last_abnormal_at']}" if incident.get('last_abnormal_at') else "Latest abnormal time is not recorded") + (f" with {latest_detail}." if latest_detail else ".")
-    if incident.get("state")=="RECOVERED" and incident.get("recovered_at"):
-        recovery_statement=f"Recovery was recorded at {incident['recovered_at']}."
+    if incident.get("state")=="RECOVERED":
+        if _instant(incident.get("recovered_at")) is not None:
+            recovery_statement=f"Recovery was recorded at {incident['recovered_at']}. Historical recovery does not establish current resource health."
+        else:
+            recovery_statement="The ledger is marked RECOVERED, but a valid timezone-aware recovery time is not recorded. Recovery timing and current resource health are unverified."
+    elif incident.get("recovered_at") or recovery:
+        recovery_statement="The ledger is not marked RECOVERED but contains recovery evidence; these conflicting records require review."
     else:
         recovery_statement="No recovery is recorded."
     refs=[]

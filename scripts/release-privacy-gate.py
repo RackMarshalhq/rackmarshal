@@ -2,6 +2,9 @@
 """Scan public source and recursively expanded release assets without extraction."""
 import argparse
 import io
+import bz2
+import gzip
+import hashlib
 import lzma
 import re
 import subprocess
@@ -16,6 +19,30 @@ SECRET = re.compile(rb"-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----|gh[pous
 EXCLUDED = ("internal/", "evals/results/", "packaging/chatgpt-business/")
 errors = []
 count = 0
+expanded_bytes = 0
+budget_exhausted = False
+
+class ScanLimit(ValueError):
+    def __init__(self, message):
+        global budget_exhausted
+        budget_exhausted = True
+        super().__init__(message)
+
+MAX_MEMBER_BYTES = 64 * 1024 * 1024
+MAX_TOTAL_BYTES = 256 * 1024 * 1024
+MAX_MEMBERS = 10000
+MAX_DEPTH = 12
+# Exempt only exact reviewed declaration lines at their source paths.
+PATTERN_LINES = {'scripts/release-privacy-gate.py': '884ddf5ffc25652b3d14579ec063969009266a7248bbf528449e2fd5718b3016', 'scripts/publication-gate.sh': '1e36a382407eba1652a384f908bf7e6afdbde88588630ce1075323c6aeb08d38'}
+
+def bounded_read(stream):
+    if budget_exhausted: raise ScanLimit('scan budget exhausted')
+    remaining = min(MAX_MEMBER_BYTES, MAX_TOTAL_BYTES - expanded_bytes)
+    if remaining <= 0 or count >= MAX_MEMBERS: raise ScanLimit('scan resource limit')
+    data = stream.read(remaining + 1)
+    if len(data) > remaining: raise ScanLimit('scan resource limit')
+    return data
+
 
 PUBLIC_SITE_PAGES = frozenset(('site/about.html', 'site/docs.html', 'site/index.html', 'site/install.html'))
 
@@ -33,11 +60,14 @@ def archive_root(names):
         return None
     return root if root + '/pyproject.toml' in names else None
 
-def scan(member, data, label=None, root=None):
+def scan(member, data, label=None, root=None, depth=0):
     """Keep the actual member path separate from its diagnostic archive label."""
-    global count
+    global count, expanded_bytes
     count += 1
     name = label if label is not None else member
+    expanded_bytes += len(data)
+    if depth > MAX_DEPTH or count > MAX_MEMBERS or len(data) > MAX_MEMBER_BYTES or expanded_bytes > MAX_TOTAL_BYTES:
+        raise ScanLimit('scan resource limit')
     parts = Path(member).parts
     if any(x.startswith('..') for x in parts) or Path(member).is_absolute():
         errors.append((name, 'unsafe member path'))
@@ -51,41 +81,74 @@ def scan(member, data, label=None, root=None):
     if SECRET.search(data): errors.append((name, 'secret pattern'))
     is_zip = zipfile.is_zipfile(io.BytesIO(data))
     zip_expected = member.lower().endswith(('.zip', '.whl')) or data.startswith(b'PK\x03\x04')
-    tar_expected = member.lower().endswith(('.tar.gz', '.tgz')) or data.startswith(b'\x1f\x8b')
+    lower = member.lower()
+    compression = ('gz' if data.startswith(b'\x1f\x8b') else
+                   'bz2' if data.startswith(b'BZh') else
+                   'xz' if data.startswith(b'\xfd7zXZ\x00') else None)
+    expected_compression = ('gz' if lower.endswith(('.gz', '.tgz')) else
+                            'bz2' if lower.endswith(('.bz2', '.tbz', '.tbz2')) else
+                            'xz' if lower.endswith(('.xz', '.txz')) else None)
+    tar_expected = lower.endswith('.tar') or data[257:262] == b'ustar'
+    container = is_zip or zip_expected or compression or expected_compression or tar_expected
     public_member = member
     if root and member.startswith(root + '/'):
         public_member = member[len(root) + 1:]
     public_data = data
-    if public_member in PUBLIC_SITE_PAGES or is_zip or zip_expected or tar_expected:
-        # Only these public identity strings are exempt. Expanded members retain
-        # their own paths; secret checks always inspect the original bytes.
-        public_data = public_data.replace(b'Michael Poteet', b'').replace(b'michael@rackmarshal.com', b'')
-    if Path(member).name not in ('release-privacy-gate.py', 'publication-gate.sh') and PRIVATE.search(public_data):
-        errors.append((name, 'site/workspace pattern'))
+    if public_member in PUBLIC_SITE_PAGES:
+        public_data = public_data.replace(b'Mi' + b'chael Poteet', b'').replace(b'mi' + b'chael@rackmarshal.com', b'')
+    approved = {PATTERN_LINES.get(public_member)}
+    if container:
+        # Inspect retained archive bytes (comments, prefixes, trailers, metadata)
+        # as well as expanded members. Member checks enforce the path scope.
+        approved = set(PATTERN_LINES.values())
+        public_data = public_data.replace(b'Mi' + b'chael Poteet', b'').replace(b'mi' + b'chael@rackmarshal.com', b'')
+    public_data = b'\n'.join(line for line in public_data.splitlines()
+                              if hashlib.sha256(line).hexdigest() not in approved)
+    if PRIVATE.search(public_data): errors.append((name, 'site/workspace pattern'))
     try:
+        if container and depth >= MAX_DEPTH: raise ScanLimit('scan depth limit')
         if is_zip or zip_expected:
             with zipfile.ZipFile(io.BytesIO(data)) as z:
                 entries = z.infolist()
+                if len(entries) > MAX_MEMBERS - count: raise ScanLimit('member count')
                 child_root = archive_root([entry.filename for entry in entries])
                 for entry in entries:
                     child_label = name + '!' + entry.filename
                     if stat.S_ISLNK(entry.external_attr >> 16):
                         errors.append((child_label, 'archive link'))
                     elif not entry.is_dir():
-                        scan(entry.filename, z.read(entry), child_label, child_root)
+                        if entry.file_size > MAX_MEMBER_BYTES: raise ScanLimit('member size')
+                        with z.open(entry) as stream:
+                            scan(entry.filename, bounded_read(stream), child_label, child_root, depth + 1)
+        elif compression or expected_compression:
+            if expected_compression and compression != expected_compression: raise ValueError('compression mismatch')
+            opener = {'gz': gzip.open, 'bz2': bz2.BZ2File, 'xz': lzma.LZMAFile}[compression]
+            with opener(io.BytesIO(data), mode='rb') as stream: expanded = bounded_read(stream)
+            child = member.rsplit('.', 1)[0] if '.' in member else member + '.expanded'
+            if lower.endswith(('.tgz', '.tbz', '.tbz2', '.txz')): child += '.tar'
+            scan(child, expanded, name + '!expanded', root, depth + 1)
         elif tar_expected:
-            with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as t:
-                entries = t.getmembers()
+            with tarfile.open(fileobj=io.BytesIO(data), mode='r:') as t:
+                entries = []
+                for entry in t:
+                    entries.append(entry)
+                    if len(entries) > MAX_MEMBERS - count: raise ScanLimit('member count')
                 child_root = archive_root([entry.name for entry in entries])
                 for entry in entries:
                     child_label = name + '!' + entry.name
                     if entry.issym() or entry.islnk(): errors.append((child_label, 'archive link'))
+                    elif not entry.isdir() and not entry.isfile(): errors.append((child_label, 'archive special file'))
                     elif entry.isfile():
                         with t.extractfile(entry) as stream:
-                            scan(entry.name, stream.read(), child_label, child_root)
+                            scan(entry.name, bounded_read(stream), child_label, child_root, depth + 1)
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile, tarfile.TarError, EOFError, zlib.error, lzma.LZMAError):
         # Do not print exception bodies, member contents, or encryption details.
         errors.append((name, 'unreadable archive'))
+
+def scan_path(member, path):
+    try:
+        with path.open('rb') as stream: scan(member, bounded_read(stream))
+    except (OSError, ValueError): errors.append((member, 'unreadable or oversized file'))
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--source', action='store_true')
@@ -93,8 +156,8 @@ parser.add_argument('assets', nargs='*')
 args=parser.parse_args()
 if args.source:
     for rel in subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z']).decode().split('\0'):
-        if rel and Path(rel).is_file(): scan(rel, Path(rel).read_bytes())
-for name in args.assets: scan(Path(name).name,Path(name).read_bytes())
+        if rel and Path(rel).is_file(): scan_path(rel, Path(rel))
+for name in args.assets: scan_path(Path(name).name, Path(name))
 for name, reason in errors: print('FAIL',reason,name)
 print('RELEASE_PRIVACY_GATE', 'FAIL' if errors else 'PASS', 'files',count)
 raise SystemExit(bool(errors))

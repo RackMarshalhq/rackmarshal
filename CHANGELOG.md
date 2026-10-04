@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0rc4 — Local review candidate (not published)
+
+- Gate candidate upload on exact source/artifact-bound qualification receipts and scan final assets before checksums; synthetic operation and production routine-use gates remain separate.
+- Inspect nested and renamed compressed assets with bounded expansion; restrict scanner exemptions to exact reviewed declaration lines.
+- Compare non-PVE material-change bounds by timezone-aware instants and expose timestamp gaps.
+- Distinguish missing recovery time from no recorded recovery and historical recovery from current resource health.
+- Changed bytes require new applicable qualification. Frozen earlier candidates are unchanged.
+
 ## 1.2.0rc3 — Local qualification candidate (not published)
 
 - Integrate setup safety regression coverage and deterministic health acceptance fixtures.

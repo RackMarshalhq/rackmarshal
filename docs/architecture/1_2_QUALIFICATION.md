@@ -1,6 +1,14 @@
 # 1.2 candidate qualification
 
-## Current preparation: 1.2.0rc3
+## Current preparation: 1.2.0rc4
+
+Status: **LOCAL PREPARATION; unpublished; fresh qualification PENDING**.
+
+This source fixes release gating, compressed-asset inspection, narrow scanner exemptions, recovery-summary wording and offset-aware material-change bounds. Development tests and artifact build receipts do not qualify changed runtime bytes. Frozen rc2 and rc3 runs, their artifacts and their owners remain unchanged. No evidence from those runs is promoted to rc4 qualification.
+
+The upload workflow requires a source/artifact-bound receipt package as described in [release gate](RELEASE_GATE.md). Synthetic 72-hour operation and production routine-use remain separate, initially PENDING. Local explicit and private hosted explicit client acceptance require their own receipts; other activation surfaces remain unsupported until separately qualified. No new qualification run or publication is authorized by preparing this source.
+
+## Historical preparation: 1.2.0rc3
 
 Updated: 2026-10-02. Status: **LOCAL PREPARATION; not published; fresh qualification pending**.
 
