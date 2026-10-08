@@ -1,3 +1,4 @@
+include build_support/_build_backend.py
 include AGENTS.md .mcp.json
 include INSTALL.md CONFIGURATION.md UPGRADE.md UNINSTALL.md SECURITY.md CONTRIBUTING.md CHANGELOG.md
 recursive-include .codex-plugin *.json

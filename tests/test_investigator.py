@@ -7,6 +7,8 @@ class InvestigatorContract(unittest.TestCase):
   for n in ALLOWED_TOOLS: self.assertFalse(any(v in n for v in ('set_','delete','restart','execute','acknowledge','close_incident')))
  def test_incident_plan_prefers_evidence_bundle(self): self.assertIn('get_incident_evidence_bundle',investigation_plan('incident'))
  def test_recovery_plan_uses_authoritative_history(self): self.assertIn('get_recovery_history',investigation_plan('recovery')); self.assertIn('get_incident_timeline',investigation_plan('recovery'))
+ def test_health_plan_requires_reachability_and_collection_evidence(self):
+  self.assertEqual(investigation_plan('health'),('get_health','get_status'))
  def test_policy_preserves_advisory_boundary(self):
   self.assertIn('ADVISORY',SYSTEM_INSTRUCTIONS); self.assertIn('Never claim an incident recovered',SYSTEM_INSTRUCTIONS)
 if __name__=='__main__': unittest.main()

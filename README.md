@@ -1,6 +1,6 @@
 # RackMarshal™
 
-**Development: 1.2.0rc2.** Setup/coverage improvements are under qualification; published RC1 remains a separate artifact.
+**Development: 1.2.0rc5.** Local health-policy fix; fresh exact-artifact qualification is pending. Frozen rc2, rc3 and rc4 remain separate artifacts.
 
 Local-first infrastructure operations and incident management for self-hosted systems.
 

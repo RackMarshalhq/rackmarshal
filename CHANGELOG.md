@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.2.0rc5 — Local health-policy fix (not published)
+
+- Require current get_health and get_status evidence for RackMarshal health questions in the runtime policy, packaged skill and deterministic health plan.
+- Explain partial/unverified results, collection/freshness gaps and response-versus-observation timestamps without granting action authority.
+- Verify health-policy parity across local and private hosted packages. Existing acceptance requirements remain unchanged; live client acceptance is pending.
+- Frozen rc4 artifacts and its independent synthetic window remain unchanged. Changed rc5 bytes require their own qualification.
+
+## 1.2.0rc4 — Local review candidate (not published)
+
+- Gate candidate upload on exact source/artifact-bound qualification receipts and scan final assets before checksums; synthetic operation and production routine-use gates remain separate.
+- Inspect nested and renamed compressed assets with bounded expansion; restrict scanner exemptions to exact reviewed declaration lines.
+- Compare non-PVE material-change bounds by timezone-aware instants and expose timestamp gaps.
+- Distinguish missing recovery time from no recorded recovery and historical recovery from current resource health.
+- Changed bytes require new applicable qualification. Frozen earlier candidates are unchanged.
+
+## 1.2.0rc3 — Local qualification candidate (not published)
+
+- Integrate setup safety regression coverage and deterministic health acceptance fixtures.
+- Require the exact eleven-entry MCP tool contract, rejecting duplicate names.
+- Strengthen source/artifact privacy checks for renamed databases and archives, links, literal member paths, and public website attribution boundaries.
+- Retain public-tree privacy cleanup and generic provider-neutral packaging.
+- Fresh exact-artifact installation, lifecycle, security, client, and sustained synthetic qualification remain required; rc2 evidence is not transferred.
+
 ## 1.2.0rc2 — Qualification candidate (not published)
 
 - Prevent mount recovery from missing/unknown observation rows; require an explicit healthy mount result and retain accurate OPEN counts.

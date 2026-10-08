@@ -1,10 +1,11 @@
 [build-system]
 requires = ["setuptools>=77"]
-build-backend = "setuptools.build_meta"
+build-backend = "_build_backend"
+backend-path = ["build_support"]
 
 [project]
 name = "rackmarshal"
-version = "1.2.0rc2"
+version = "1.2.0rc5"
 description = "Local-first infrastructure operations and incident management for self-hosted systems."
 readme = "README.md"
 requires-python = ">=3.11"
