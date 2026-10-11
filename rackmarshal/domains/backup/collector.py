@@ -4,7 +4,7 @@ import json
 import subprocess
 import ssl
 import urllib.error
-import urllib.request
+from rackmarshal import http
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -153,18 +153,18 @@ def api_get(
 ):
     url = base_url.rstrip('/') + endpoint
 
-    request = urllib.request.Request(
-        url,
-        headers=headers,
-        method='GET',
-    )
-
-    context = ssl.create_default_context(
-        cafile=cafile
-    )
-
     try:
-        with urllib.request.urlopen(
+        request = http.Request(
+            url,
+            headers=headers,
+            method='GET',
+        )
+
+        context = ssl.create_default_context(
+            cafile=cafile
+        )
+
+        with http.urlopen(
             request,
             context=context,
             timeout=20,

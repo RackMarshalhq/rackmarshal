@@ -42,7 +42,7 @@ class SetupPlanTests(unittest.TestCase):
         content = f"STATE_DB=/uncreated/state.db\nENABLED_DOMAINS=pve\nPVE_API_ENV={credential}\nPVE_CA_FILE={ca}\nSITE_NAME={token}\n"
         self.config.write_text(content)
         before = {f.name:f.read_bytes() for f in self.root.iterdir()}
-        with patch("urllib.request.urlopen", side_effect=AssertionError("network probe")), patch("subprocess.run", side_effect=AssertionError("service action")):
+        with patch("urllib.request.urlopen", side_effect=AssertionError("network probe")), patch("rackmarshal.http.urlopen", side_effect=AssertionError("network probe")), patch("subprocess.run", side_effect=AssertionError("service action")):
             p = setup_plan(self.config)
         self.assertEqual(p["domains"][0]["setup_state"], "CONFIGURATION_COMPLETE")
         encoded = json.dumps(p)

@@ -1,5 +1,6 @@
 """Optional OpenAI Responses API edge client for RackMarshal Investigator."""
-import argparse, json, os, sys, urllib.error, urllib.request
+import argparse, json, os, sys, urllib.error
+from rackmarshal import http
 from rackmarshal.agent.investigator import SYSTEM_INSTRUCTIONS
 from rackmarshal.mcp.tools import TOOL_NAMES
 
@@ -31,12 +32,12 @@ def extract_text(response):
 
 def run(prompt,api_key,tunnel_id,model=DEFAULT_MODEL,timeout=180):
     body=build_request(prompt,tunnel_id,model)
-    req=urllib.request.Request(
+    req=http.Request(
         "https://api.openai.com/v1/responses",
         data=json.dumps(body).encode(),
         headers={"Authorization":"Bearer "+api_key,"Content-Type":"application/json"},
     )
-    with urllib.request.urlopen(req,timeout=timeout) as response:
+    with http.urlopen(req,timeout=timeout) as response:
         return json.load(response)
 
 def main(argv=None):

@@ -6,7 +6,7 @@ import json
 import sqlite3
 import subprocess
 import urllib.error
-import urllib.request
+from rackmarshal import http
 
 from rackmarshal.core.config import (
     ha_credential_file,
@@ -307,18 +307,18 @@ def send_ha(
         "notification_id": notification_id,
     }
 
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        method="POST",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
-    )
-
     try:
-        with urllib.request.urlopen(
+        request = http.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+        )
+
+        with http.urlopen(
             request,
             timeout=10,
         ) as response:

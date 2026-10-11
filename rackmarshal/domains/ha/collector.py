@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 import urllib.error
-import urllib.request
+from rackmarshal import http
 
 from rackmarshal.core.config import ha_credential_file
 
@@ -64,16 +64,16 @@ printf '%s\0%s' "$HA_URL" "$HA_TOKEN"
 
 
 def api_get(base_url, token, path):
-    request = urllib.request.Request(
-        base_url + path,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
-    )
-
     try:
-        with urllib.request.urlopen(
+        request = http.Request(
+            base_url + path,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+        )
+
+        with http.urlopen(
             request,
             timeout=15,
         ) as response:

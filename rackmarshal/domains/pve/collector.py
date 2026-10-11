@@ -3,7 +3,7 @@
 import json
 import ssl
 import urllib.error
-import urllib.request
+from rackmarshal import http
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -57,24 +57,24 @@ def load_config(path):
 def api_get(config, endpoint):
     url = config['PVE_API_URL'].rstrip('/') + endpoint
 
-    request = urllib.request.Request(
-        url,
-        headers={
-            'Authorization':
-                'PVEAPIToken='
-                + config['PVE_TOKEN_ID']
-                + '='
-                + config['PVE_TOKEN_SECRET'],
-            'Accept': 'application/json',
-            'User-Agent': 'RackMarshal/1.0',
-        },
-        method='GET',
-    )
-
-    context = ssl.create_default_context(cafile=str(CA_FILE))
-
     try:
-        with urllib.request.urlopen(
+        request = http.Request(
+            url,
+            headers={
+                'Authorization':
+                    'PVEAPIToken='
+                    + config['PVE_TOKEN_ID']
+                    + '='
+                    + config['PVE_TOKEN_SECRET'],
+                'Accept': 'application/json',
+                'User-Agent': 'RackMarshal/1.0',
+            },
+            method='GET',
+        )
+
+        context = ssl.create_default_context(cafile=str(CA_FILE))
+
+        with http.urlopen(
             request,
             context=context,
             timeout=10,

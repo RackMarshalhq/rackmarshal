@@ -12,6 +12,8 @@ def run(cmd,env=None):
  return r
 
 def main():
+ if not __debug__:
+  raise RuntimeError('Staging smoke requires assertions; remove -O/-OO and PYTHONOPTIMIZE')
  with tempfile.TemporaryDirectory(prefix='rackmarshal-smoke-') as td:
   t=Path(td); db=t/'fresh.db'; kh=t/'known_hosts'; kh.write_text('')
   conf=t/'rackmarshal.conf'

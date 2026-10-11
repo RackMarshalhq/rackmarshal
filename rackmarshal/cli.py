@@ -1,5 +1,6 @@
 """RackMarshal administrative CLI."""
-import argparse, importlib, importlib.util, json, os, stat, sys, tomllib, urllib.request
+import argparse, importlib, importlib.util, json, os, stat, sys, tomllib
+from rackmarshal import http
 from pathlib import Path
 from rackmarshal import __version__
 from rackmarshal.core.config import ConfigError, load_config, require
@@ -57,7 +58,7 @@ def diagnostic(path):
     c=load_config(path); db=Path(require(c,"STATE_DB")); out={"config":str(path),"state_db":str(db),"state_db_exists":db.exists(),"enabled_domains":_enabled(c)}
     url=f"http://{c.get('STATUS_API_LISTEN_ADDRESS','127.0.0.1')}:{c.get('STATUS_API_LISTEN_PORT','9110')}/health"
     try:
-      with urllib.request.urlopen(url,timeout=2) as r: out["health"]={"status":r.status,"body":json.loads(r.read())}
+      with http.urlopen(url,timeout=2) as r: out["health"]={"status":r.status,"body":json.loads(r.read())}
     except Exception as e: out["health"]={"error":f"{type(e).__name__}: {e}"}
     return out
 

@@ -75,7 +75,8 @@ def adopt(db, observation_id, resources, note, apply=False, backup_dir=None, now
                 for row in rows:
                     conn.execute('INSERT INTO resource_baseline(resource_type,resource_key,display_name,expected_status,baseline_state,source_observation,note) VALUES(:resource_type,:resource_key,:display_name,:expected_status,:baseline_state,:source_observation,:note)', row)
                 receipt['after_count'] = conn.execute('SELECT COUNT(*) FROM resource_baseline').fetchone()[0]
-                assert receipt['after_count'] == receipt['before_count'] + len(rows)
+                if receipt['after_count'] != receipt['before_count'] + len(rows):
+                    raise RuntimeError('Baseline row count changed unexpectedly; adoption rolled back')
                 conn.commit()
                 receipt['state'] = 'APPLIED'
             else:

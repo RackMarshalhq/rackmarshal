@@ -1,5 +1,16 @@
 # 1.2 candidate qualification
 
+## Unpublished security follow-up to frozen RC5
+
+This development tree changes outbound HTTP validation/redirect handling and
+optimized-interpreter acceptance guards. Frozen RC5 source `f9ccecb`, artifacts,
+and retained qualification evidence are unchanged. See
+[static review follow-up](STATIC_REVIEW_FOLLOWUP.md) for findings and coverage.
+Local regression results do not qualify these changed bytes. A separately
+versioned candidate would need new exact-artifact security, installation,
+lifecycle, client and sustained-operation receipts before promotion. No new
+qualification run or deployment is started by these changes.
+
 ## Current preparation: 1.2.0rc5
 
 Status: **LOCAL HEALTH-POLICY FIX; unpublished; fresh qualification PENDING**.

@@ -128,13 +128,18 @@ def process_hardware_incidents_ledger():
             f"process_hardware_incidents failed rc={result.returncode}"
         )
     try:
-        start = text.find("{")
-        end = text.rfind("}")
-        if start >= 0 and end > start:
-            return json.loads(text[start : end + 1])
-    except Exception:
-        pass
-    return {"status": "OK", "note": "no_json"}
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("hardware incident processor returned invalid JSON") from exc
+    if not isinstance(data, dict):
+        raise RuntimeError("hardware incident processor must return a JSON object")
+    if data.get("status") != "OK" or data.get("consumer") != "hardware_incident_processor":
+        raise RuntimeError("hardware incident processor result is unsuccessful or unrecognized")
+    for field in ("opened", "escalated", "recovered", "processed", "open_incidents"):
+        value = data.get(field)
+        if type(value) is not int or value < 0:
+            raise RuntimeError(f"hardware incident processor returned invalid {field} count")
+    return data
 
 
 def enqueue_notifications():

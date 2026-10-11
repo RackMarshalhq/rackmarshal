@@ -25,3 +25,25 @@ The SQLite state database contains operational history. Depending on configured 
 ## Reporting vulnerabilities
 
 Report vulnerabilities through GitHub Private Vulnerability Reporting for the RackMarshal repository. Do not post credentials, exploit details affecting a live installation, private infrastructure data, or other sensitive material in a public issue.
+# Outbound HTTP destinations
+
+Development follow-up to frozen 1.2.0rc5: Python HTTP clients accept explicit
+HTTP(S) endpoints and reject URL user information, malformed destinations and
+control characters. Redirects must retain the original scheme, host and
+effective port; redirects to another origin, including HTTPS downgrades, fail
+before forwarding the request. Configure the intended endpoint directly when a
+service moves. Same-origin redirects retain standard urllib method behavior.
+
+Private and loopback endpoints remain supported for self-hosted operation.
+Configuration and proxy settings are trusted operator inputs; this is not a
+network sandbox or DNS-rebinding defense. Use HTTPS for credentials outside an
+appropriately protected local environment. Custom certificate verification
+contexts and configured proxies remain in effect.
+
+Standalone readiness and narrative acceptance scripts reject all redirects:
+another URL's response cannot establish the selected endpoint's acceptance.
+Acceptance evaluators that use assertions reject optimized Python execution
+(`-O`, `-OO`, or `PYTHONOPTIMIZE`) rather than emit a receipt with checks removed.
+
+These changes are local development, not a patch to qualified RC5 artifacts.
+The original exact-artifact qualification does not cover these changed bytes.

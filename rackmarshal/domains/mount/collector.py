@@ -21,7 +21,7 @@ import time
 import tomllib
 import urllib.parse
 import urllib.error
-import urllib.request
+from rackmarshal import http
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -128,10 +128,10 @@ def api_request(config: dict, method: str, endpoint: str, form=None) -> dict:
     if form is not None:
         body = urllib.parse.urlencode(form, doseq=True).encode()
         headers["Content-Type"] = "application/x-www-form-urlencoded"
-    request = urllib.request.Request(url, data=body, headers=headers, method=method)
-    context = ssl.create_default_context(cafile=str(pve_ca_file()))
     try:
-        with urllib.request.urlopen(request, context=context, timeout=30) as response:
+        request = http.Request(url, data=body, headers=headers, method=method)
+        context = ssl.create_default_context(cafile=str(pve_ca_file()))
+        with http.urlopen(request, context=context, timeout=30) as response:
             return json.load(response)
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode(errors="replace")

@@ -13,7 +13,19 @@ import tempfile
 import time
 from urllib.parse import urlsplit
 from urllib.error import HTTPError
-from urllib.request import urlopen
+from urllib.request import HTTPRedirectHandler, build_opener
+
+
+class NoRedirect(HTTPRedirectHandler):
+    """Readiness must be established by the selected local service itself."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def urlopen(url, *, timeout):
+    local_url(url)
+    return build_opener(NoRedirect()).open(url, timeout=timeout)
 
 ASSETS = {
     "acceptance/prove-incident-narrative.py": "scripts/prove-incident-narrative.py",
@@ -237,7 +249,9 @@ def promote(bundle, roots, backups, runtime, acceptance):
 
 def local_url(url):
     parsed = urlsplit(url)
-    if parsed.scheme != "http" or parsed.hostname not in ("127.0.0.1", "localhost", "::1") or parsed.username or parsed.password or parsed.query or parsed.fragment:
+    if (parsed.scheme != "http" or parsed.hostname not in ("127.0.0.1", "localhost", "::1")
+            or parsed.username is not None or parsed.password is not None or parsed.query or parsed.fragment
+            or any(ord(c) <= 32 or ord(c) == 127 for c in url) or "\\" in url or parsed.port == 0):
         raise ValueError("Acceptance endpoints must be unauthenticated loopback HTTP URLs")
     return url.rstrip("/")
 

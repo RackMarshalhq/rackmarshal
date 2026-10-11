@@ -6,8 +6,28 @@ import json
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import quote
-from urllib.request import urlopen
+from urllib.parse import quote, urlsplit
+from urllib.request import HTTPRedirectHandler, build_opener
+
+
+class NoRedirect(HTTPRedirectHandler):
+    """A proof must inspect the selected endpoint, not a redirect target."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def urlopen(url, *, timeout):
+    parsed = urlsplit(url)
+    if (parsed.scheme not in ("http", "https") or not parsed.hostname
+            or parsed.username is not None or parsed.password is not None
+            or parsed.fragment or any(ord(c) <= 32 or ord(c) == 127 for c in url)
+            or "\\" in url):
+        raise ValueError("Proof endpoint must be an HTTP(S) URL without credentials or fragments")
+    # Evaluate .port to reject malformed/out-of-range ports before any I/O.
+    if parsed.port == 0:
+        raise ValueError("Proof endpoint port must be positive")
+    return build_opener(NoRedirect()).open(url, timeout=timeout)
 
 
 class Links(HTMLParser):
@@ -26,6 +46,8 @@ class Links(HTMLParser):
 
 
 def main():
+    if not __debug__:
+        raise RuntimeError("Acceptance proof requires Python without optimization")
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--output", required=True)

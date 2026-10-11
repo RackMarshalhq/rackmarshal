@@ -17,7 +17,7 @@ import shutil
 import sqlite3
 import sys
 import urllib.error
-import urllib.request
+from rackmarshal import http
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -41,9 +41,9 @@ def stamp_et(now: datetime | None = None) -> str:
 
 
 def fetch_status(url: str, timeout: float = 10.0) -> dict[str, Any]:
-    req = urllib.request.Request(url, method="GET")
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        req = http.Request(url, method="GET")
+        with http.urlopen(req, timeout=timeout) as resp:
             body = resp.read()
             ctype = resp.headers.get("Content-Type", "")
     except urllib.error.URLError as exc:

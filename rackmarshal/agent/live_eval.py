@@ -32,6 +32,8 @@ def _timeline_and_bundle(results):
     return timeline,bundle
 
 def assert_case(name,results,assertions):
+    if not __debug__:
+        raise RuntimeError("Investigator acceptance requires assertions; remove -O/-OO and PYTHONOPTIMIZE")
     failures=[]
     timeline,bundle=_timeline_and_bundle(results)
     for a in assertions:
@@ -84,6 +86,8 @@ def assert_case(name,results,assertions):
             failures.append(f"{a}: {exc or 'assertion failed'}")
     return failures
 async def run_suite(path,server=None):
+    if not __debug__:
+        raise RuntimeError("Investigator acceptance requires assertions; remove -O/-OO and PYTHONOPTIMIZE")
     from mcp import ClientSession
     from mcp.client.streamable_http import streamable_http_client
     suite=json.loads(Path(path).read_text())
