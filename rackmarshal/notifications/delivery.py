@@ -5,6 +5,7 @@ import datetime
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, CREDENTIAL_TIMEOUT_SECONDS
 import urllib.error
 from rackmarshal import http
 
@@ -38,11 +39,15 @@ set -a
 printf '%s\0%s' "$HA_URL" "$HA_TOKEN"
 '''
 
-    result = subprocess.run(
-        ["bash", "-c", command, "_", path],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    try:
+        result = run_process(
+            ["bash", "-c", command, "_", path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=CREDENTIAL_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise DeliveryError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         raise DeliveryError(

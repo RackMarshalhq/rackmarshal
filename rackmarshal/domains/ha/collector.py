@@ -5,6 +5,7 @@ import datetime
 import json
 import os
 import subprocess
+from rackmarshal.process import run as run_process, CREDENTIAL_TIMEOUT_SECONDS
 import sys
 import urllib.error
 from rackmarshal import http
@@ -34,11 +35,15 @@ set -a
 printf '%s\0%s' "$HA_URL" "$HA_TOKEN"
 '''
 
-    result = subprocess.run(
-        ["bash", "-c", command, "_", CREDENTIAL],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    try:
+        result = run_process(
+            ["bash", "-c", command, "_", CREDENTIAL],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=CREDENTIAL_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CollectorError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         raise CollectorError(

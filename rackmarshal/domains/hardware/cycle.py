@@ -4,6 +4,7 @@ import fcntl
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, stage_timeout
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -70,12 +71,16 @@ def emit(value):
 
 
 def run_json(command, *, stdin_text=None):
-    result = subprocess.run(
-        command,
-        input=stdin_text,
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = run_process(
+            command,
+            input=stdin_text,
+            text=True,
+            capture_output=True,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         stderr = result.stderr.strip()
@@ -109,13 +114,17 @@ def run_json(command, *, stdin_text=None):
 
 def process_hardware_incidents_ledger():
     """Step D: mirror temperature events into hardware_events/incidents."""
-    result = subprocess.run(
-        PROCESS_HARDWARE_INCIDENTS,
-        text=True,
-        cwd=str(_ROOT),
-        check=False,
-        capture_output=True,
-    )
+    try:
+        result = run_process(
+            PROCESS_HARDWARE_INCIDENTS,
+            text=True,
+            cwd=str(_ROOT),
+            check=False,
+            capture_output=True,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("local command timed out; stage incomplete") from None
     text = (result.stdout or "").strip()
     if text:
         print(text)
@@ -201,13 +210,17 @@ def deliver_notifications():
 
 
 def collect():
-    result = subprocess.run(
-        COLLECTOR,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    try:
+        result = run_process(
+            COLLECTOR,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         raise RuntimeError(

@@ -4,6 +4,7 @@ import fcntl
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, stage_timeout
 import sys
 from pathlib import Path
 
@@ -44,14 +45,18 @@ class CycleError(RuntimeError):
 
 
 def run(command, input_text=None):
-    result = subprocess.run(
-        [str(x) for x in command],
-        input=input_text,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    try:
+        result = run_process(
+            [str(x) for x in command],
+            input=input_text,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CycleError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         raise CycleError(

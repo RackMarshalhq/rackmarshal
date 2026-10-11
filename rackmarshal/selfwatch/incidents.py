@@ -60,7 +60,10 @@ def evaluate_self_signals(
                     "signal_key": freshness_signal_key(domain),
                     "incident_type": "FRESHNESS_MISSING",
                     "severity": "warning",
-                    "detail": {"domain": domain},
+                    "detail": {"domain": domain, **(
+                        {"reason": "FRESHNESS_POLICY_UNAVAILABLE"}
+                        if row.get("reason") == "FRESHNESS_POLICY_UNAVAILABLE" else {}
+                    )},
                 }
             )
 

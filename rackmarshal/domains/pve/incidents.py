@@ -4,6 +4,7 @@ import argparse
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, LOCAL_STAGE_TIMEOUT_SECONDS
 import sys
 from pathlib import Path
 
@@ -28,14 +29,18 @@ class IncidentProcessorError(Exception):
 
 
 def run_comparator(observation_id):
-    result = subprocess.run(
-        COMPARATOR + [
-            "--observation-id",
-            str(observation_id),
-        ],
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = run_process(
+            COMPARATOR + [
+                "--observation-id",
+                str(observation_id),
+            ],
+            text=True,
+            capture_output=True,
+            timeout=LOCAL_STAGE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise IncidentProcessorError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         detail = result.stderr.strip()

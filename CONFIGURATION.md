@@ -67,6 +67,13 @@ PBS_DATASTORE=...
 
 The Home Assistant collector expects its credential file to provide `HA_URL` and `HA_TOKEN`.
 
+The Home Assistant collector and notification delivery worker source this file
+with Bash; it is trusted executable shell configuration, not an inert dotenv
+parser. Keep it administrator-owned and writable only by its administrator,
+readable by the service account as needed. Do not use downloaded or
+less-trusted input as this file. The generic RackMarshal configuration and
+PVE/PBS key-value readers do not thereby gain shell evaluation.
+
 Do not commit these credential files. Protect them with restrictive ownership and permissions appropriate to the RackMarshal service account.
 
 ## SSH-backed domains
@@ -107,6 +114,23 @@ These capabilities are development-stage components. Do not assume a default bas
 ## Configuration ownership
 
 The installer preserves an existing `/etc/rackmarshal/rackmarshal.conf` on subsequent installs. Upgrade procedures therefore do not silently replace site configuration. Review release notes for new keys before enabling new domains.
+
+Operator-selected Python, comparator and explainer paths are code-execution
+choices. Likewise, tools invoked by name (`bash`, `systemctl`, and Git in
+operator scripts) resolve through the launch environment's PATH. Use a trusted
+PATH containing only administrator-controlled directories; do not prepend a
+working directory or a directory writable by a less-trusted account. This
+applies especially when running installation or promotion commands as root.
+Arguments are passed separately rather than interpolated into shell source,
+but that does not make an untrusted executable or shell configuration safe.
+
+The packaged services use the unprivileged RackMarshal account, absolute Python
+entrypoints, `NoNewPrivileges` and filesystem protections. These constrain
+service execution; they do not validate administrator overrides, grant safe
+execution of untrusted configuration, or protect against malicious operator
+code. The installer creates new configuration as root-owned and preserves
+existing configuration. It does not silently repair pre-existing ownership or
+permission mistakes.
 
 
 ## Read-only setup guidance (1.2 development)

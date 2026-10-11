@@ -96,9 +96,9 @@ def main():
     parser.add_argument('--scope', choices=('candidate','stable'), default='candidate')
     args = parser.parse_args()
     try:
-        actual = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+        actual = subprocess.check_output(['git','rev-parse','HEAD'],text=True,timeout=30).strip()
         if actual != args.source: raise ValueError('checkout/source mismatch')
-        if subprocess.check_output(['git','status','--porcelain','--untracked-files=all'],text=True).strip():
+        if subprocess.check_output(['git','status','--porcelain','--untracked-files=all'],text=True,timeout=30).strip():
             raise ValueError('tracked source edits are not qualified')
         version = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
         if 'rc' not in version and args.scope != 'stable': raise ValueError('stable version requires routine-use evidence')
@@ -116,7 +116,7 @@ def main():
             for name in sorted(before): stream.write(before[name] + '  ' + name + '\n')
         print('RELEASE_CANDIDATE_GATE PASS')
         return 0
-    except (ValueError, KeyError, TypeError, AttributeError, OSError, subprocess.CalledProcessError):
+    except (ValueError, KeyError, TypeError, AttributeError, OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         print('RELEASE_CANDIDATE_GATE FAIL: missing, invalid or mismatched evidence/assets', file=sys.stderr)
         return 1
 

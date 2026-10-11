@@ -56,7 +56,9 @@ HA collector and notification delivery intentionally source an administrator-man
 
 Several cycle/helper subprocess calls lack Python-level timeouts. A hung child can stall a cycle; this is an availability hardening concern, not proof of injection. Systemd limits and child-specific timeouts were not exhaustively proven for every call here. Do not infer safety solely from absence of `shell=True`.
 
-### Residual diagnostic limitations
+### Diagnostic limitations at the first follow-up commit
+
+These two issues are addressed by the subsequent [status diagnostics follow-up](STATUS_DIAGNOSTICS_FOLLOWUP.md); the description below records the original finding, not the final behavior.
 
 `api/status.py:863` can omit a backup summary after an unexpected parsing/summary error without exposing that error. `api/status.py:496` silently falls back when plugin threshold metadata cannot be read/parsed. These behaviors were confirmed by source inspection; fault-injection and downstream health-impact analysis remain follow-up work. Optional API diagnostic metadata is explicitly deferred in this bounded change; no new API representation was introduced. These findings do not establish that recovery was falsely recorded, and no incident or live collector state was changed.
 
@@ -74,7 +76,7 @@ The guard now requires the complete stdout to be one JSON object, `status=OK`, t
 
 These checks use temporary synthetic databases and local Python subprocesses; no live host probes or state changes. The new source is unqualified until its applicable tests, review, packaging and candidate-specific qualification are completed. Frozen RC5 evidence applies to its original bytes, not these fixes. Hosted-client acceptance and the separate 1.1 routine-use gate remain distinct.
 
-## Final development validation and residual scan
+## Validation at first follow-up commit 95a3bc8
 
 On October 11, 2026, the complete publication gate (which validates but does not publish) passed **297 tests** with ResourceWarning treated as errors, staging smoke (30 entrypoints, 17 safe CLI paths), compilation, and source privacy scanning (224 files). Environment: macOS arm64, Python 3.14.7. An independent reviewer passed 27 focused transport, acceptance, hardware and cycle tests and found no remaining blocker in the inspected diff after response-cleanup and exception-contract corrections. This is not a Debian/Python 3.11 deployment or hosted-client test.
 

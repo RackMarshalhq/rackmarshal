@@ -104,6 +104,25 @@ def pbs_store_summary(payload):
     }
 
 
+def attach_backup_summary(domain, payload):
+    """Expose derivation failure without publishing raw payloads/exceptions."""
+    try:
+        summary = pbs_store_summary(payload) if payload else None
+    except Exception:
+        domain["pbs_store"] = {
+            "error": "Backup summary could not be derived from recorded evidence.",
+            "code": "BACKUP_SUMMARY_UNAVAILABLE",
+            "evidence_state": "UNKNOWN",
+        }
+        return
+    if summary is None:
+        return
+    domain["pbs_store"] = summary
+    for key in ("timemachine", "phones", "messages", "host_verify", "rsync_filebackups"):
+        if isinstance(summary.get(key), dict):
+            domain[key] = summary[key]
+
+
 def load_backup_payload_json(conn):
     row = conn.execute(
         """
@@ -478,9 +497,19 @@ def parse_observed_at(value):
         return None
 
 
-def load_stale_after_seconds():
+def load_stale_after_seconds(diagnostics=None):
     """Read stale_after_seconds from domains/*/plugin.toml (defaults 900)."""
     thresholds = {domain: 900 for domain in STATUS_DOMAINS}
+    diagnostics = diagnostics if diagnostics is not None else {}
+
+    def invalid(domain, code):
+        if domain:
+            diagnostics[domain] = {
+                "status": "ERROR", "code": code,
+                "fallback_seconds": 900,
+                "fallback_used_for_classification": False,
+            }
+
     root = domains_dir(CONFIG)
     try:
         import tomllib
@@ -493,20 +522,35 @@ def load_stale_after_seconds():
     for path in sorted(root.glob("*/plugin.toml")):
         try:
             data = tomllib.loads(path.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, UnicodeError, ValueError):
+            invalid(_PLUGIN_DOMAIN_KEYS.get(path.parent.name.lower()), "PLUGIN_METADATA_UNREADABLE")
+            continue
+        parent_domain = _PLUGIN_DOMAIN_KEYS.get(path.parent.name.lower())
+        if parent_domain and "id" in data and (
+            not isinstance(data["id"], str) or data["id"].lower() != path.parent.name.lower()
+        ):
+            invalid(parent_domain, "INVALID_FRESHNESS_POLICY")
             continue
         plugin_id = str(data.get("id") or path.parent.name).lower()
         domain = _PLUGIN_DOMAIN_KEYS.get(plugin_id)
         if not domain:
             continue
-        status = data.get("status") or {}
+        status = data.get("status", {})
+        if not isinstance(status, dict):
+            invalid(domain, "INVALID_FRESHNESS_POLICY")
+            continue
         raw = status.get("stale_after_seconds")
         if raw is None:
             continue
         try:
-            thresholds[domain] = int(raw)
+            if type(raw) not in (int, str):
+                raise ValueError("threshold must be an integer")
+            threshold = int(raw)
+            if threshold <= 0:
+                raise ValueError("threshold must be positive")
+            thresholds[domain] = threshold
         except (TypeError, ValueError):
-            continue
+            invalid(domain, "INVALID_FRESHNESS_POLICY")
     return thresholds
 
 
@@ -517,7 +561,8 @@ def build_freshness(observations, now=None):
     elif now.tzinfo is None:
         now = now.replace(tzinfo=timezone.utc)
 
-    thresholds = load_stale_after_seconds()
+    diagnostics = {}
+    thresholds = load_stale_after_seconds(diagnostics)
     freshness = {}
 
     for domain in STATUS_DOMAINS:
@@ -554,6 +599,14 @@ def build_freshness(observations, now=None):
             "observed_at": obs.get("observed_at"),
         }
 
+    for domain, diagnostic in diagnostics.items():
+        # Missing policy cannot establish freshness or clear an existing
+        # freshness signal. Keep timestamp/age facts, not a fallback OK claim.
+        freshness[domain].update({
+            "state": "MISSING", "stale_after_seconds": None,
+            "reason": "FRESHNESS_POLICY_UNAVAILABLE",
+            "threshold_configuration": diagnostic,
+        })
     return freshness
 
 
@@ -845,24 +898,7 @@ def build_status():
             "last_observation": observations[domain],
         }
 
-    # --- STEP3_PBS_STORE_STATUS attach ---
-    try:
-        _sum = pbs_store_summary(backup_payload) if backup_payload else None
-        if _sum is not None:
-            domains["BACKUP"]["pbs_store"] = _sum
-            if isinstance(_sum.get("timemachine"), dict):
-                domains["BACKUP"]["timemachine"] = _sum["timemachine"]
-            if isinstance(_sum.get("phones"), dict):
-                domains["BACKUP"]["phones"] = _sum["phones"]
-            if isinstance(_sum.get("messages"), dict):
-                domains["BACKUP"]["messages"] = _sum["messages"]
-            if isinstance(_sum.get("host_verify"), dict):
-                domains["BACKUP"]["host_verify"] = _sum["host_verify"]
-            if isinstance(_sum.get("rsync_filebackups"), dict):
-                domains["BACKUP"]["rsync_filebackups"] = _sum["rsync_filebackups"]
-    except Exception:
-        pass
-    # --- STEP3_PBS_STORE_STATUS attach end ---
+    attach_backup_summary(domains["BACKUP"], backup_payload)
 
     ai_by_incident = latest_ai_explanations(conn)
 

@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from rackmarshal.process import run as run_process, stage_timeout
 import sys
 import fcntl
 from pathlib import Path
@@ -38,14 +39,18 @@ class CycleError(Exception):
 
 
 def run(command, stdin_text=None):
-    result = subprocess.run(
-        command,
-        input=stdin_text,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    try:
+        result = run_process(
+            command,
+            input=stdin_text,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CycleError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         message = (

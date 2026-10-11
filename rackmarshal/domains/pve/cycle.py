@@ -3,6 +3,7 @@
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, stage_timeout
 import sys
 from pathlib import Path
 
@@ -40,12 +41,16 @@ class CycleError(Exception):
 
 
 def run_json(command, *, stdin_text=None):
-    result = subprocess.run(
-        command,
-        input=stdin_text,
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = run_process(
+            command,
+            input=stdin_text,
+            text=True,
+            capture_output=True,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CycleError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         stderr = result.stderr.strip()

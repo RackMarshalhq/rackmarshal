@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from rackmarshal.process import run as run_process, stage_timeout
 import sys
 from pathlib import Path
 
@@ -33,12 +34,16 @@ HA_CREDENTIAL = str(ha_credential_file())
 
 
 def run(command, input_text=None):
-    result = subprocess.run(
-        [str(x) for x in command],
-        input=input_text,
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = run_process(
+            [str(x) for x in command],
+            input=input_text,
+            text=True,
+            capture_output=True,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         if result.stdout:

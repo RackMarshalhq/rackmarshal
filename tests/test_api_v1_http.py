@@ -23,7 +23,8 @@ class ApiV1HttpSmoke(unittest.TestCase):
  def get(self,path):
   try:
    with urllib.request.urlopen(self.base+path,timeout=5) as r:return r.status,json.load(r)
-  except urllib.error.HTTPError as e:return e.code,json.load(e)
+  except urllib.error.HTTPError as e:
+   with e:return e.code,json.load(e)
  def test_dashboard_uses_configured_domain_selection_over_http(self):
   from unittest.mock import patch
   with patch.dict(status.CONFIG,{"ENABLED_DOMAINS":" pve "}):

@@ -76,7 +76,7 @@ def prepare(repo, revision, files, destination):
     if not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise ValueError("Use an explicit full Git commit SHA")
     def git(*args):
-        return subprocess.check_output(["git", "-C", str(repo), *args])
+        return subprocess.check_output(["git", "-C", str(repo), *args], timeout=30)
     if git("cat-file", "-t", revision).strip() != b"commit":
         raise ValueError("Revision must be a commit")
     selected = sorted(set(files))

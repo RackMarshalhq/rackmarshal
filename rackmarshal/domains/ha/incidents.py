@@ -4,6 +4,7 @@ import argparse
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, LOCAL_STAGE_TIMEOUT_SECONDS
 import sys
 
 from rackmarshal.core.config import install_root, state_db
@@ -15,15 +16,19 @@ COMPARATOR_DEFAULT = [sys.executable, "-m", "rackmarshal.domains.ha.comparator"]
 
 
 def compare(comparator, db, observation_id):
-    r = subprocess.run(
-        (list(comparator) if isinstance(comparator, (list, tuple)) else [comparator]) + [
-            "--db", db,
-            "--observation-id", str(observation_id),
-        ],
-        check=True,
-        text=True,
-        capture_output=True,
-    )
+    try:
+        r = run_process(
+            (list(comparator) if isinstance(comparator, (list, tuple)) else [comparator]) + [
+                "--db", db,
+                "--observation-id", str(observation_id),
+            ],
+            check=True,
+            text=True,
+            capture_output=True,
+            timeout=LOCAL_STAGE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("local command timed out; stage incomplete") from None
     return json.loads(r.stdout)
 
 

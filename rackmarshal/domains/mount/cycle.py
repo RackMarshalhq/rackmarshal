@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+from rackmarshal.process import run as run_process
 import sys
 from pathlib import Path
 
@@ -42,11 +43,11 @@ DELIVER_TIMEOUT_S = float(
 def run(
     cmd: list[str],
     *,
-    timeout: float | None = None,
+    timeout: float = 300,
 ) -> subprocess.CompletedProcess:
     print(f"$ {' '.join(cmd)}", flush=True)
     try:
-        return subprocess.run(
+        return run_process(
             cmd,
             text=True,
             cwd=str(_ROOT),

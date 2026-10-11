@@ -4,6 +4,7 @@ import argparse
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, LOCAL_STAGE_TIMEOUT_SECONDS
 import sys
 
 from rackmarshal.core.config import state_db, install_root
@@ -41,11 +42,15 @@ def build_packet(
         notification_type,
     ]
 
-    result = subprocess.run(
-        command,
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = run_process(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=LOCAL_STAGE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise EnqueueError("local command timed out; stage incomplete") from None
 
     if result.returncode != 0:
         detail = (

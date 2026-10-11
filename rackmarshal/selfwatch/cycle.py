@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import subprocess
+from rackmarshal.process import run as run_process, stage_timeout
 import sys
 from datetime import datetime, timezone
 
@@ -61,11 +62,15 @@ def utc_now():
 
 
 def run_json(command):
-    result = subprocess.run(
-        command,
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = run_process(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=stage_timeout(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CycleError("local command timed out; stage incomplete") from None
     if result.returncode != 0:
         detail = (result.stderr or result.stdout or "").strip()
         raise CycleError(

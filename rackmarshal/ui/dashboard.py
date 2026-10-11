@@ -100,6 +100,8 @@ def render_collection_coverage(conn, freshness_builder=None, domain=None, enable
         fresh=item["freshness"] or {}
         state=fresh.get("state")
         label={"OK":"Fresh observation", "STALE":"Stale observation", "MISSING":"No usable observation time"}.get(state,"Freshness unavailable")
+        if fresh.get("reason") == "FRESHNESS_POLICY_UNAVAILABLE":
+            label = "Freshness policy unavailable"
         selection={True:"Enabled in configuration",False:"Disabled in configuration",None:"Domain selection unavailable"}[item["enabled"]]
         selection_note=" Historical records only; collection is disabled." if item["enabled"] is False else " Selection alone does not prove active collection."
         cycle_state=(item["cycle"] or {}).get("health_state", "NOT_RECORDED")

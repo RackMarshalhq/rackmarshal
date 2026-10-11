@@ -167,7 +167,7 @@ parser.add_argument('--source', action='store_true')
 parser.add_argument('assets', nargs='*')
 args=parser.parse_args()
 if args.source:
-    for rel in subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z']).decode().split('\0'):
+    for rel in subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z'], timeout=30).decode().split('\0'):
         if rel and Path(rel).is_file(): scan_path(rel, Path(rel))
 for name in args.assets: scan_path(Path(name).name, Path(name))
 for name, reason in errors: print('FAIL',reason,name)

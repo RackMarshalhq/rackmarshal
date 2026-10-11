@@ -39,7 +39,7 @@ class HardwareProcessorResultTests(unittest.TestCase):
         return subprocess.CompletedProcess(['fictional'], returncode, output, '')
 
     def invoke(self, output, returncode=0):
-        with patch.object(self.module.subprocess, 'run', return_value=self.response(output, returncode)), contextlib.redirect_stdout(io.StringIO()):
+        with patch.object(self.module, 'run_process', return_value=self.response(output, returncode)), contextlib.redirect_stdout(io.StringIO()):
             return self.module.process_hardware_incidents_ledger()
 
     def test_current_processor_success_variants_accepted(self):
@@ -75,7 +75,7 @@ class HardwareProcessorResultTests(unittest.TestCase):
     def test_bad_processor_prevents_cycle_success_and_notifications(self):
         payload = {'collector': 'hardware_temperature', 'observed_at': '2026-01-01T00:00:00Z', 'devices': []}
         with patch.object(self.module, 'collect', return_value=payload), \
-             patch.object(self.module.subprocess, 'run', return_value=self.response('')), \
+             patch.object(self.module, 'run_process', return_value=self.response('')), \
              patch.object(self.module, 'enqueue_notifications') as enqueue, \
              patch.object(self.module, 'deliver_notifications') as deliver, \
              patch.object(self.module, 'emit') as emit:
