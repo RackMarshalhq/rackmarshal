@@ -38,6 +38,29 @@ LISTEN_PORT = require_int(
 
 
 # --- STEP3_PBS_STORE_STATUS begin ---
+def _pbs_section_errors(probe):
+    """Accept bounded diagnostic vocabulary without exposing worker details."""
+    if "section_errors" not in probe:
+        return None  # Preserve the legacy summary shape.
+    raw = probe["section_errors"]
+    sections = {"primary", "secondary", "timemachine", "phones", "messages",
+                "host_verify", "pbs_native_verify", "rsync_filebackups"}
+    reasons = {"state_directory_unavailable", "deadline_exceeded", "worker_busy",
+               "lock_unavailable", "worker_start_failed", "worker_io_failed",
+               "worker_output_limit", "worker_failed", "parent_interrupted"}
+    if not isinstance(raw, dict) or not raw.keys() <= sections:
+        raise ValueError("invalid section diagnostics")
+    sanitized = {}
+    for section, item in raw.items():
+        if (not isinstance(item, dict) or item.get("state") != "UNKNOWN"
+                or not isinstance(item.get("reason"), str) or not item["reason"]):
+            raise ValueError("invalid section diagnostic")
+        reason = item["reason"]
+        sanitized[section] = {"state": "UNKNOWN",
+                              "reason": reason if reason in reasons else "section_unavailable"}
+    return sanitized
+
+
 def pbs_store_summary(payload):
     """Build /status BACKUP.pbs_store from observation payload dict."""
     if not isinstance(payload, dict):
@@ -50,6 +73,13 @@ def pbs_store_summary(payload):
             "policy": "alert_only_when_primary_stale",
             "error": probe.get("_error"),
         }
+    section_errors = _pbs_section_errors(probe)
+    failed = section_errors or {}
+    # Do not derive a measurement from failed-section placeholders or stale data.
+    # Work on a shallow copy; the stored observation remains untouched.
+    probe = dict(probe)
+    for section in failed:
+        probe[section] = {}
     primary = probe.get("primary") or {}
     secondary = probe.get("secondary") or {}
     ages = [
@@ -67,11 +97,12 @@ def pbs_store_summary(payload):
             "used": entry.get("used"),
             "exists": entry.get("exists"),
         }
-    return {
+    summary = {
         "policy": "alert_only_when_primary_stale",
-        "primary_count": len(primary),
-        "secondary_count": len(secondary),
-        "missing_on_secondary": list(probe.get("missing_on_secondary") or []),
+        "primary_count": None if "primary" in failed else len(primary),
+        "secondary_count": None if "secondary" in failed else len(secondary),
+        "missing_on_secondary": (None if {"primary", "secondary"} & failed.keys()
+                                 else list(probe.get("missing_on_secondary") or [])),
         "max_secondary_age_hours": max(ages) if ages else None,
         "observed_at": probe.get("observed_at"),
         "timemachine": tm_out,
@@ -102,6 +133,10 @@ def pbs_store_summary(payload):
             "alert_on_empty_children": False,
         },
     }
+
+    if section_errors is not None:
+        summary["section_errors"] = section_errors
+    return summary
 
 
 def attach_backup_summary(domain, payload):
