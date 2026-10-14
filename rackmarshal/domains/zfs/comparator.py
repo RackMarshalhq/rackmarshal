@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from rackmarshal.core.config import state_db
+from rackmarshal.domains.zfs.integrity import integrity_state
 
 
 DB_PATH = state_db()
@@ -99,7 +100,14 @@ def pool_match_result(
 
     actual_errors = observed.get("error_count")
 
-    if actual_errors != baseline["expected_error_count"]:
+    integrity = integrity_state(actual_errors)
+    if integrity == "PROBLEM":
+        status_changes.append({
+            "field": "data_integrity", "expected": "CLEAN", "actual": "PROBLEM",
+            "error_count": actual_errors,
+        })
+
+    if actual_errors != baseline["expected_error_count"] or integrity == "UNKNOWN":
         counter_changes.append(
             {
                 "field": "error_count",
@@ -122,6 +130,8 @@ def pool_match_result(
     return {
         "resource_type": "zfs_pool",
         "resource_key": name,
+        "availability_state": observed.get("state"),
+        "integrity_state": integrity,
         "baseline_state": baseline["baseline_state"],
         "outcome": outcome,
         "changes": changes,
@@ -391,6 +401,8 @@ def main():
                 "observed_error_count": observed.get(
                     "error_count"
                 ),
+                "availability_state": observed.get("state"),
+                "integrity_state": integrity_state(observed.get("error_count")),
                 "observed_pool_guid": str(
                     observed.get("pool_guid")
                 ),

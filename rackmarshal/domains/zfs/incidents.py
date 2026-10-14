@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from rackmarshal.core.config import state_db
+from rackmarshal.domains.zfs.integrity import integrity_state
 
 
 DEFAULT_DB = state_db()
@@ -160,6 +161,27 @@ def normalize_result(result):
     }
 
 
+def pool_recovery_proven(connection, observation, pool_name):
+    """Require clean evidence for this exact pool from the recorded sample."""
+    baseline = connection.execute(
+        "SELECT pool_guid, expected_state FROM zfs_pool_baseline WHERE pool_name=?",
+        (pool_name,),
+    ).fetchone()
+    if baseline is None:
+        return False
+    try:
+        pools = json.loads(observation["payload_json"]).get("pools", [])
+        matches = [p for p in pools if isinstance(p, dict) and p.get("name") == pool_name]
+    except (ValueError, TypeError, AttributeError):
+        return False
+    if len(matches) != 1:
+        return False
+    pool = matches[0]
+    return (integrity_state(pool.get("error_count")) == "CLEAN"
+            and pool.get("state") == baseline["expected_state"] == "ONLINE"
+            and str(pool.get("pool_guid")) == baseline["pool_guid"])
+
+
 def close_incident(
     connection,
     incident_id,
@@ -235,7 +257,7 @@ def main():
 
             observation = connection.execute(
                 """
-                SELECT id, observed_at
+                SELECT id, observed_at, payload_json
                 FROM zfs_observations
                 WHERE id=?
                 """,
@@ -366,6 +388,10 @@ def main():
                 # Resource is fully back at baseline.
                 #
                 if outcome == "MATCH":
+                    if resource_type == "zfs_pool" and not pool_recovery_proven(
+                        connection, observation, resource_key
+                    ):
+                        continue
                     for incident in open_incidents:
                         close_incident(
                             connection,
@@ -395,28 +421,16 @@ def main():
                         f"{outcome}"
                     )
 
-                #
-                # COUNTER-CHANGED:
-                #
-                # Permanent evidence belongs in zfs_events,
-                # but the counter difference does not open
-                # an incident.
-                #
-                # Because comparator status fields matched
-                # baseline in order to reach this outcome,
-                # any prior status/missing/new incident for
-                # this resource has recovered.
-                #
+                # Historical vdev counters are advisory. Pool permanent errors
+                # require recorded explicit clean evidence before any recovery.
                 if outcome == "COUNTER-CHANGED":
+                    if resource_type == "zfs_pool" and not pool_recovery_proven(
+                        connection, observation, resource_key
+                    ):
+                        continue
                     for incident in open_incidents:
-                        close_incident(
-                            connection,
-                            incident["id"],
-                            observation_id,
-                            observed_at,
-                        )
+                        close_incident(connection, incident["id"], observation_id, observed_at)
                         incidents_recovered += 1
-
                     continue
 
                 if outcome not in INCIDENT_OUTCOMES:
@@ -425,41 +439,9 @@ def main():
                         f"{outcome!r}"
                     )
 
-                #
-                # If the abnormal classification changed,
-                # close the previous incident first.
-                #
-                for incident in open_incidents:
-                    if (
-                        incident["incident_type"]
-                        == outcome
-                    ):
-                        continue
-
-                    close_incident(
-                        connection,
-                        incident["id"],
-                        observation_id,
-                        observed_at,
-                    )
-
-                    incidents_recovered += 1
-
-                current = connection.execute(
-                    """
-                    SELECT *
-                    FROM zfs_incidents
-                    WHERE resource_type=?
-                      AND resource_key=?
-                      AND incident_type=?
-                      AND incident_state='OPEN'
-                    """,
-                    (
-                        resource_type,
-                        resource_key,
-                        outcome,
-                    ),
-                ).fetchone()
+                # A different abnormal classification is not recovery. Keep
+                # the original episode and attach the latest abnormal event.
+                current = open_incidents[0] if open_incidents else None
 
                 if current is None:
                     connection.execute(

@@ -122,6 +122,17 @@ def int_value(value, field_name, pool_name):
         )
 
 
+def permanent_error_count(value, pool_name):
+    # Missing evidence must survive normalization; never manufacture zero.
+    if value is None:
+        return None
+    if isinstance(value, str) and value.isascii() and value.isdecimal():
+        value = int(value)
+    if type(value) is not int or value < 0:
+        fail(f"Pool {pool_name} has invalid error_count: {value!r}")
+    return value
+
+
 def optional_int(value, field_name, context):
     if value is None:
         return None
@@ -265,9 +276,8 @@ def main():
                 "name": pool_name,
                 "pool_guid": pool.get("pool_guid"),
                 "state": state,
-                "error_count": int_value(
-                    pool.get("error_count", 0),
-                    "error_count",
+                "error_count": permanent_error_count(
+                    pool.get("error_count"),
                     pool_name,
                 ),
                 "scan": normalize_scan(

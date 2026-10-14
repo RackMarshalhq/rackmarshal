@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
 from rackmarshal.api.v1 import route as route_v1
+from rackmarshal.domains.zfs.integrity import integrity_state
 from rackmarshal.ui.incidents import render_incident_page
 from rackmarshal.ui.dashboard import render_incident_index
 
@@ -213,6 +214,49 @@ def latest_generic_observation(conn, collector):
     ).fetchone()
 
     return dict(row) if row else None
+
+
+def zfs_integrity_summary(conn):
+    """Report recorded data integrity separately from incident/availability state."""
+    row = conn.execute(
+        "SELECT id, observed_at, payload_json FROM zfs_observations ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    summary = {"state": "UNKNOWN", "pools": [], "authority": "DERIVED",
+               "observation_id": row["id"] if row else None,
+               "observed_at": row["observed_at"] if row else None}
+    if row is None:
+        return summary
+    try:
+        payload = json.loads(row["payload_json"])
+    except (TypeError, ValueError):
+        return summary
+    pools = payload.get("pools") if isinstance(payload, dict) else None
+    if not isinstance(pools, list) or not pools:
+        return summary
+    states = []
+    names = set()
+    for pool in pools:
+        if not isinstance(pool, dict):
+            states.append("UNKNOWN")
+            continue
+        name = pool.get("name")
+        if not isinstance(name, str) or not name or name in names:
+            states.append("UNKNOWN")
+        if isinstance(name, str):
+            names.add(name)
+        count = pool.get("error_count")
+        state = integrity_state(count)
+        states.append(state)
+        availability = pool.get("state")
+        summary["pools"].append({
+            "pool_name": name if isinstance(name, str) else None,
+            "availability_state": availability if isinstance(availability, str) and availability else "UNKNOWN",
+            "integrity_state": state,
+            "permanent_error_count": count if state != "UNKNOWN" else None,
+        })
+    summary["state"] = ("PROBLEM" if "PROBLEM" in states else
+                        "UNKNOWN" if "UNKNOWN" in states else "CLEAN")
+    return summary
 
 
 def latest_zfs_observation(conn):
@@ -871,6 +915,7 @@ def build_status():
         }
 
         backup_payload = load_backup_payload_json(conn)
+        zfs_integrity = zfs_integrity_summary(conn)
 
         # Phase 3 Step 4.3: notify backlog snapshot while DB is open.
         notifications = build_self_watch_notifications(conn)
@@ -934,6 +979,7 @@ def build_status():
         }
 
     attach_backup_summary(domains["BACKUP"], backup_payload)
+    domains["ZFS"]["integrity"] = zfs_integrity
 
     ai_by_incident = latest_ai_explanations(conn)
 

@@ -89,7 +89,7 @@ def validate(payload):
 
         error_count = pool.get("error_count")
 
-        if (
+        if error_count is not None and (
             not isinstance(error_count, int)
             or isinstance(error_count, bool)
             or error_count < 0

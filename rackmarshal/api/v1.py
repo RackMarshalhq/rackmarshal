@@ -352,10 +352,10 @@ def route(conn,path,params,status_builder=None):
             conn.execute("SELECT 1").fetchone(); return 200,envelope({"status":"OK","database_readable":True,"api_version":"v1"})
         if path=="/v1/status":
             if not status_builder: return error("SERVICE_UNAVAILABLE","status builder unavailable",503)
-            s=status_builder(); data={"overall_status":s["overall_status"],"domains":[{"domain":d,"status":v["status"],"open_incident_count":v["open_incidents"],"last_observation":v["last_observation"],"authority":"DERIVED"} for d,v in s["domains"].items()],"open_incident_count":s["open_incident_count"],"generated_from":"rackmarshal-ledgers"}; return 200,envelope(data)
+            s=status_builder(); data={"overall_status":s["overall_status"],"domains":[{"domain":d,"status":v["status"],"open_incident_count":v["open_incidents"],"last_observation":v["last_observation"],"authority":"DERIVED",**({"integrity":v["integrity"]} if d=="ZFS" and "integrity" in v else {})} for d,v in s["domains"].items()],"open_incident_count":s["open_incident_count"],"generated_from":"rackmarshal-ledgers"}; return 200,envelope(data)
         if path=="/v1/domains" or path.startswith("/v1/domains/"):
             if not status_builder: return error("SERVICE_UNAVAILABLE","status builder unavailable",503)
-            s=status_builder(); domains=[{"domain":d,"status":v["status"],"last_observation":v["last_observation"],"freshness":s.get("self_watch",{}).get("freshness",{}).get(d),"open_incident_count":v["open_incidents"],"authority":"DERIVED"} for d,v in s["domains"].items()]
+            s=status_builder(); domains=[{"domain":d,"status":v["status"],"last_observation":v["last_observation"],"freshness":s.get("self_watch",{}).get("freshness",{}).get(d),"open_incident_count":v["open_incidents"],"authority":"DERIVED",**({"integrity":v["integrity"]} if d=="ZFS" and "integrity" in v else {})} for d,v in s["domains"].items()]
             if path!="/v1/domains":
                 d=_domain(path.rsplit("/",1)[1]); item=next((x for x in domains if x["domain"]==d),None); return (200,envelope(item)) if item else error("DOMAIN_NOT_FOUND","unknown domain",404)
             return 200,envelope(domains)
