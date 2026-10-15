@@ -7,7 +7,7 @@ import tarfile
 import tempfile
 
 
-EXECUTABLES = frozenset(['packaging/observers/pbs-native-verify-cache', 'scripts/bootstrap-pip.py', 'scripts/build-installer-bundle.py', 'scripts/build-installer-bundle.sh', 'scripts/install.sh', 'scripts/publication-gate.sh', 'scripts/uninstall.sh', 'tests/fixture_comparator.py', 'tests/staging_smoke.py'])
+EXECUTABLES = frozenset(['packaging/observers/pbs-native-verify-cache', 'scripts/bootstrap-wheel.py', 'scripts/build-installer-bundle.py', 'scripts/build-installer-bundle.sh', 'scripts/install.sh', 'scripts/publication-gate.sh', 'scripts/uninstall.sh', 'tests/fixture_comparator.py', 'tests/staging_smoke.py'])
 
 
 def __getattr__(name):

@@ -52,7 +52,7 @@ BUNDLE_ROOT="${SCRIPT_DIR%/scripts}"
 prepare_args=(--bundle "$BUNDLE_ROOT" --wheel "$WHEEL")
 [[ -z "$CONFIG_SOURCE" ]] || prepare_args+=(--config "$CONFIG_SOURCE")
 # Validate/copy all bundle inputs before accounts, install paths or database writes.
-STAGE="$(python3 -I -B "$SCRIPT_DIR/bootstrap-pip.py" prepare "${prepare_args[@]}")"
+STAGE="$(python3 -I -B "$SCRIPT_DIR/bootstrap-wheel.py" prepare "${prepare_args[@]}")"
 echo "Private installation evidence: $STAGE"
 finish() {
   rc=$?
@@ -71,7 +71,7 @@ install -d -o root -g root -m 0755 /opt/rackmarshal
 install -d -o root -g rackmarshal -m 0750 /etc/rackmarshal
 install -d -o rackmarshal -g rackmarshal -m 0750 /var/lib/rackmarshal /var/log/rackmarshal
 python3 -I -B -m venv --without-pip /opt/rackmarshal/venv
-python3 -I -B "$STAGE/scripts/bootstrap-pip.py" install --stage "$STAGE"
+python3 -I -B "$STAGE/scripts/bootstrap-wheel.py" install --stage "$STAGE"
 [[ -z "$CONFIG_SOURCE" ]] || CONFIG_SOURCE="$STAGE/supplied.conf"
 SCRIPT_DIR="$STAGE/scripts"
 

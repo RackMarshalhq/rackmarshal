@@ -119,3 +119,9 @@ The pre-release engineering record above documents the qualification work that l
 - Retain upstream licenses/provenance and narrowly bind public CA privacy exceptions to exact hashes.
 - Canonicalize installer and source archive permissions independent of checkout modes.
 - Mac development tests do not satisfy Linux/systemd release acceptance.
+
+## 1.2.0rc6.dev2 (private, not release-qualified)
+
+- Replace pip bootstrap with unmodified PyPA installer 1.1.0 and full RECORD validation; install only RackMarshal into a pip-less venv.
+- Remove bundled pip, its vendored dependencies and related privacy exceptions.
+- Preserve ownership, integrity, permission and existing-install refusal boundaries. Cloud foreign-root ownership remains unsupported; genuine Debian root qualification is pending.

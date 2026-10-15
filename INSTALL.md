@@ -93,10 +93,12 @@ paths even when a root installation command succeeds. A failed normalization
 or probe is an installation failure and requires inspection, not automatic
 service startup. Changed installer artifacts require fresh lifecycle validation.
 
-## Private bootstrap candidate 1.2.0rc6.dev1
+## Private bootstrap candidate 1.2.0rc6.dev2
 
-This candidate supports fresh installations only. Any existing install, configuration, state/log path, service account/group, or RackMarshal unit causes refusal before persistent changes. Upgrade, reinstall and rollback paths are not qualified. Preserve any partial installation after failure; do not retry by deleting it.
+This candidate supports fresh installations only. Any existing install, configuration, state/log path, service account/group, or RackMarshal unit causes refusal before persistent changes. Upgrade, reinstall and rollback paths are not qualified. Preserve partial installations after failure; do not retry by deleting them.
 
-Provision Python 3.11 or later with the standard-library venv module and systemd/account utilities separately. The installer never runs APT, ensurepip or host pip. It validates all bundled input hashes and ownership, stages copies privately under /run, creates a pip-less venv, and installs pinned pip 26.2.1 and the exact application wheel with hashes, no dependencies and no index. Bootstrap network operations are denied. Obtain the installer archive digest from an independently trusted channel before executing its installer. The internal manifest detects alteration but does not authenticate an attacker-replaced archive.
+Provision Python 3.11 or later with the standard-library venv module and systemd/account utilities separately. The installer never runs APT, ensurepip or host pip. It verifies all bundle hashes and ownership, stages copies privately under /run, creates a pip-less venv, and temporarily executes the unmodified pinned PyPA installer 1.1.0 wheel. Only the exact RackMarshal wheel is installed, with complete RECORD validation and no bytecode compilation. Neither pip nor installer is left in the runtime. Network operations are denied during bootstrap.
 
-Use --no-start for qualification. Copy the reported private staging directory and receipts into durable private evidence before reboot; /run is ephemeral. Mac unit/build results are development evidence only. Linux Python 3.11, service identity, lifecycle, failure and rollback-refusal qualification remain required before release.
+Obtain the installer archive digest from an independently trusted channel before executing it. The internal manifest detects alteration but cannot authenticate an attacker-replaced archive.
+
+Use --no-start for qualification. Copy the reported staging directory and receipts to durable private evidence before reboot; /run is ephemeral. The cloud executor with UID65534-owned root ancestors is unsupported by the ownership verifier. Do not weaken checks or substitute ownership results. Mac tests and cloud non-root tests do not replace genuine Debian12 root/Python3.11 service-identity and lifecycle qualification.

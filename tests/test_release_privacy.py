@@ -191,14 +191,8 @@ class ReleasePrivacyTests(unittest.TestCase):
                 self.assertIn('unreadable archive', result.stdout)
                 self.assertNotIn('Traceback', result.stderr)
 
-    def test_pinned_pip_certificate_exception_requires_entire_wheel(self):
-        wheel = SCRIPT.parents[1] / 'packaging/bootstrap/pip-26.2.1-py3-none-any.whl'
-        data = wheel.read_bytes()
-        self.assertEqual(self.check({'vendor.whl':data}).returncode, 0)
-        with zipfile.ZipFile(io.BytesIO(data)) as archive:
-            certificate = archive.read('pip/_vendor/certifi/cacert.pem')
-        self.assertNotEqual(self.check({'pip/_vendor/certifi/cacert.pem':certificate}).returncode, 0)
-        changed = io.BytesIO(data)
-        with zipfile.ZipFile(changed, 'a') as archive: archive.writestr('extra.txt', 'untrusted change')
-        self.assertNotEqual(self.check({'vendor.whl':changed.getvalue()}).returncode, 0)
-        self.assertNotEqual(self.check({'vendor.whl':data, 'secret.txt':'ghp_'+'a'*36}).returncode, 0)
+    def test_installer_wheel_passes_without_certificate_exceptions(self):
+        wheel = SCRIPT.parents[1] / 'packaging/bootstrap/installer-1.1.0-py3-none-any.whl'
+        self.assertEqual(self.check({'vendor.whl':wheel.read_bytes()}).returncode, 0)
+        self.assertNotEqual(self.check({'pip/_vendor/certifi/cacert.pem':b'public certificate fixture'}).returncode, 0)
+        self.assertNotEqual(self.check({'vendor.whl':wheel.read_bytes(), 'secret.txt':'ghp_'+'a'*36}).returncode, 0)

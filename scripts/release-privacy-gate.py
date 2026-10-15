@@ -60,16 +60,7 @@ def archive_root(names):
         return None
     return root if root + '/pyproject.toml' in names else None
 
-
-# Exact unmodified upstream pip wheel only. These members contain reviewed
-# upstream attributions or generic documentation examples; all secret/path
-# checks still apply. Repacking or changing any byte invalidates the exception.
-PINNED_PIP_SHA = '71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e'
-PINNED_CA_MEMBER = 'pip/_vendor/certifi/cacert.pem'
-PINNED_CA_SHA = 'bbc7e9c01d7551bb8a159b5dedd989b8ee3ce105aff522b68eb1b01bf854cab0'
-PINNED_UPSTREAM_TEXT = {'pip/_vendor/distlib/LICENSE.txt': '808e10c8a6ab8deb149ff9b3fb19f447a808094606d712a9ca57fead3552599d', 'pip/_vendor/requests/utils.py': 'bbb3080b2cd04ef7d46b76ac83d9c1bdcae785220f11ceaa8494b18861b04ce9', 'pip/_vendor/rich/highlighter.py': '1bfb27fbc0ca8ccd6c1232c6fe8738a2f9169a25295af8fc6d78b4c9e7762e76', 'pip/_vendor/truststore/LICENSE': '33be7b7e8fa4fd19b1760e1a8ed8a668bdab852c91b692dd41424bcb725a9fca', 'pip-26.2.1.dist-info/licenses/AUTHORS.txt': '4eb1fb1705e2def898e81bcba19c3aac80620d27ba3569d6a6df7b4629d1b5c2', 'pip-26.2.1.dist-info/licenses/src/pip/_vendor/distlib/LICENSE.txt': '808e10c8a6ab8deb149ff9b3fb19f447a808094606d712a9ca57fead3552599d', 'pip-26.2.1.dist-info/licenses/src/pip/_vendor/truststore/LICENSE': '33be7b7e8fa4fd19b1760e1a8ed8a668bdab852c91b692dd41424bcb725a9fca'}
-
-def scan(member, data, label=None, root=None, depth=0, wheel_sha=None):
+def scan(member, data, label=None, root=None, depth=0):
     """Keep the actual member path separate from its diagnostic archive label."""
     global count, expanded_bytes
     count += 1
@@ -83,8 +74,7 @@ def scan(member, data, label=None, root=None, depth=0, wheel_sha=None):
     if any(x in parts for x in ('.git', 'chatgpt-business', 'internal')) or 'evals/results/' in member:
         errors.append((name, 'private path'))
     suffix = Path(member).suffix.lower()
-    known_ca = wheel_sha == PINNED_PIP_SHA and member == PINNED_CA_MEMBER and hashlib.sha256(data).hexdigest() == PINNED_CA_SHA
-    if not known_ca and (suffix in ('.env', '.pem', '.key', '.db', '.db-wal', '.db-shm', '.db-journal') or suffix.startswith('.sqlite')):
+    if suffix in ('.env', '.pem', '.key', '.db', '.db-wal', '.db-shm', '.db-journal') or suffix.startswith('.sqlite'):
         errors.append((name, 'forbidden file type'))
     if data.startswith(b'SQLite format 3\x00'):
         errors.append((name, 'SQLite database content'))
@@ -114,8 +104,7 @@ def scan(member, data, label=None, root=None, depth=0, wheel_sha=None):
         public_data = public_data.replace(b'Mi' + b'chael Poteet', b'').replace(b'mi' + b'chael@rackmarshal.com', b'')
     public_data = b'\n'.join(line for line in public_data.splitlines()
                               if hashlib.sha256(line).hexdigest() not in approved)
-    upstream_text = wheel_sha == PINNED_PIP_SHA and PINNED_UPSTREAM_TEXT.get(member) == hashlib.sha256(data).hexdigest()
-    if not upstream_text and PRIVATE.search(public_data): errors.append((name, 'site/workspace pattern'))
+    if PRIVATE.search(public_data): errors.append((name, 'site/workspace pattern'))
     try:
         if container and depth >= MAX_DEPTH: raise ScanLimit('scan depth limit')
         if is_zip or zip_expected:
@@ -132,7 +121,7 @@ def scan(member, data, label=None, root=None, depth=0, wheel_sha=None):
                         # zipfile exposes no LZMA decoder memory limit; fail closed.
                         if entry.compress_type == zipfile.ZIP_LZMA: raise ValueError('unsupported ZIP compression')
                         with z.open(entry) as stream:
-                            scan(entry.filename, bounded_read(stream), child_label, child_root, depth + 1, hashlib.sha256(data).hexdigest())
+                            scan(entry.filename, bounded_read(stream), child_label, child_root, depth + 1)
         elif compression or expected_compression:
             if expected_compression and compression != expected_compression: raise ValueError('compression mismatch')
             if compression == 'xz':

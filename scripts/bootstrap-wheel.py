@@ -15,15 +15,15 @@ import sys
 import tempfile
 import zipfile
 
-VERSION = '1.2.0rc6.dev1'
-PIP_VERSION = '26.2.1'
-PIP_NAME = 'pip-26.2.1-py3-none-any.whl'
-PIP_SHA256 = '71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e'
+VERSION = '1.2.0rc6.dev2'
+INSTALLER_VERSION = '1.1.0'
+INSTALLER_NAME = 'installer-1.1.0-py3-none-any.whl'
+INSTALLER_SHA256 = 'f55f5728ff61d3dd54dbc5a397cf3f7307cb64b180c20b72afbebf01c9e2c8a0'
 APP_NAME = 'rackmarshal-' + VERSION + '-py3-none-any.whl'
 LIMIT = 32 * 1024 * 1024
 DOCS = ('LICENSE', 'README.md', 'INSTALL.md', 'CONFIGURATION.md', 'UPGRADE.md', 'UNINSTALL.md', 'SECURITY.md', 'CHANGELOG.md', 'THIRD-PARTY-NOTICES.txt')
 UNITS = ('rackmarshal-status.service', 'rackmarshal-notify.service', 'rackmarshal-notify.timer', 'rackmarshal-domain@.service', 'rackmarshal-domain@.timer', 'rackmarshal-domain@.service.d/20-cycle-health.conf', 'rackmarshal-self-watch.service.d/20-cycle-health.conf')
-BUNDLE_FILES = set(DOCS) | {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-pip.py', 'packaging/bootstrap/manifest.json', 'packaging/bootstrap/' + PIP_NAME, APP_NAME, 'config/rackmarshal.conf.example', 'config/mounts.catalog.example.toml'} | {'packaging/systemd/' + n for n in UNITS}
+BUNDLE_FILES = set(DOCS) | {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-wheel.py', 'packaging/bootstrap/manifest.json', 'packaging/bootstrap/' + INSTALLER_NAME, APP_NAME, 'config/rackmarshal.conf.example', 'config/mounts.catalog.example.toml'} | {'packaging/systemd/' + n for n in UNITS}
 
 def require(ok, message):
     if not ok:
@@ -96,6 +96,19 @@ def validate_wheel(data, project, version):
                 require(str(parent) not in payloads, 'wheel path conflict')
         meta = email.parser.BytesParser().parsebytes(payloads[project + '-' + version + '.dist-info/METADATA'])
         require(meta.get_all('Name') == [project] and meta.get_all('Version') == [version], 'wrong wheel identity')
+        record_name = project + '-' + version + '.dist-info/RECORD'
+        records = set()
+        for row in csv.reader(io.StringIO(payloads[record_name].decode('utf-8'))):
+            require(len(row) == 3 and row[0] not in records, 'invalid wheel RECORD')
+            name, checksum, size = row
+            records.add(name)
+            require(name in payloads, 'wheel RECORD has unknown member')
+            if name == record_name:
+                require(checksum == size == '', 'invalid wheel RECORD self entry')
+            else:
+                actual = 'sha256=' + base64.urlsafe_b64encode(hashlib.sha256(payloads[name]).digest()).decode().rstrip('=')
+                require(checksum == actual and size == str(len(payloads[name])), 'wheel RECORD mismatch')
+        require(records == set(payloads), 'wheel RECORD omits member')
         return payloads
 
 def assert_fresh_paths(paths, owner=0):
@@ -119,8 +132,8 @@ def prepare(bundle, wheel, staging_parent='/run', owner=0, config=None):
         require(digest(data) == expected, 'bundle input hash mismatch: ' + name)
         payloads[name] = data
     require(Path(wheel).name == APP_NAME, 'unexpected application wheel basename')
-    require(digest(payloads['packaging/bootstrap/' + PIP_NAME]) == PIP_SHA256, 'untrusted pip wheel')
-    validate_wheel(payloads['packaging/bootstrap/' + PIP_NAME], 'pip', PIP_VERSION)
+    require(digest(payloads['packaging/bootstrap/' + INSTALLER_NAME]) == INSTALLER_SHA256, 'untrusted installer wheel')
+    validate_wheel(payloads['packaging/bootstrap/' + INSTALLER_NAME], 'installer', INSTALLER_VERSION)
     validate_wheel(payloads[APP_NAME], 'rackmarshal', VERSION)
     config_data = trusted_read(config, owner) if config is not None else None
     info = Path(staging_parent).lstat()
@@ -146,18 +159,23 @@ def prepare(bundle, wheel, staging_parent='/run', owner=0, config=None):
 
 RUNNER = r'''
 import hashlib, json, pathlib, runpy, sys
-wheel, expected, target, arguments = json.loads(sys.argv[1])
-assert pathlib.Path(sys.prefix) == pathlib.Path(target) and sys.prefix != sys.base_prefix
-assert hashlib.sha256(pathlib.Path(wheel).read_bytes()).hexdigest() == expected
+wheel, expected, target, app, app_hash = json.loads(sys.argv[1])
+if pathlib.Path(sys.prefix) != pathlib.Path(target) or sys.prefix == sys.base_prefix:
+    raise RuntimeError('wrong bootstrap target')
+if hashlib.sha256(pathlib.Path(wheel).read_bytes()).hexdigest() != expected:
+    raise RuntimeError('installer changed')
+if hashlib.sha256(pathlib.Path(app).read_bytes()).hexdigest() != app_hash:
+    raise RuntimeError('application changed')
 def offline(event, arguments):
     if event in ('socket.connect', 'socket.bind', 'socket.getaddrinfo', 'socket.gethostbyname'):
         raise RuntimeError('network prohibited during offline bootstrap')
 sys.addaudithook(offline)
 sys.path.insert(0, wheel)
-import pip
-assert pip.__version__ == '26.2.1' and pip.__file__ == wheel + '/pip/__init__.py'
-sys.argv = ['pip'] + arguments
-runpy.run_module('pip', run_name='__main__')
+import installer
+if installer.__version__ != '1.1.0' or installer.__file__ != wheel + '/installer/__init__.py':
+    raise RuntimeError('unexpected installer import')
+sys.argv = ['installer', '--validate-record', 'all', '--no-compile-bytecode', app]
+runpy.run_module('installer', run_name='__main__')
 '''
 
 def validate_target(target, owner=0):
@@ -187,7 +205,6 @@ def verify_inventory(target, distributions, owner=0):
     for project, version, payloads in distributions:
         prefix = project + '-' + version + '.dist-info/'
         expected.update(payloads)
-        expected.update(prefix + name for name in ('INSTALLER', 'REQUESTED', 'direct_url.json'))
         record = site / (prefix + 'RECORD')
         recorded = set()
         for row in csv.reader(io.StringIO(trusted_read(record, owner).decode())):
@@ -212,42 +229,35 @@ def install(stage, target, owner=0):
     require(stat.S_ISDIR(info.st_mode) and info.st_uid == owner and stat.S_IMODE(info.st_mode) == 0o700, 'unsafe staging directory')
     manifest = json.loads(trusted_read(stage / 'install-manifest.json', owner), object_pairs_hook=unique_object)
     require(manifest.get('version') == VERSION and set(manifest.get('files', {})) == BUNDLE_FILES, 'invalid staged manifest')
-    pip_wheel = stage / 'packaging/bootstrap' / PIP_NAME
-    pip_data = trusted_read(pip_wheel, owner)
-    require(digest(pip_data) == PIP_SHA256, 'staged pip changed')
-    validate_wheel(pip_data, 'pip', PIP_VERSION)
-    app_data = trusted_read(stage / APP_NAME, owner)
+    installer_wheel = stage / 'packaging/bootstrap' / INSTALLER_NAME
+    installer_data = trusted_read(installer_wheel, owner)
+    require(digest(installer_data) == INSTALLER_SHA256, 'staged installer changed')
+    validate_wheel(installer_data, 'installer', INSTALLER_VERSION)
+    app_wheel = stage / APP_NAME
+    app_data = trusted_read(app_wheel, owner)
     require(digest(app_data) == manifest['files'][APP_NAME], 'staged application changed')
-    validate_wheel(app_data, 'rackmarshal', VERSION)
+    payloads = validate_wheel(app_data, 'rackmarshal', VERSION)
     # No pre-existing code may run at Python startup or be silently repaired.
     require(not any(target.glob('lib/python*/site-packages/*')), 'target is not pipless/empty')
-    receipt = {'result': 'IN_PROGRESS', 'pip_sha256': PIP_SHA256, 'application_sha256': digest(app_data), 'target': str(target), 'commands': []}
+    receipt = {'result': 'IN_PROGRESS', 'installer_sha256': INSTALLER_SHA256, 'application_sha256': digest(app_data), 'target': str(target), 'commands': []}
     receipt_path = stage / 'bootstrap-receipt.json'
     with receipt_path.open('x') as stream:
         stream.write(json.dumps(receipt) + '\n')
-    env = {'PATH': '/usr/bin:/bin', 'PIP_CONFIG_FILE': os.devnull, 'PYTHONNOUSERSITE': '1', 'LC_ALL': 'C'}
-    distributions = []
+    env = {'PATH': '/usr/bin:/bin', 'PYTHONNOUSERSITE': '1', 'LC_ALL': 'C'}
     try:
-        for project, version, wheel, expected in [('pip', PIP_VERSION, pip_wheel, PIP_SHA256), ('rackmarshal', VERSION, stage / APP_NAME, digest(app_data))]:
-            lock = stage / (project + '.requirements.txt')
-            with lock.open('x') as stream:
-                stream.write(wheel.as_uri() + ' --hash=sha256:' + expected + '\n')
-            args = ['--isolated', '--disable-pip-version-check', '--no-cache-dir', 'install', '--no-index', '--no-deps', '--only-binary=:all:', '--no-compile', '--require-hashes', '-r', str(lock)]
-            spec = json.dumps([str(pip_wheel), PIP_SHA256, str(target), args])
-            result = subprocess.run([str(target / 'bin/python'), '-I', '-B', '-c', RUNNER, spec], cwd=stage, env=env, capture_output=True, text=True, timeout=120)
-            receipt['commands'].append({'project': project, 'arguments': args, 'returncode': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr})
-            require(result.returncode == 0, project + ' offline installation failed')
-            payloads = validate_wheel(trusted_read(wheel, owner), project, version)
-            sites = list(target.glob('lib/python*/site-packages'))
-            require(len(sites) == 1, 'unexpected site-packages layout')
-            for name, data in payloads.items():
-                if name.endswith('.dist-info/RECORD'):
-                    continue  # pip records generated scripts/direct-url metadata itself.
-                require(trusted_read(sites[0] / name, owner) == data, 'installed payload differs: ' + name)
-            require((sites[0] / project / '__init__.py').is_file(), 'installed package absent')
-            distributions.append((project, version, payloads))
-            verify_inventory(target, distributions, owner)
-            validate_target(target, owner)
+        spec = json.dumps([str(installer_wheel), INSTALLER_SHA256, str(target), str(app_wheel), digest(app_data)])
+        result = subprocess.run([str(target / 'bin/python'), '-I', '-B', '-c', RUNNER, spec], cwd=stage, env=env, capture_output=True, text=True, timeout=120)
+        receipt['commands'].append({'project': 'rackmarshal', 'arguments': ['--validate-record', 'all', '--no-compile-bytecode', str(app_wheel)], 'returncode': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr})
+        require(result.returncode == 0, 'offline installation failed')
+        sites = list(target.glob('lib/python*/site-packages'))
+        require(len(sites) == 1, 'unexpected site-packages layout')
+        for name, data in payloads.items():
+            if name.endswith('.dist-info/RECORD'):
+                continue  # installer records generated console scripts.
+            require(trusted_read(sites[0] / name, owner) == data, 'installed payload differs: ' + name)
+        require((sites[0] / 'rackmarshal/__init__.py').is_file(), 'installed package absent')
+        verify_inventory(target, [('rackmarshal', VERSION, payloads)], owner)
+        validate_target(target, owner)
         receipt['result'] = 'PASS'
     except Exception as exc:
         receipt['result'], receipt['error'] = 'FAIL', str(exc)

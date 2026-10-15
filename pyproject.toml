@@ -5,7 +5,7 @@ backend-path = ["build_support"]
 
 [project]
 name = "rackmarshal"
-version = "1.2.0rc6.dev1"
+version = "1.2.0rc6.dev2"
 description = "Local-first infrastructure operations and incident management for self-hosted systems."
 readme = "README.md"
 requires-python = ">=3.11"

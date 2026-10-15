@@ -46,6 +46,6 @@ For an unsuccessful upgrade with no accepted intervening writes, keep workloads 
 
 The 1.1.0rc1 candidate retains the 1.0.0 migration set. Exact artifact install/upgrade/rollback qualification is recorded separately from this procedure. The base installer is not an automatic transactional rollback manager.
 
-## rc6.dev1 qualification restriction
+## rc6.dev2 qualification restriction
 
 The private offline-bootstrap candidate refuses every existing installation before persistent mutation. It does not provide an upgrade, reinstall or rollback implementation. Preserve existing source/artifacts and installations; qualify a fresh disposable Linux guest separately.

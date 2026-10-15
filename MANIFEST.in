@@ -19,4 +19,4 @@ prune site
 global-exclude __pycache__ *.pyc *.env *.pem *.key *.db *.sqlite*
 
 include THIRD-PARTY-NOTICES.txt
-include packaging/bootstrap/manifest.json packaging/bootstrap/pip-26.2.1-py3-none-any.whl
+include packaging/bootstrap/manifest.json packaging/bootstrap/installer-1.1.0-py3-none-any.whl
