@@ -27,7 +27,7 @@ These cases cover all supported domain setup requirements, credential-content pr
 
 Test results are development evidence. They do not replace the exact-artifact installation or sustained-operation gates in [release acceptance](docs/architecture/RELEASE_ACCEPTANCE.md), and do not expand the supported client or platform matrix.
 
-For reproducible packages, run `python3 -m build` with `SOURCE_DATE_EPOCH` set to the source commit's Unix timestamp and retain the Python, setuptools and compression-tool versions. The build backend preserves source payloads and executable bits while normalizing source-archive ordering, ownership and timestamps; without that variable it uses epoch zero. Compare complete artifact hashes across clean builds with the same source, epoch and toolchain. This does not promise identical bytes across different build-tool versions.
+For reproducible packages, run `python3 -m build` with `SOURCE_DATE_EPOCH` set to the source commit's Unix timestamp and retain the Python, setuptools and compression-tool versions. The build backend preserves source payloads and applies a declared executable-path allowlist while normalizing source-archive ordering, ownership and timestamps; without that variable it uses epoch zero. Compare complete artifact hashes across clean builds with the same source, epoch and toolchain. This does not promise identical bytes across different build-tool versions.
 
 ## Publication safety
 

@@ -7,13 +7,16 @@ import tarfile
 import tempfile
 
 
+EXECUTABLES = frozenset(['packaging/observers/pbs-native-verify-cache', 'scripts/bootstrap-pip.py', 'scripts/build-installer-bundle.py', 'scripts/build-installer-bundle.sh', 'scripts/install.sh', 'scripts/publication-gate.sh', 'scripts/uninstall.sh', 'tests/fixture_comparator.py', 'tests/staging_smoke.py'])
+
+
 def __getattr__(name):
     from setuptools import build_meta
     return getattr(build_meta, name)
 
 
 def normalize_sdist(path, epoch):
-    """Preserve payloads and executable bits; remove host/time archive metadata."""
+    """Preserve payloads, declare modes, and remove host/time archive metadata."""
     if not 0 <= epoch <= 0xffffffff:
         raise ValueError("SOURCE_DATE_EPOCH must fit an unsigned 32-bit timestamp")
     path = Path(path)
@@ -32,7 +35,8 @@ def normalize_sdist(path, epoch):
                             entry.uname = entry.gname = ""
                             entry.mtime = epoch
                             entry.pax_headers = {}
-                            entry.mode = 0o755 if entry.isdir() or entry.mode & 0o111 else 0o644
+                            relative = '/'.join(Path(entry.name).parts[1:])
+                            entry.mode = 0o755 if entry.isdir() or relative in EXECUTABLES else 0o644
                             if entry.isfile():
                                 with source.extractfile(member) as payload:
                                     target.addfile(entry, payload)

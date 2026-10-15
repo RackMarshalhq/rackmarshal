@@ -14,7 +14,7 @@ SPEC.loader.exec_module(BACKEND)
 
 class SourceDistributionTests(unittest.TestCase):
     def archive(self, path, stamp, reverse=False, link=False):
-        names = ["fixture/", "fixture/README.md", "fixture/run.sh"]
+        names = ["fixture/", "fixture/README.md", "fixture/scripts/install.sh"]
         with path.open("wb") as output, gzip.GzipFile(filename=path.name, fileobj=output, mode="wb", mtime=stamp) as compressed:
             with tarfile.open(fileobj=compressed, mode="w", format=tarfile.PAX_FORMAT) as archive:
                 for name in reversed(names) if reverse else names:

@@ -111,3 +111,11 @@ The pre-release engineering record above documents the qualification work that l
 - Fix dashboard completeness beyond 200 incident records per domain.
 - Add narrative regressions, repeatable real-data HTTP proof, and a prepared
   ChatGPT Business Investigator connection guide; no workspace changes made.
+
+## 1.2.0rc6.dev1 (private, not release-qualified)
+
+- Add pinned offline pip bootstrap with pip-less venv creation, input validation, isolated execution and installed inventory verification.
+- Refuse existing installations and missing prerequisites before persistent changes.
+- Retain upstream licenses/provenance and narrowly bind public CA privacy exceptions to exact hashes.
+- Canonicalize installer and source archive permissions independent of checkout modes.
+- Mac development tests do not satisfy Linux/systemd release acceptance.

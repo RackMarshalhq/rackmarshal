@@ -1,6 +1,6 @@
 {
   "name": "rackmarshal-investigator",
-  "version": "1.2.0-rc5",
+  "version": "1.2.0-rc6.dev1",
   "description": "Read-only operational investigation using RackMarshal evidence.",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",

@@ -92,3 +92,11 @@ with the same user and group as the service. This catches owner-only virtualenv
 paths even when a root installation command succeeds. A failed normalization
 or probe is an installation failure and requires inspection, not automatic
 service startup. Changed installer artifacts require fresh lifecycle validation.
+
+## Private bootstrap candidate 1.2.0rc6.dev1
+
+This candidate supports fresh installations only. Any existing install, configuration, state/log path, service account/group, or RackMarshal unit causes refusal before persistent changes. Upgrade, reinstall and rollback paths are not qualified. Preserve any partial installation after failure; do not retry by deleting it.
+
+Provision Python 3.11 or later with the standard-library venv module and systemd/account utilities separately. The installer never runs APT, ensurepip or host pip. It validates all bundled input hashes and ownership, stages copies privately under /run, creates a pip-less venv, and installs pinned pip 26.2.1 and the exact application wheel with hashes, no dependencies and no index. Bootstrap network operations are denied. Obtain the installer archive digest from an independently trusted channel before executing its installer. The internal manifest detects alteration but does not authenticate an attacker-replaced archive.
+
+Use --no-start for qualification. Copy the reported private staging directory and receipts into durable private evidence before reboot; /run is ephemeral. Mac unit/build results are development evidence only. Linux Python 3.11, service identity, lifecycle, failure and rollback-refusal qualification remain required before release.

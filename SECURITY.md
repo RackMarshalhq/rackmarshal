@@ -47,3 +47,9 @@ Acceptance evaluators that use assertions reject optimized Python execution
 
 These changes are local development, not a patch to qualified RC5 artifacts.
 The original exact-artifact qualification does not cover these changed bytes.
+
+## Offline bootstrap trust boundary
+
+The private rc6.dev1 installer bundles the unmodified official pip 26.2.1 wheel, pinned by SHA-256 in its standard-library bootstrap. Root-owned inputs must have safe ancestors, no symlinks/hardlinks or group/world writes. Wheel structure and identity are checked before isolated execution in a fresh pip-less venv. Installed payload bytes, site-packages inventory and generated RECORD hashes are verified. Existing environments are refused because Python startup hooks could execute before pip. Runtime files remain root-owned and readable, but not writable, by the service group.
+
+The release privacy gate permits the bundled public CA certificate file only when the complete pip wheel hash, exact member path and member hash match. Upstream license/author/example text exceptions likewise bind complete wheel and member hashes; secret and path checks still apply. See THIRD-PARTY-NOTICES.txt and packaging/bootstrap/manifest.json for retained licenses and provenance.

@@ -17,3 +17,6 @@ prune evals/results
 prune packaging/chatgpt-business
 prune site
 global-exclude __pycache__ *.pyc *.env *.pem *.key *.db *.sqlite*
+
+include THIRD-PARTY-NOTICES.txt
+include packaging/bootstrap/manifest.json packaging/bootstrap/pip-26.2.1-py3-none-any.whl

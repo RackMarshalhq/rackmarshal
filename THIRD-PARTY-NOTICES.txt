@@ -1,0 +1,5 @@
+This private development candidate redistributes the unmodified official pip26.2.1 wheel in its installer and source distribution only. Pip is licensed under the MIT license; its vendored libraries retain their individual licenses and notices inside the wheel. The full upstream license texts and AUTHORS remain unmodified in pip-26.2.1.dist-info/licenses/ and pip/_vendor/.
+
+See packaging/bootstrap/manifest.json for official download provenance, exact wheel SHA256, vendored package versions, and every retained license/author member hash. No host trust store is replaced. The public certifi CA bundle belongs to the unmodified wheel; it contains public certificates, not private keys.
+
+The wheel is not included in the RackMarshal application wheel or Investigator plugin. Its presence and hashes must be included in dependency, license, privacy and security review for every future release. This record does not claim every vendored library has completed advisory review. No public release is authorized by this development candidate.

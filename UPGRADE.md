@@ -45,3 +45,7 @@ Test upgrades on a disposable host first. Quiesce the status service and all ena
 For an unsuccessful upgrade with no accepted intervening writes, keep workloads stopped, reinstall the previous wheel, restore the saved configuration and units (remove candidate-only drop-ins), run daemon-reload, and verify the prior version and health before restoring the prior timer/service state. Restore the pre-upgrade database only when needed for schema rollback, and only while all writers are stopped; this deliberately loses post-backup records. For a successful upgrade with later observations, prefer compatible code rollback that preserves history. Never erase production history merely to undo an incident or baseline decision.
 
 The 1.1.0rc1 candidate retains the 1.0.0 migration set. Exact artifact install/upgrade/rollback qualification is recorded separately from this procedure. The base installer is not an automatic transactional rollback manager.
+
+## rc6.dev1 qualification restriction
+
+The private offline-bootstrap candidate refuses every existing installation before persistent mutation. It does not provide an upgrade, reinstall or rollback implementation. Preserve existing source/artifacts and installations; qualify a fresh disposable Linux guest separately.

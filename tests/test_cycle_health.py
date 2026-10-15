@@ -83,5 +83,5 @@ class CycleHealthTests(unittest.TestCase):
             hook = Path("packaging/systemd") / (unit + ".d") / "20-cycle-health.conf"
             self.assertIn("ExecStopPost=-/opt/rackmarshal/venv/bin/python -m rackmarshal.selfwatch.cycle_health --unit %n --from-systemd", hook.read_text())
             self.assertNotIn("ReadWritePaths", hook.read_text())
-        self.assertIn("cp -R packaging/systemd/*", Path("scripts/build-installer-bundle.sh").read_text())
+        self.assertIn("rackmarshal-domain@.service.d/20-cycle-health.conf", Path("scripts/bootstrap-pip.py").read_text())
         self.assertIn('systemctl cat "$unit"', Path("scripts/install.sh").read_text())

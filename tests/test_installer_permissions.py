@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
 SCRIPT=(ROOT/'scripts/install.sh').read_text()
-POLICY=SCRIPT.split("python3 - <<'PY_VENV_PERMISSIONS'\n",1)[1].split('\nPY_VENV_PERMISSIONS',1)[0]
+POLICY=SCRIPT.split("python3 -I -B - <<'PY_VENV_PERMISSIONS'\n",1)[1].split('\nPY_VENV_PERMISSIONS',1)[0]
 ns={'__name__':'test_policy'}
 exec(compile(POLICY,'installer-policy','exec'),ns)
 
@@ -62,7 +62,7 @@ class InstallerPermissions(unittest.TestCase):
         self.assertEqual(result.stdout.strip(),'0027')
     def test_service_probe_is_after_policy_and_before_config_validation(self):
         self.assertLess(SCRIPT.index('PY_VENV_PERMISSIONS'),SCRIPT.index('PY_SERVICE_ACCESS'))
-        self.assertLess(SCRIPT.index('PY_SERVICE_ACCESS'),SCRIPT.index('rackmarshal validate-config'))
+        self.assertLess(SCRIPT.index('PY_SERVICE_ACCESS'),SCRIPT.index('rackmarshal.cli validate-config'))
         self.assertIn('extra_groups=[]',SCRIPT)
         self.assertIn("'-I', '-B'",SCRIPT)
 
