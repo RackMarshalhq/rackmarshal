@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('bootstrap', ROOT / 'scripts/bootstrap-wheel.py')
 bootstrap = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bootstrap)
-EXECUTABLES = {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-wheel.py'}
+EXECUTABLES = {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-wheel.py','scripts/lifecycle.py'}
 
 def build(root=ROOT):
     version = tomllib.loads((root / 'pyproject.toml').read_text())['project']['version']
@@ -25,7 +25,7 @@ def build(root=ROOT):
     bootstrap.require(bootstrap.digest(payloads['packaging/bootstrap/' + bootstrap.INSTALLER_NAME]) == bootstrap.INSTALLER_SHA256, 'bootstrap installer hash mismatch')
     bootstrap.validate_wheel(payloads['packaging/bootstrap/' + bootstrap.INSTALLER_NAME], 'installer', bootstrap.INSTALLER_VERSION)
     bootstrap.validate_wheel(payloads[bootstrap.APP_NAME], 'rackmarshal', version)
-    payloads['install-manifest.json'] = (json.dumps({'version': version, 'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(payloads.items())}}, sort_keys=True, indent=2) + '\n').encode()
+    payloads['install-manifest.json'] = (json.dumps({'version': version, 'source_commit': os.environ.get('RACKMARSHAL_BUILD_SOURCE'), 'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(payloads.items())}}, sort_keys=True, indent=2) + '\n').encode()
     epoch = int(os.environ['SOURCE_DATE_EPOCH'] if 'SOURCE_DATE_EPOCH' in os.environ else subprocess.check_output(['git', '-C', str(root), 'log', '-1', '--format=%ct'], text=True).strip())
     bootstrap.require(0 <= epoch <= 0xffffffff, 'invalid source epoch')
     label = 'rackmarshal-installer-' + version.replace('rc', '-rc')

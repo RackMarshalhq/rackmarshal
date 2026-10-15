@@ -152,3 +152,5 @@ Actual systemd stop/start and mutation remain unexercised in production until th
 next independently qualified code patch is ready for promotion.
 
 
+
+Private dev3 lifecycle scope is defined in UPGRADE.md: only the exact corrected dev2 predecessor is accepted. Fresh install, arbitrary wheel replacement and stable rollback are not equivalent supported upgrade paths.

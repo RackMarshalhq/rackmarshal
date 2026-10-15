@@ -17,7 +17,7 @@ The standard uninstall:
 - **preserves** `/var/lib/rackmarshal`
 - leaves the service account available
 
-This behavior is intentional so configuration and operational state survive an uninstall/reinstall cycle.
+Configuration and operational state survive standard removal. Retain lifecycle transaction and preparation receipts separately before any separately authorized uninstall; they are under `/opt/rackmarshal`.
 
 ## Purge
 
@@ -36,4 +36,4 @@ Purge additionally removes:
 
 ## Reinstallation after standard uninstall
 
-Run the normal installer again. The preserved configuration and database are reused and pending migrations are applied.
+The private dev2/dev3 fresh installer refuses preserved installation paths. Do not run it as an upgrade or delete preserved state to bypass this guard. Reusing a partially removed installation requires an explicitly reviewed recovery procedure; the lifecycle CLI requires its recognized complete installation and retained transaction state. See UPGRADE.md.

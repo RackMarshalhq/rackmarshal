@@ -43,7 +43,7 @@ class SystemdRuntime:
 
     def fields(self, name):
         result = self.command('show', name, '-p', 'ActiveState', '-p', 'SubState', '-p', 'UnitFileState',
-                              '-p', 'Type', '-p', 'MainPID', '-p', 'NeedDaemonReload')
+                              '-p', 'Type', '-p', 'MainPID', '-p', 'NeedDaemonReload', '-p', 'NRestarts', '-p', 'InvocationID')
         return dict(line.split('=',1) for line in result.splitlines() if '=' in line)
 
     def snapshot(self):
@@ -87,21 +87,33 @@ class SystemdRuntime:
             d=self.unit_directory/(name+'.d')
             if d.exists():
                 private_dir(d,self.owner)
-                require({p.name for p in d.iterdir()} <= {'20-cycle-health.conf','99-lifecycle-maintenance.conf'}, 'unsupported unit override')
+                allowed={'99-lifecycle-maintenance.conf'} if name in BASE else set()
+                if name=='rackmarshal-domain@.service':allowed.add('20-cycle-health.conf')
+                require({p.name for p in d.iterdir()} <= allowed, 'unsupported unit override')
         self.command('daemon-reload')
         for name in BASE:
             loaded=self.command('cat',name)
             require(text.decode().strip() in loaded,'maintenance condition not loaded')
         for name in sorted(set(BASE[:3])|set(INSTANCES)):
-            effective=self.command('show',name,'-p','Conditions','-p','DropInPaths')
-            # systemd prints tuple(type,trigger,negate,parameter,state). No trigger OR
-            # conditions or reset/extra conditions are accepted in this scope.
-            lines=dict(line.split('=',1) for line in effective.splitlines() if '=' in line)
-            expected='ConditionPathExists = false true '+str(self.marker)
-            require(expected in lines.get('Conditions',''), 'effective maintenance condition absent')
-            require(lines['Conditions'].count('ConditionPathExists')==1, 'ambiguous effective condition')
-            paths=lines.get('DropInPaths','').split()
-            require(all(Path(p).parent.parent==self.unit_directory and Path(p).name in ('20-cycle-health.conf','99-lifecycle-maintenance.conf') for p in paths), 'unrecognized effective drop-in')
+            # Load each concrete instance before querying its D-Bus property.
+            self.command('show',name,'-p','LoadState')
+            # systemd v252 D-Bus Conditions is a(sbbsi); do not parse display text.
+            unit_path='/org/freedesktop/systemd1/unit/'+''.join(c if c.isascii() and c.isalnum() else '_'+format(ord(c),'02x') for c in name)
+            argv=['/usr/bin/busctl','--system','--json=short','get-property','org.freedesktop.systemd1',unit_path,'org.freedesktop.systemd1.Unit','Conditions']
+            entry={'argv':argv};self.commands.append(entry)
+            try:
+                output=self.runner(argv);entry['stdout']=output
+                result=json.loads(output)
+                require(result['type']=='a(sbbsi)' and len(result['data'])==1,'unexpected condition signature')
+                conditions=result['data']
+                require(len(conditions)==1 and conditions[0][:4]==['ConditionPathExists',False,True,str(self.marker)],'effective guard differs')
+            except BaseException as exc:
+                entry['error']=repr(exc);raise
+            loaded=self.command('show',name,'-p','DropInPaths')
+            paths=loaded.strip().removeprefix('DropInPaths=').split()
+            expected={self.unit_directory/(base+'.d')/'99-lifecycle-maintenance.conf' for base in BASE}
+            expected.add(self.unit_directory/'rackmarshal-domain@.service.d/20-cycle-health.conf')
+            require(all(Path(p) in expected for p in paths),'unrecognized effective drop-in')
 
     def quiesce(self, snapshot):
         names = sorted(snapshot['units'])
@@ -132,7 +144,8 @@ class SystemdRuntime:
         units=snapshot['units']
         for name,value in units.items():
             if name.endswith('.service') and value['ActiveState']=='active' and value.get('Type')!='oneshot':
-                self.command('start',name);self.readiness(name)
+                before=self.fields(name)
+                self.command('start',name);self.readiness(name,before)
         for name,value in units.items():
             if name.endswith('.timer') and value['ActiveState']=='active':self.command('start',name)
         actual=self.snapshot()

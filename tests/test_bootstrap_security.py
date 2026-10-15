@@ -85,6 +85,13 @@ class BootstrapSecurityTests(unittest.TestCase):
         with patch.object(B.subprocess, 'run', side_effect=AssertionError('must not execute')):
             with self.assertRaisesRegex(ValueError, 'pipless/empty'): B.install(stage, target, self.owner)
 
+    def test_final_path_entrypoint_is_generated_with_valid_record(self):
+        stage,target=self.stage(),self.target()
+        result=B.install(stage,target,self.owner,final_python='/opt/rackmarshal/venv/bin/python')
+        self.assertEqual(result['result'],'PASS')
+        self.assertTrue((target/'bin/fixture-rackmarshal').read_bytes().startswith(b'#!/opt/rackmarshal/venv/bin/python\n'))
+        B.verify_inventory(target,[('rackmarshal',B.VERSION,B.validate_wheel(wheel(),'rackmarshal',B.VERSION))],self.owner)
+
     def test_changed_bundle_fails_before_staging(self):
         root = self.bundle(); (root / B.APP_NAME).write_bytes(b'changed')
         with self.assertRaisesRegex(ValueError, 'hash mismatch'): B.prepare(root, root / B.APP_NAME, self.root, self.owner)
@@ -130,7 +137,7 @@ class BootstrapSecurityTests(unittest.TestCase):
         with zipfile.ZipFile(fake, 'w') as archive:
             archive.writestr('installer/__init__.py', 'import socket; socket.create_connection(("127.0.0.1",9))\n')
         app = self.root / B.APP_NAME; app.write_bytes(wheel())
-        spec = json.dumps([str(fake), B.digest(fake.read_bytes()), str(target), str(app), B.digest(app.read_bytes())])
+        spec = json.dumps([str(fake), B.digest(fake.read_bytes()), str(target), str(app), B.digest(app.read_bytes()), None])
         result = subprocess.run([str(target/'bin/python'), '-I', '-B', '-c', B.RUNNER, spec],capture_output=True,text=True)
         self.assertNotEqual(result.returncode,0); self.assertIn('network prohibited',result.stderr)
 

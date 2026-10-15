@@ -77,3 +77,11 @@ The durable RESUME_AUTHORIZED journal boundary is the acceptance/activation comm
 Local source replay of exact stable v1.0.0 confirmed the known ZFS behavior: DEGRADED/0 opens one incident; ONLINE/11 falsely recovers it; repeated11 remains closed. Stable cannot be marked safe for resumed rollback merely because its schema matches. Preparing a corrected compatible rollback target is a separate candidate/artifact requirement. Preserve the failed semantic evidence privately and keep the release rollback gate pending.
 
 Remaining implementation: trusted predecessor artifact/inventory adapter, semantic proof bound to exact installed bytes, final-path-aware venv/console-script staging, service-unit change transactions, production recovery/entrypoint integration and exact supported-version matrix. Current engine tests do not replace these. Follow with independently reviewed disposable Linux lifecycle/reboot qualification and all unchanged release/client/window gates.
+
+## Integrated private candidate (supersedes milestone implementation gaps)
+
+The separate scripts/lifecycle.py entry point now supplies source-bound manifest validation, pinned corrected dev2 wheel/installed RECORD checks, semantic fixtures, final-path staging and explicit rollback/recover integration. The preceding milestone notes remain historical; the integrated scope is defined by UPGRADE.md. Stable v1.0.0 is explicitly unsupported for resumed rollback. Private mechanical qualification uses dev2 → dev3 → dev2 → dev3, without claiming broad public upgrade support.
+
+Units are an identity transition: exact supplied core payloads and the cycle-health drop-in are protected files. Unknown unit changes/overrides are refused; no replacement-unit transaction is supported. Maintenance drop-ins are lifecycle-owned and retained. Effective Conditions use the typed D-Bus a(sbbsi) property through busctl JSON, whose data is the array itself (systemd v252 busctl.c json_transform_variant/get_property), not systemctl display text. Actual Linux/reboot verification remains pending.
+
+Implementation is not qualification. A completed local synthetic pass does not satisfy the disposable Linux lifecycle, client, or observation-window release gates, and no host actions are authorized here.

@@ -212,7 +212,7 @@ class Lifecycle:
         write_json(transaction / 'transaction.json', journal)
         self.fault(phase)
 
-    def upgrade(self, candidate, identity, expected_old, expected_schema, compatible):
+    def upgrade(self, candidate, identity, expected_old, expected_schema, compatible, evidence=None, expected_candidate=None):
         require(compatible is True, 'semantic compatibility unqualified')
         with self.lock():
             for path in self.store.glob('*/transaction.json'):
@@ -229,7 +229,8 @@ class Lifecycle:
             fsync_dir(self.store)
             journal = {'format': 1, 'active': str(self.active), 'database': str(self.database), 'identity': identity,
                        'before': before, 'protected': protected, 'database_before': db,
-                       'runtime': self.runtime.snapshot(), 'after': inventory(candidate, self.owner)}
+                       'runtime': self.runtime.snapshot(), 'after': inventory(candidate, self.owner), 'evidence': evidence or {}}
+            if expected_candidate is not None:require(journal['after']==expected_candidate,'candidate changed after semantic proof')
             self.save(transaction, journal, 'STAGING')
             protected_dir=transaction/'protected';protected_dir.mkdir(mode=0o700)
             journal['protected_backups']={}

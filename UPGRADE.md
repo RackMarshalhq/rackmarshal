@@ -1,51 +1,21 @@
-# Upgrading RackMarshal
+# Private lifecycle qualification
 
-The current installer is designed to be safely rerun against an existing RackMarshal installation.
+Version 1.2.0rc6.dev3 implements a restricted, same-schema private qualification path: exact corrected dev2 → dev3 → dev2 → dev3. It is not a public support promise or a completed Linux qualification. The fresh installer refuses existing installations and cannot be used to upgrade or reinstall preserved state.
 
-## Before upgrading
+The predecessor is rackmarshal-1.2.0rc6.dev2-py3-none-any.whl, SHA-256 `137663acf2bd799b606c2a38db15b646d1a4649417f5c5a697a306afcfe725a5`. The candidate requires a complete source-bound installer bundle, matching installed wheel bytes and RECORD, unchanged SQL migrations and ledger, exact unchanged supplied core units, standard paths, the existing service account and loopback status endpoint. Unknown/custom/optional services, altered units, incomplete evidence and unresolved transactions fail closed. No migrations, credential changes, new enablement or notification replay are performed.
 
-Back up at least:
+Stable v1.0.0 is refused: equal migration schemas do not establish semantic safety. Its positive permanent ZFS data errors can falsely recover incidents. A guarded or non-running downgrade does not satisfy the resumed rollback release gate.
 
-```text
-/etc/rackmarshal/
-/var/lib/rackmarshal/state.db
-```
+## Entry point
 
-If you keep additional site-specific keys, certificates, catalogs, or credential files elsewhere, back those up according to your own configuration.
+On a separately authorized disposable Linux installation, run the reviewed bundle's `scripts/lifecycle.py` with trusted `/usr/bin/python3 -I -B -S`. Actions are `plan`, `upgrade`, `rollback`, and `recover`; all require `--previous-wheel` pointing at the pinned predecessor. Rollback/recover additionally require `--transaction` naming the retained transaction directory. `plan` only checks artifact/schema prerequisites; runtime guards and semantic execution still need validation. Do not interpret its output as permission to mutate a host.
 
-## Upgrade procedure
+Every executable transition validates both artifact identity and synthetic ZFS semantics. Candidate launchers and activation scripts target the final `/opt/rackmarshal/venv` path. The transaction retains old code, protected-file backups, SQLite backup plus restoration proof, and a durable journal under `/opt/rackmarshal/lifecycle-transactions`. Preparation receipts remain under `/opt/rackmarshal/lifecycle-inputs`. Retain both directories and exact artifacts for investigation.
 
-Extract the new RackMarshal release bundle and run its installer using the wheel from that same release:
+The runtime adapter installs persistent maintenance conditions, quiesces timers before services and refuses active oneshots. Base unit payloads remain identical; this private path does not implement arbitrary unit changes. It verifies effective typed systemd conditions before activation. Rollback preserves the current database, newer observations, configuration and credentials; it never restores an older database. Changed protected files require investigation rather than automatic replacement.
 
-```bash
-sudo ./scripts/install.sh \
-  --wheel ./rackmarshal-VERSION-py3-none-any.whl
-```
+`RESUME_AUTHORIZED` is the durable acceptance decision before removing the maintenance marker. `COMMITTED` or `ROLLED_BACK` is written only after restoring the recorded runtime state. A crash after authorization can boot the accepted code according to existing enablement, which may differ from the previous active-state snapshot. Explicit recover reconciles retained inventories and journal state and restores the pinned predecessor; it does not silently restart an unknown version. A failed/incomplete transition is not a pass. Retry of a completed rollback is refused; use a new upgrade transaction for re-upgrade.
 
-The installer force-reinstalls the Python package into the existing RackMarshal virtual environment, preserves an existing `rackmarshal.conf`, applies pending database migrations, refreshes the supplied systemd units, and starts/verifies the base services.
+## Remaining qualification
 
-## Database migrations
-
-RackMarshal records applied schema migrations. Already-applied migrations are not reapplied during a normal upgrade.
-
-Do not manually edit the migration ledger or alter an existing migration file in a deployed release.
-
-## After upgrading
-
-Verify the status service and notification timer, then check the health endpoint. Review the changelog and configuration documentation for any newly introduced site settings before enabling affected collectors.
-
-## Upgrade validation
-
-Before an upgrade, run `rackmarshal validate-config`. The installer preserves site configuration, applies only pending migrations, and refreshes systemd units. After upgrading, run `rackmarshal diagnostic` and verify `/health`. If an upgrade fails before completion, retain the pre-upgrade configuration/database backup and do not manually edit the migration ledger.
-
-## Release-candidate rollback
-
-Test upgrades on a disposable host first. Quiesce the status service and all enabled domain/notification timers and wait for in-flight jobs before taking a consistent SQLite backup. Retain the exact previous installer/wheel, configuration, database backup, and systemd units/drop-ins. Record hashes and permissions.
-
-For an unsuccessful upgrade with no accepted intervening writes, keep workloads stopped, reinstall the previous wheel, restore the saved configuration and units (remove candidate-only drop-ins), run daemon-reload, and verify the prior version and health before restoring the prior timer/service state. Restore the pre-upgrade database only when needed for schema rollback, and only while all writers are stopped; this deliberately loses post-backup records. For a successful upgrade with later observations, prefer compatible code rollback that preserves history. Never erase production history merely to undo an incident or baseline decision.
-
-The 1.1.0rc1 candidate retains the 1.0.0 migration set. Exact artifact install/upgrade/rollback qualification is recorded separately from this procedure. The base installer is not an automatic transactional rollback manager.
-
-## rc6.dev2 qualification restriction
-
-The private offline-bootstrap candidate refuses every existing installation before persistent mutation. It does not provide an upgrade, reinstall or rollback implementation. Preserve existing source/artifacts and installations; qualify a fresh disposable Linux guest separately.
+Local synthetic tests do not prove real systemd behavior. Independent review, exact-artifact disposable Linux upgrade/rollback/re-upgrade with newer data, interruption/reboot checks, fresh-install checks, client gates and the observation window remain required before release. See `docs/development/STATE_PRESERVING_LIFECYCLE_DESIGN.md`. No deployment or publication is authorized by this document.

@@ -125,3 +125,9 @@ The pre-release engineering record above documents the qualification work that l
 - Replace pip bootstrap with unmodified PyPA installer 1.1.0 and full RECORD validation; install only RackMarshal into a pip-less venv.
 - Remove bundled pip, its vendored dependencies and related privacy exceptions.
 - Preserve ownership, integrity, permission and existing-install refusal boundaries. Cloud foreign-root ownership remains unsupported; genuine Debian root qualification is pending.
+
+## 1.2.0rc6.dev3 (private, not release-qualified)
+
+- Add a source-bound same-schema lifecycle CLI for the pinned corrected dev2 predecessor, durable recovery/rollback journals, persistent systemd maintenance guards and exact inventory authorization.
+- Require synthetic permanent-error/unknown-evidence semantics before accepting either runtime. Refuse legacy stable rollback despite schema equality.
+- Preserve newer database contents and protected configuration/credentials across rollback; generate staged launchers for the final path. Exact unchanged units only; Linux lifecycle and release gates remain pending.

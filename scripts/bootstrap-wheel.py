@@ -23,7 +23,8 @@ APP_NAME = 'rackmarshal-' + VERSION + '-py3-none-any.whl'
 LIMIT = 32 * 1024 * 1024
 DOCS = ('LICENSE', 'README.md', 'INSTALL.md', 'CONFIGURATION.md', 'UPGRADE.md', 'UNINSTALL.md', 'SECURITY.md', 'CHANGELOG.md', 'THIRD-PARTY-NOTICES.txt')
 UNITS = ('rackmarshal-status.service', 'rackmarshal-notify.service', 'rackmarshal-notify.timer', 'rackmarshal-domain@.service', 'rackmarshal-domain@.timer', 'rackmarshal-domain@.service.d/20-cycle-health.conf', 'rackmarshal-self-watch.service.d/20-cycle-health.conf')
-BUNDLE_FILES = set(DOCS) | {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-wheel.py', 'packaging/bootstrap/manifest.json', 'packaging/bootstrap/' + INSTALLER_NAME, APP_NAME, 'config/rackmarshal.conf.example', 'config/mounts.catalog.example.toml'} | {'packaging/systemd/' + n for n in UNITS}
+LIFECYCLE_FILES = {'scripts/lifecycle.py','rackmarshal/__init__.py','rackmarshal/maintenance/__init__.py'} | {'rackmarshal/maintenance/'+n+'.py' for n in ('lifecycle','lifecycle_systemd','lifecycle_semantics')}
+BUNDLE_FILES = LIFECYCLE_FILES | set(DOCS) | {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-wheel.py', 'packaging/bootstrap/manifest.json', 'packaging/bootstrap/' + INSTALLER_NAME, APP_NAME, 'config/rackmarshal.conf.example', 'config/mounts.catalog.example.toml'} | {'packaging/systemd/' + n for n in UNITS}
 
 def require(ok, message):
     if not ok:
@@ -159,7 +160,7 @@ def prepare(bundle, wheel, staging_parent='/run', owner=0, config=None):
 
 RUNNER = r'''
 import hashlib, json, pathlib, runpy, sys
-wheel, expected, target, app, app_hash = json.loads(sys.argv[1])
+wheel, expected, target, app, app_hash, final_python = json.loads(sys.argv[1])
 if pathlib.Path(sys.prefix) != pathlib.Path(target) or sys.prefix == sys.base_prefix:
     raise RuntimeError('wrong bootstrap target')
 if hashlib.sha256(pathlib.Path(wheel).read_bytes()).hexdigest() != expected:
@@ -174,8 +175,17 @@ sys.path.insert(0, wheel)
 import installer
 if installer.__version__ != '1.1.0' or installer.__file__ != wheel + '/installer/__init__.py':
     raise RuntimeError('unexpected installer import')
-sys.argv = ['installer', '--validate-record', 'all', '--no-compile-bytecode', app]
-runpy.run_module('installer', run_name='__main__')
+if final_python:
+    from installer.__main__ import _get_scheme_dict, get_launcher_kind
+    from installer.destinations import SchemeDictionaryDestination
+    from installer.sources import WheelFile
+    with WheelFile.open(app) as source:
+        source.validate_record(validate_contents=True)
+        destination=SchemeDictionaryDestination(scheme_dict=_get_scheme_dict(source.distribution,prefix=None),interpreter=final_python,script_kind=get_launcher_kind(),bytecode_optimization_levels=[])
+        installer.install(source,destination,{})
+else:
+    sys.argv = ['installer', '--validate-record', 'all', '--no-compile-bytecode', app]
+    runpy.run_module('installer', run_name='__main__')
 '''
 
 def validate_target(target, owner=0):
@@ -223,8 +233,9 @@ def verify_inventory(target, distributions, owner=0):
     actual = {str(p.relative_to(site)) for p in site.rglob('*') if p.is_file()}
     require(actual == expected, 'unexpected or missing installed files')
 
-def install(stage, target, owner=0):
+def install(stage, target, owner=0, final_python=None):
     stage, target = Path(stage).absolute(), validate_target(target, owner)
+    require(final_python is None or final_python == '/opt/rackmarshal/venv/bin/python', 'unsupported final interpreter')
     info = stage.lstat()
     require(stat.S_ISDIR(info.st_mode) and info.st_uid == owner and stat.S_IMODE(info.st_mode) == 0o700, 'unsafe staging directory')
     manifest = json.loads(trusted_read(stage / 'install-manifest.json', owner), object_pairs_hook=unique_object)
@@ -245,7 +256,7 @@ def install(stage, target, owner=0):
         stream.write(json.dumps(receipt) + '\n')
     env = {'PATH': '/usr/bin:/bin', 'PYTHONNOUSERSITE': '1', 'LC_ALL': 'C'}
     try:
-        spec = json.dumps([str(installer_wheel), INSTALLER_SHA256, str(target), str(app_wheel), digest(app_data)])
+        spec = json.dumps([str(installer_wheel), INSTALLER_SHA256, str(target), str(app_wheel), digest(app_data), final_python])
         result = subprocess.run([str(target / 'bin/python'), '-I', '-B', '-c', RUNNER, spec], cwd=stage, env=env, capture_output=True, text=True, timeout=120)
         receipt['commands'].append({'project': 'rackmarshal', 'arguments': ['--validate-record', 'all', '--no-compile-bytecode', str(app_wheel)], 'returncode': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr})
         require(result.returncode == 0, 'offline installation failed')

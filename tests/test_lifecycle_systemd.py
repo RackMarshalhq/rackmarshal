@@ -8,10 +8,12 @@ class RuntimeTests(unittest.TestCase):
   self.states={'rackmarshal-status.service':'active','rackmarshal-notify.service':'inactive','rackmarshal-notify.timer':'active'};self.calls=[]
   def runner(args):
    self.calls.append(args[1:]);cmd=args[1]
+   if args[0]=='/usr/bin/busctl':return json.dumps({'type':'a(sbbsi)','data':[['ConditionPathExists',False,True,str(self.root/'marker'),0]]})
    if cmd=='list-units':return '\n'.join(n+' loaded '+v+' dead' for n,v in self.states.items())
    if cmd=='list-unit-files':return '\n'.join(n+' '+('static' if n.endswith('notify.service') else 'enabled') for n in self.states)
    if cmd=='show':
     n=args[2]
+    if args[-1]=='DropInPaths':return 'DropInPaths='+str(self.units/(BASE[0]+'.d')/'99-lifecycle-maintenance.conf')
     if 'Conditions' in args:return 'Conditions=ConditionPathExists = false true '+str(self.root/'marker')+' untested\nDropInPaths='+str(self.units/(BASE[0]+'.d')/'99-lifecycle-maintenance.conf')
     return '\n'.join([f'ActiveState={self.states.get(n,"inactive")}', 'SubState=dead','UnitFileState='+('static' if n.endswith('notify.service') else 'enabled'),'Type='+('oneshot' if n.endswith('notify.service') else 'simple'),'MainPID=0','NeedDaemonReload=no'])
    if cmd=='cat':return (self.units/(args[2]+'.d')/'99-lifecycle-maintenance.conf').read_text()
@@ -42,4 +44,14 @@ class RuntimeTests(unittest.TestCase):
   def fail():raise RuntimeError('journal fsync failure')
   with self.assertRaises(RuntimeError):self.rt.resume(self.root/'tx',before,fail)
   self.assertTrue((self.root/'marker').exists());self.assertTrue(all(v=='inactive' for v in self.states.values()))
+ def test_instance_override_refused(self):
+  d=self.units/'rackmarshal-domain@zfs.service.d';d.mkdir();(d/'20-cycle-health.conf').write_text('[Service]\nExecStart=/untrusted')
+  with self.assertRaisesRegex(Refused,'unsupported unit override'):self.rt.guard(self.root/'tx',self.rt.snapshot())
+ def test_wrong_typed_condition_shape_refused(self):
+  original=self.rt.runner
+  def wrong(args):
+   if args[0]=='/usr/bin/busctl':return json.dumps({'type':'a(sbbsi)','data':[[['ConditionPathExists',False,True,str(self.root/'marker'),0]]]})
+   return original(args)
+  self.rt.runner=wrong
+  with self.assertRaisesRegex(Refused,'effective guard differs'):self.rt.guard(self.root/'tx',self.rt.snapshot())
 if __name__=='__main__':unittest.main()
