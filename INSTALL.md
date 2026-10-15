@@ -76,3 +76,19 @@ A complete configuration still requires explicit collector setup and recorded ob
 ## Optional Investigator
 
 See [Investigator installation and verification](docs/architecture/INVESTIGATOR_INSTALLATION.md) for exact-wheel MCP setup, local marketplace installation, private hosted packaging and client qualification limits.
+
+### Service access to the virtual environment
+
+Installation sets umask `0027` explicitly and normalizes the complete virtual
+environment to root ownership with the `rackmarshal` group: directories and
+owner-executable files use `0750`; other regular files use `0640`. The group
+cannot write code, and other users receive no access. Existing entries are
+normalized as well as newly installed entries. Symlinks and their targets are
+not changed. Foreign-owned entries, hard links, special files, or traversal
+errors stop the permission pass before it starts applying changes.
+
+Before configuration or migration work, a bounded interpreter/import probe runs
+with the same user and group as the service. This catches owner-only virtualenv
+paths even when a root installation command succeeds. A failed normalization
+or probe is an installation failure and requires inspection, not automatic
+service startup. Changed installer artifacts require fresh lifecycle validation.

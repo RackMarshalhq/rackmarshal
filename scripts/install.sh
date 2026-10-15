@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Never inherit an invoking shell's public or owner-only installation policy.
+umask 0027
 
 WHEEL=""
 CONFIG_SOURCE=""
@@ -55,6 +57,67 @@ if [[ ! -x /opt/rackmarshal/venv/bin/pip ]]; then
   python3 -m venv /opt/rackmarshal/venv
 fi
 /opt/rackmarshal/venv/bin/pip install --no-index --upgrade --force-reinstall "$WHEEL"
+
+# Runtime code is root-owned and service-group readable, never group-writable.
+# Normalize existing entries too: umask alone cannot repair an existing venv.
+python3 - <<'PY_VENV_PERMISSIONS'
+import grp
+import os
+from pathlib import Path
+import stat
+
+
+def raise_walk_error(error):
+    raise error
+
+
+def permission_plan(root, gid, owner=0):
+    """Validate the entire private venv before granting the service group access."""
+    root = Path(root)
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError('virtualenv root must be a real directory')
+    paths = [root]
+    for directory, dirs, files in os.walk(root, followlinks=False, onerror=raise_walk_error):
+        paths.extend(Path(directory) / name for name in dirs + files)
+    plan = []
+    for path in sorted(paths):
+        info = path.lstat()
+        if info.st_uid != owner:
+            raise ValueError('virtualenv entry is not owned by installer: ' + str(path))
+        if stat.S_ISLNK(info.st_mode):
+            # Python executables and lib64 commonly link outside/inside the venv.
+            # Never chmod/chown a link or follow it into a system interpreter.
+            continue
+        if not (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)):
+            raise ValueError('special file in virtualenv: ' + str(path))
+        if stat.S_ISREG(info.st_mode) and info.st_nlink != 1:
+            raise ValueError('hard-linked file in virtualenv: ' + str(path))
+        mode = 0o750 if stat.S_ISDIR(info.st_mode) or info.st_mode & stat.S_IXUSR else 0o640
+        plan.append((path, gid, mode))
+    return plan
+
+
+def apply_plan(plan):
+    for path, gid, mode in plan:
+        os.chown(path, -1, gid, follow_symlinks=False)
+        os.chmod(path, mode, follow_symlinks=False)
+
+
+if __name__ == '__main__':
+    apply_plan(permission_plan('/opt/rackmarshal/venv', grp.getgrnam('rackmarshal').gr_gid))
+PY_VENV_PERMISSIONS
+
+# Exercise interpreter traversal and module imports with the actual service IDs.
+python3 - <<'PY_SERVICE_ACCESS'
+import grp, os, pwd, subprocess
+account = pwd.getpwnam('rackmarshal')
+subprocess.run(
+    ['/opt/rackmarshal/venv/bin/python', '-I', '-B', '-c',
+     'import rackmarshal, rackmarshal.api.v1, rackmarshal.domains.zfs.integrity'],
+    check=True, timeout=30, user=account.pw_uid, group=grp.getgrnam('rackmarshal').gr_gid,
+    extra_groups=[], env={'PATH': '/usr/bin:/bin'}, cwd='/',
+)
+PY_SERVICE_ACCESS
 
 if [[ ! -f /etc/rackmarshal/rackmarshal.conf ]]; then
   if [[ -n "$CONFIG_SOURCE" ]]; then
