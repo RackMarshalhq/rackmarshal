@@ -1,8 +1,8 @@
 # State-preserving release lifecycle proposal
 
-Status: DESIGN ONLY. No lifecycle implementation or qualification PASS is claimed.
+Status: implementation milestone; no lifecycle qualification or deployment PASS is claimed. The transaction core and restricted runtime adapter exist, while exact-artifact/semantic policy, final-path staging and the production entry point remain incomplete.
 Base: 4f5ec853c86a561bd8b01915803109c0ea6865c2 (private rc6.dev2).
-Work in a separate candidate checkout/branch; preserve frozen artifacts and CT131.
+Work in a separate candidate checkout/branch; preserve frozen artifacts and the existing qualification guest.
 
 ## Existing evidence and reusable code
 
@@ -62,6 +62,18 @@ Owner-run disposable Linux only after reviewed artifacts: fresh install/reboot; 
 
 Implementation and local synthetic tests can proceed under existing development authorization in this isolated branch. No decision is needed to preserve history, refuse unsafe ownership, or retain release requirements. The safe default is same-schema, recognized core installations, no new optional runtime surface and no automatic migration.
 
-Michael's consequential decisions are deferred until concrete reviewable work exists: approve a disposable Linux lifecycle qualification batch (service transitions/reboots and private scratch/backup creation; separately scoped restoration/deletion if needed), select any broader legacy/MCP/custom-layout support required beyond the initial known-artifact matrix, and approve actual deployment/release only after all gates. Existing installed CT131 is not repurposed or mutated by this design. Missing stable artifact provenance is an evidence dependency to resolve read-only, not a reason to ask permission for trivial inspection.
+The owner's consequential decisions are deferred until concrete reviewable work exists: approve a disposable Linux lifecycle qualification batch (service transitions/reboots and private scratch/backup creation; separately scoped restoration/deletion if needed), select any broader legacy/MCP/custom-layout support required beyond the initial known-artifact matrix, and approve actual deployment/release only after all gates. Existing installed the existing qualification guest is not repurposed or mutated by this design. Missing stable artifact provenance is an evidence dependency to resolve read-only, not a reason to ask permission for trivial inspection.
 
 Design does not implement upgrade support, waive gates or authorize live action. Finish dev2 fixture proof independently; its evidence cannot be transferred to changed dev3 bytes.
+
+## Implementation milestone boundaries
+
+Version is pinned to 1.2.0rc6.dev3 with plugin label 1.2.0-rc6.dev3. No candidate artifacts have been built or installed. The existing fresh installer remains fresh-only; no upgrade CLI is exposed. Internal test calls supplying compatibility=True are not production semantic authorization.
+
+Implemented: same-filesystem staged tree activation, exclusive transaction locking, private config/credential byte backups and metadata, read-only SQLite backup/restore proof with framed all-table logical digests, no database rewind, explicit recovery/rollback preserving newer records, expected-current-byte checks, schema checks after quiescence, fsync journals/directories, runtime command logs and fault tests. The restricted runtime adapter refuses unknown units, in-flight oneshots and overriding guards; it changes no enablement and replays no notification jobs.
+
+The durable RESUME_AUTHORIZED journal boundary is the acceptance/activation commit decision, written before removing the maintenance marker. COMMITTED is withheld until ordinary runtime restoration finishes. A crash after authorization may boot the accepted code using existing systemd enablement; this can differ from the pre-maintenance active-state snapshot. Recovery must reconcile this explicit boundary rather than claim the old snapshot was restored. Before authorization the persistent marker blocks startup. Actual Debian effective-condition formatting and reboot behavior remain unqualified; the adapter is not available through a production command.
+
+Local source replay of exact stable v1.0.0 confirmed the known ZFS behavior: DEGRADED/0 opens one incident; ONLINE/11 falsely recovers it; repeated11 remains closed. Stable cannot be marked safe for resumed rollback merely because its schema matches. Preparing a corrected compatible rollback target is a separate candidate/artifact requirement. Preserve the failed semantic evidence privately and keep the release rollback gate pending.
+
+Remaining implementation: trusted predecessor artifact/inventory adapter, semantic proof bound to exact installed bytes, final-path-aware venv/console-script staging, service-unit change transactions, production recovery/entrypoint integration and exact supported-version matrix. Current engine tests do not replace these. Follow with independently reviewed disposable Linux lifecycle/reboot qualification and all unchanged release/client/window gates.
