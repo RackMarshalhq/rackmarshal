@@ -63,3 +63,20 @@ class SourceDistributionTests(unittest.TestCase):
                 with self.assertRaises(ValueError): BACKEND.normalize_sdist(path, epoch)
                 self.assertEqual(path.read_bytes(), before)
                 self.assertEqual(list(Path(directory).iterdir()), [path])
+
+    def test_wheel_modes_and_order_are_canonical_without_changing_payloads(self):
+        import zipfile
+        with tempfile.TemporaryDirectory() as directory:
+            paths = [Path(directory) / name for name in ('a.whl', 'b.whl')]
+            for index, path in enumerate(paths):
+                with zipfile.ZipFile(path, 'w') as archive:
+                    names = ['rackmarshal/__init__.py', 'rackmarshal-1.dist-info/METADATA']
+                    for name in names if index == 0 else reversed(names):
+                        entry = zipfile.ZipInfo(name, (2020, 1, 1, 0, 0, 0)); entry.external_attr = (0o100644 if index == 0 else 0o100700) << 16
+                        archive.writestr(entry, b'unchanged payload')
+                BACKEND.normalize_wheel(path)
+            self.assertEqual(paths[0].read_bytes(), paths[1].read_bytes())
+            with zipfile.ZipFile(paths[0]) as archive:
+                for entry in archive.infolist():
+                    self.assertEqual(entry.external_attr >> 16, 0o100644)
+                    self.assertEqual(archive.read(entry), b'unchanged payload')
