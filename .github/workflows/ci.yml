@@ -38,7 +38,11 @@ jobs:
           printf 'STATE_DB=%s/state.db\n' "$tmp" > "$tmp/config"
           RACKMARSHAL_CONFIG="$tmp/config" python -m rackmarshal.db.migrations.migrate --db "$tmp/state.db" --apply --yes
       - name: Publication and smoke gates
-        run: ./scripts/publication-gate.sh
+        run: ./scripts/publication-gate.sh 2>&1 | tee "$RUNNER_TEMP/gate.log"
+      - name: Surface gate failures as annotations
+        if: failure()
+        run: |
+          grep -v -E '^(test_|Ran |OK|-+$|$)|\.\.\. ok$' "$RUNNER_TEMP/gate.log" | tail -25 | while IFS= read -r line; do echo "::error title=gate::${line:0:240}"; done || true
       - name: Installer shell validation
         run: bash -n scripts/install.sh scripts/uninstall.sh scripts/build-installer-bundle.sh scripts/publication-gate.sh
   test-as-root:
