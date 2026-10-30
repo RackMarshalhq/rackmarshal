@@ -70,6 +70,7 @@ def main(argv=None):
     guide.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
     check=s.add_parser("investigator-check",help="Read-only MCP connection and authority check")
     check.add_argument("--url",default="http://127.0.0.1:8000/mcp")
+    nt=s.add_parser("notify-test",help="Send one test notification through the configured channel"); nt.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
     d=s.add_parser("diagnostic"); d.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
     m=s.add_parser("migrate"); m.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf")); m.add_argument("--apply",action="store_true")
     a=p.parse_args(argv)
@@ -80,6 +81,9 @@ def main(argv=None):
     if a.cmd=="investigator-check":
       from rackmarshal.mcp.check import connection_check
       report=connection_check(a.url); print(json.dumps(report,indent=2)); return 0 if report["result"]=="PASS" else 2
+    if a.cmd=="notify-test":
+      from rackmarshal.notifications.testsend import send_test
+      report,code=send_test(a.config); print(json.dumps(report,indent=2)); return code
     if a.cmd=="diagnostic": print(json.dumps(diagnostic(a.config),indent=2)); return 0
     if a.cmd=="migrate":
       from rackmarshal.db.migrations.migrate import main as migration_main

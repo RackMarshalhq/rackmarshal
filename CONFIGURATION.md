@@ -138,3 +138,8 @@ permission mistakes.
 Run `rackmarshal setup-plan --config /etc/rackmarshal/rackmarshal.conf` to see supported domain selection, missing required key names, and credential/certificate/catalog file readiness. Output omits configuration values, paths and credential contents. It writes nothing and performs no network or service actions. Exit 2 indicates invalid/incomplete configuration; exit 0 means these configuration checks pass, including a valid base install with all domains disabled. It is not a resource-health check.
 
 A complete configuration still requires explicit collector setup and recorded observations. The dashboard distinguishes enabled selection, disabled historical records and unavailable selection; none of those labels proves current resource health. Domain support does not imply every resource is monitored. Downloads, general network monitoring and storage capacity are not covered.
+
+
+## Testing notifications (1.3 development)
+
+Run `rackmarshal notify-test --config /etc/rackmarshal/rackmarshal.conf` to send one clearly labelled test message through the same Home Assistant path real incidents use. It creates no incident and writes nothing to the state database. Exit 0 means Home Assistant accepted the message; exit 2 means it did not, and the output says whether credentials or delivery failed. Credentials are never printed.
