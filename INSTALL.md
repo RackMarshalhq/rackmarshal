@@ -95,15 +95,3 @@ with the same user and group as the service. This catches owner-only virtualenv
 paths even when a root installation command succeeds. A failed normalization
 or probe is an installation failure and requires inspection, not automatic
 service startup. Changed installer artifacts require fresh lifecycle validation.
-
-## Private bootstrap candidate 1.2.0rc6.dev3
-
-This candidate supports fresh installations only. Any existing install, configuration, state/log path, service account/group, or RackMarshal unit causes refusal before persistent changes. Upgrade, reinstall and rollback paths are not qualified. Preserve partial installations after failure; do not retry by deleting them.
-
-Provision Python 3.11 or later with the standard-library venv module and systemd/account utilities separately. The installer never runs APT, ensurepip or host pip. It verifies all bundle hashes and ownership, stages copies privately under /run, creates a pip-less venv, and temporarily executes the unmodified pinned PyPA installer 1.1.0 wheel. Only the exact RackMarshal wheel is installed, with complete RECORD validation and no bytecode compilation. Neither pip nor installer is left in the runtime. Network operations are denied during bootstrap.
-
-Obtain the installer archive digest from an independently trusted channel before executing it. The internal manifest detects alteration but cannot authenticate an attacker-replaced archive.
-
-Use --no-start for qualification. Copy the reported staging directory and receipts to durable private evidence before reboot; /run is ephemeral. The cloud executor with UID65534-owned root ancestors is unsupported by the ownership verifier. Do not weaken checks or substitute ownership results. Mac tests and cloud non-root tests do not replace genuine Debian12 root/Python3.11 service-identity and lifecycle qualification.
-
-The fresh-only rule remains in force. A separate restricted private dev2/dev3 lifecycle command is documented in UPGRADE.md; it does not broaden fresh-install behavior or establish release qualification.

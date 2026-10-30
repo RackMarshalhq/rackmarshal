@@ -25,9 +25,43 @@ STATUS_API_LISTEN_PORT=9110
 
 ## Enabling monitoring domains
 
-A base install is intentionally safe and schedules no infrastructure collectors. Set `ENABLED_DOMAINS` to a comma-separated subset of `pve,zfs,backup,ha,hardware,mount`, provide that domain's required site configuration, then rerun the installer. The installer validates configuration before database changes and enables a dedicated systemd timer for each selected domain.
+A base install is intentionally safe and schedules no infrastructure collectors. To turn one on after installation, edit `/etc/rackmarshal/rackmarshal.conf`: add that domain's required site values and list the domain in `ENABLED_DOMAINS` (a comma-separated subset of `pve,zfs,backup,ha,hardware,mount`). Then check the file and start the domain's timer yourself:
+
+```bash
+sudo /opt/rackmarshal/venv/bin/rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf
+sudo systemctl enable --now rackmarshal-domain@zfs.timer     # use the domain you are enabling
+```
+
+The installer cannot be run again for this: it refuses to run over an existing installation. **For `pve`, `zfs`, `backup` and `ha`, record a baseline first** (next section), or every resource they find is reported as new and opens an incident.
 
 Run `rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf` before enabling a domain. Use `rackmarshal domains` to list supported domain identifiers and `rackmarshal diagnostic` for a non-secret operational summary.
+
+## Baselines: telling RackMarshal what healthy looks like
+
+RackMarshal compares what it sees with a **baseline**, a stored record of what you decided is normal. A resource with no baseline is reported as `NEW` and opens an incident. The baselines live in the database, so every installation starts with none.
+
+Two operator tools in the installer bundle record them. Both are insert-only: they never change an existing baseline. Each prints a plan and writes nothing until you add `--apply`, and `--apply` needs root and first writes a backup of the database.
+
+1. Record one observation **without** running the full cycle, so nothing is compared or alerted yet. For ZFS, as the service account:
+
+   ```bash
+   sudo -u rackmarshal env RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf RACKMARSHAL_STATE_DB=/var/lib/rackmarshal/state.db \
+     sh -c '/opt/rackmarshal/venv/bin/python -m rackmarshal.domains.zfs.collector | /opt/rackmarshal/venv/bin/python -m rackmarshal.domains.zfs.observation'
+   ```
+
+   It prints an `observation_id`. The observation must be less than 15 minutes old when you adopt it.
+
+2. Look at what that observation contains, then adopt the pools you have checked are healthy. From the extracted bundle:
+
+   ```bash
+   sudo mkdir -m 700 /root/rackmarshal-baseline-backups
+   sudo /opt/rackmarshal/venv/bin/python -I -B scripts/adopt-zfs-baseline.py --db /var/lib/rackmarshal/state.db \
+     --observation-id 1 --pool tank --approval-note "I checked zpool status -v on 2026-11-01" \
+     --backup-dir /root/rackmarshal-baseline-backups          # prints the plan only
+   # add --apply once the plan is what you expect
+   ```
+
+The ZFS tool refuses a pool that is not `ONLINE`, that does not report a permanent error count of exactly zero, or whose devices are not `ONLINE`. Check `zpool status -v` yourself first: the baseline says "this is normal", and a pool that already has damage should be fixed, not recorded as normal. PVE guests use `scripts/adopt-pve-baseline.py` (see [PVE baseline adoption](docs/architecture/PVE_BASELINE_ADOPTION.md)). **Tools for backup and Home Assistant baselines are not available yet in this release candidate**; do not enable those two domains until they are.
 
 ## Optional path overrides
 
