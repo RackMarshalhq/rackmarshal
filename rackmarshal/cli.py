@@ -204,7 +204,13 @@ def _cmd_investigator_check(args):
 
 
 def _cmd_diagnostic(args):
-    _print_json(diagnostic(args.config))
+    try:
+        report = diagnostic(args.config)
+    except ConfigError as exc:
+        # Same shape and exit code as validate-config, instead of a traceback.
+        _print_json({"status": "FAIL", "errors": [str(exc)]})
+        return 2
+    _print_json(report)
     return 0
 
 

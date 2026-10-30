@@ -193,9 +193,9 @@
    "<TMP>/does-not-exist.conf"
   ],
   "case": "missing_file",
-  "code": "EXC ConfigError",
+  "code": 2,
   "stderr": "",
-  "stdout": ""
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"unable to read config <TMP>/does-not-exist.conf: [Errno 2] No such file or directory: '<TMP>/does-not-exist.conf'\"\n  ]\n}\n"
  },
  {
   "argv": [
@@ -226,9 +226,9 @@
    "<TMP>/no_state_db.conf"
   ],
   "case": "no_state_db",
-  "code": "EXC ConfigError",
+  "code": 2,
   "stderr": "",
-  "stdout": ""
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"required configuration key missing: STATE_DB\"\n  ]\n}\n"
  },
  {
   "argv": [
@@ -259,9 +259,9 @@
    "<TMP>/several_problems_at_once.conf"
   ],
   "case": "several_problems_at_once",
-  "code": "EXC ConfigError",
+  "code": 2,
   "stderr": "",
-  "stdout": ""
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"required configuration key missing: STATE_DB\"\n  ]\n}\n"
  },
  {
   "argv": [
