@@ -36,4 +36,4 @@ Purge additionally removes:
 
 ## Reinstallation after standard uninstall
 
-The private dev2/dev3 fresh installer refuses preserved installation paths. Do not run it as an upgrade or delete preserved state to bypass this guard. Reusing a partially removed installation requires an explicitly reviewed recovery procedure; the lifecycle CLI requires its recognized complete installation and retained transaction state. See UPGRADE.md.
+The 1.3 fresh installer refuses to run when any RackMarshal installation path, service account or unit is still present, including after a standard uninstall that preserved state. Do not run it as an upgrade or delete preserved state to get past that check. To start over, use `--purge` (after backing up anything you want to keep) or a fresh container or VM. See [UPGRADE.md](UPGRADE.md).

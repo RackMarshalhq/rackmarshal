@@ -6,4 +6,4 @@ Opening changes are not substituted when the latest abnormal changes are missing
 
 OPEN with a recovery timestamp/entry, recovery preceding abnormal/opening time, or disagreement between incident and timeline timestamps is flagged for review. The page withholds a consistent recovery interpretation when records conflict. Missing timestamps and timezone information are explicit gaps; ordering is compared only for valid timezone-aware times. Missing expected/actual change values are labeled Not recorded.
 
-This is development version 1.2.0.dev2; no stable promotion or production deployment is implied.
+This describes the behaviour in the 1.3 release candidates; no stable promotion or production deployment is implied.
