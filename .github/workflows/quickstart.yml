@@ -49,5 +49,5 @@ jobs:
           tar -xzf dist/rackmarshal-installer-*.tar.gz -C "$work"
           sudo "$work"/rackmarshal-installer-*/scripts/uninstall.sh
           test ! -e /opt/rackmarshal
-          test -f /etc/rackmarshal/rackmarshal.conf
-          test -f /var/lib/rackmarshal/state.db
+          sudo test -f /etc/rackmarshal/rackmarshal.conf
+          sudo test -f /var/lib/rackmarshal/state.db
