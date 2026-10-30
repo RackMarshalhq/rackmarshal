@@ -4,7 +4,7 @@
 
 ## Moving from 1.0.0 or 1.1.0 RC1
 
-Install 1.3 on a new machine or container beside the old one, carry the configuration and credentials over, and start with a new history. Your old installation keeps its own history; leave it in place until you are satisfied with the new one. A step-by-step move guide will be published before the 1.3.0 final release.
+Install 1.3 on a new machine or container, set up the configuration and credentials again, and record baselines (see [CONFIGURATION.md](CONFIGURATION.md)). A new installation starts with a new history. Leave the old installation in place and running until you are satisfied with the new one; the 1.3 installer will not run on a machine that has RackMarshal on it.
 
 ## Why there is no in-place upgrade
 
