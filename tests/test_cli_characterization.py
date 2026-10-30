@@ -87,8 +87,15 @@ def run(argv, tmp):
     return {"argv": [norm(a) for a in argv], "code": code, "stdout": norm(out.getvalue()), "stderr": norm(err.getvalue())}
 
 
+def _no_server(*args, **kwargs):
+    """Stand-in for the status API probe, so results do not depend on what runs on this machine."""
+    raise ConnectionRefusedError(111, "Connection refused")
+
+
 def collect():
-    with tempfile.TemporaryDirectory() as d:
+    from unittest import mock
+
+    with mock.patch.object(cli.http, "urlopen", _no_server), tempfile.TemporaryDirectory() as d:
         tmp = Path(d).resolve()
         results = []
         old_port = os.environ.pop("RACKMARSHAL_CONFIG", None)

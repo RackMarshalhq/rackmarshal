@@ -30,7 +30,7 @@
   "case": "all_domains_bare",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/all_domains_bare.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"pve\",\n    \"zfs\",\n    \"backup\",\n    \"ha\",\n    \"hardware\",\n    \"mount\"\n  ],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/all_domains_bare.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"pve\",\n    \"zfs\",\n    \"backup\",\n    \"ha\",\n    \"hardware\",\n    \"mount\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
@@ -63,7 +63,7 @@
   "case": "base_only",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/base_only.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/base_only.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
@@ -96,7 +96,7 @@
   "case": "blank_domains",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/blank_domains.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/blank_domains.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
@@ -129,7 +129,7 @@
   "case": "ha_missing_credential",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/ha_missing_credential.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"ha\"\n  ],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/ha_missing_credential.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"ha\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
@@ -162,7 +162,7 @@
   "case": "hardware_serials_incomplete",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/hardware_serials_incomplete.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"hardware\"\n  ],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/hardware_serials_incomplete.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"hardware\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
@@ -294,7 +294,7 @@
   "case": "unknown_domain",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/unknown_domain.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"pve\",\n    \"foo\",\n    \"bar\"\n  ],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/unknown_domain.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"pve\",\n    \"foo\",\n    \"bar\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
@@ -327,7 +327,7 @@
   "case": "zfs_key_too_broad",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/zfs_key_too_broad.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"zfs\"\n  ],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/zfs_key_too_broad.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"zfs\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
@@ -360,7 +360,7 @@
   "case": "zfs_valid",
   "code": 0,
   "stderr": "",
-  "stdout": "{\n  \"config\": \"<TMP>/zfs_valid.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"zfs\"\n  ],\n  \"health\": {\n    \"error\": \"URLError: <urlopen error [Errno 111] Connection refused>\"\n  }\n}\n"
+  "stdout": "{\n  \"config\": \"<TMP>/zfs_valid.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"zfs\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
  },
  {
   "argv": [
