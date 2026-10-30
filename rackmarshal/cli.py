@@ -1,91 +1,267 @@
 """RackMarshal administrative CLI."""
-import argparse, importlib, importlib.util, json, os, stat, sys, tomllib
-from rackmarshal import http
+import argparse
+import importlib
+import importlib.util
+import json
+import os
+import stat
+import sys
+import tomllib
 from pathlib import Path
-from rackmarshal import __version__
+
+from rackmarshal import __version__, http
 from rackmarshal.core.config import ConfigError, load_config, require
 
-DOMAINS=("pve","zfs","backup","ha","hardware","mount")
+DOMAINS = ("pve", "zfs", "backup", "ha", "hardware", "mount")
 ROOT = Path(__file__).resolve().parent
+DEFAULT_CONFIG = "/etc/rackmarshal/rackmarshal.conf"
+DEFAULT_INVESTIGATOR_URL = "http://127.0.0.1:8000/mcp"
 
-DOMAIN_REQUIREMENTS={
-      "pve":("PVE_API_ENV","PVE_CA_FILE"),
-      "backup":("PVE_API_ENV","PVE_CA_FILE","PBS_API_ENV","PBS_CA_FILE","PVE_NODE"),
-      "ha":("HA_CREDENTIAL_FILE",),
-      "zfs":("SITE_NAME","ZFS_SSH_HOST","ZFS_SSH_USER","ZFS_SSH_KEY","ZFS_KNOWN_HOSTS"),
-      "hardware":("SITE_NAME","HARDWARE_SSH_HOST","HARDWARE_SSH_USER","HARDWARE_SSH_KEY","HARDWARE_KNOWN_HOSTS","HARDWARE_NVME_SERIALS","HARDWARE_HOT_THRESHOLD_C","HARDWARE_HOT_REQUIRED_SAMPLES","HARDWARE_URGENT_THRESHOLD_C","HARDWARE_RECOVERY_THRESHOLD_C","HARDWARE_RECOVERY_REQUIRED_SAMPLES"),
-      "mount":("PVE_API_ENV","PVE_CA_FILE","PVE_NODE","MOUNT_CATALOG_FILE","MOUNT_SSH_HOST","MOUNT_SSH_USER","MOUNT_SSH_KEY","MOUNT_KNOWN_HOSTS")}
+# Site settings each domain needs before it can collect anything.
+DOMAIN_REQUIREMENTS = {
+    "pve": ("PVE_API_ENV", "PVE_CA_FILE"),
+    "backup": ("PVE_API_ENV", "PVE_CA_FILE", "PBS_API_ENV", "PBS_CA_FILE", "PVE_NODE"),
+    "ha": ("HA_CREDENTIAL_FILE",),
+    "zfs": ("SITE_NAME", "ZFS_SSH_HOST", "ZFS_SSH_USER", "ZFS_SSH_KEY", "ZFS_KNOWN_HOSTS"),
+    "hardware": (
+        "SITE_NAME",
+        "HARDWARE_SSH_HOST",
+        "HARDWARE_SSH_USER",
+        "HARDWARE_SSH_KEY",
+        "HARDWARE_KNOWN_HOSTS",
+        "HARDWARE_NVME_SERIALS",
+        "HARDWARE_HOT_THRESHOLD_C",
+        "HARDWARE_HOT_REQUIRED_SAMPLES",
+        "HARDWARE_URGENT_THRESHOLD_C",
+        "HARDWARE_RECOVERY_THRESHOLD_C",
+        "HARDWARE_RECOVERY_REQUIRED_SAMPLES",
+    ),
+    "mount": (
+        "PVE_API_ENV",
+        "PVE_CA_FILE",
+        "PVE_NODE",
+        "MOUNT_CATALOG_FILE",
+        "MOUNT_SSH_HOST",
+        "MOUNT_SSH_USER",
+        "MOUNT_SSH_KEY",
+        "MOUNT_KNOWN_HOSTS",
+    ),
+}
 
-def _enabled(c):
-    raw=c.get("ENABLED_DOMAINS", "").strip()
-    return [] if not raw else [x.strip().lower() for x in raw.split(",") if x.strip()]
+# Settings that name credential, key or certificate files. If the file exists,
+# only its owner may have any access to it.
+CREDENTIAL_FILE_KEYS = (
+    "PVE_API_ENV",
+    "PBS_API_ENV",
+    "HA_CREDENTIAL_FILE",
+    "ZFS_SSH_KEY",
+    "HARDWARE_SSH_KEY",
+    "MOUNT_SSH_KEY",
+    "PVE_CA_FILE",
+    "PBS_CA_FILE",
+    "ZFS_KNOWN_HOSTS",
+    "HARDWARE_KNOWN_HOSTS",
+    "MOUNT_KNOWN_HOSTS",
+    "MOUNT_CATALOG_FILE",
+)
 
-def validate(path):
-    errors=[]
-    try: c=load_config(path)
-    except ConfigError as e: return [str(e)]
-    try: require(c,"STATE_DB")
-    except ConfigError as e: errors.append(str(e))
-    enabled=_enabled(c)
-    bad=sorted(set(enabled)-set(DOMAINS))
-    if bad: errors.append("unknown enabled domains: "+", ".join(bad))
 
-    for d in enabled:
-      for k in DOMAIN_REQUIREMENTS.get(d,()):
-        if not c.get(k,"").strip(): errors.append(f"{d}: missing {k}")
-    for k in ("PVE_API_ENV","PBS_API_ENV","HA_CREDENTIAL_FILE","ZFS_SSH_KEY","HARDWARE_SSH_KEY","MOUNT_SSH_KEY","PVE_CA_FILE","PBS_CA_FILE","ZFS_KNOWN_HOSTS","HARDWARE_KNOWN_HOSTS","MOUNT_KNOWN_HOSTS","MOUNT_CATALOG_FILE"):
-      v=c.get(k,"").strip()
-      if v and Path(v).exists() and (Path(v).stat().st_mode & (stat.S_IRWXG|stat.S_IRWXO)):
-        errors.append(f"{k}: credential/key file permissions are too broad")
-    if "hardware" in enabled and c.get("HARDWARE_NVME_SERIALS", "").strip():
-      for serial in [x.strip() for x in c["HARDWARE_NVME_SERIALS"].split(",") if x.strip()]:
-        for suffix in ("MODEL","ROLE"):
-          key=f"HARDWARE_NVME_{serial}_{suffix}"
-          if not c.get(key, "").strip(): errors.append(f"hardware: missing {key}")
-    for d in DOMAINS:
-      if importlib.util.find_spec(f"rackmarshal.domains.{d}.cycle") is None: errors.append(f"{d}: cycle module unavailable")
-      manifest = ROOT / "domains" / d / "plugin.toml"
-      try:
-        data = tomllib.loads(manifest.read_text(encoding="utf-8"))
-        if data.get("id", "").lower() != d: errors.append(f"{d}: plugin manifest id mismatch")
-        if int(data.get("schema_version", 0)) != 1: errors.append(f"{d}: unsupported plugin manifest schema")
-        for name, module in data.get("entrypoints", {}).items():
-          if importlib.util.find_spec(module) is None: errors.append(f"{d}: entrypoint {name} unavailable: {module}")
-      except Exception as e: errors.append(f"{d}: invalid plugin manifest: {e}")
+def _enabled(config):
+    """Domains listed in ENABLED_DOMAINS, lower-cased, in the order given."""
+    raw = config.get("ENABLED_DOMAINS", "").strip()
+    if not raw:
+        return []
+    return [name.strip().lower() for name in raw.split(",") if name.strip()]
+
+
+def _missing_domain_keys(config, enabled):
+    errors = []
+    for domain in enabled:
+        for key in DOMAIN_REQUIREMENTS.get(domain, ()):
+            if not config.get(key, "").strip():
+                errors.append(f"{domain}: missing {key}")
     return errors
 
-def diagnostic(path):
-    c=load_config(path); db=Path(require(c,"STATE_DB")); out={"config":str(path),"state_db":str(db),"state_db_exists":db.exists(),"enabled_domains":_enabled(c)}
-    url=f"http://{c.get('STATUS_API_LISTEN_ADDRESS','127.0.0.1')}:{c.get('STATUS_API_LISTEN_PORT','9110')}/health"
+
+def _broad_permission_errors(config):
+    errors = []
+    too_open = stat.S_IRWXG | stat.S_IRWXO
+    for key in CREDENTIAL_FILE_KEYS:
+        value = config.get(key, "").strip()
+        if value and Path(value).exists() and (Path(value).stat().st_mode & too_open):
+            errors.append(f"{key}: credential/key file permissions are too broad")
+    return errors
+
+
+def _hardware_inventory_errors(config, enabled):
+    """Every listed NVMe serial needs a MODEL and a ROLE setting."""
+    serials_raw = config.get("HARDWARE_NVME_SERIALS", "").strip()
+    if "hardware" not in enabled or not serials_raw:
+        return []
+    errors = []
+    for serial in [item.strip() for item in config["HARDWARE_NVME_SERIALS"].split(",") if item.strip()]:
+        for suffix in ("MODEL", "ROLE"):
+            key = f"HARDWARE_NVME_{serial}_{suffix}"
+            if not config.get(key, "").strip():
+                errors.append(f"hardware: missing {key}")
+    return errors
+
+
+def _plugin_errors():
+    """Every supported domain must ship a cycle module and a valid plugin manifest."""
+    errors = []
+    for domain in DOMAINS:
+        if importlib.util.find_spec(f"rackmarshal.domains.{domain}.cycle") is None:
+            errors.append(f"{domain}: cycle module unavailable")
+        manifest = ROOT / "domains" / domain / "plugin.toml"
+        try:
+            data = tomllib.loads(manifest.read_text(encoding="utf-8"))
+            if data.get("id", "").lower() != domain:
+                errors.append(f"{domain}: plugin manifest id mismatch")
+            if int(data.get("schema_version", 0)) != 1:
+                errors.append(f"{domain}: unsupported plugin manifest schema")
+            for name, module in data.get("entrypoints", {}).items():
+                if importlib.util.find_spec(module) is None:
+                    errors.append(f"{domain}: entrypoint {name} unavailable: {module}")
+        except Exception as exc:
+            errors.append(f"{domain}: invalid plugin manifest: {exc}")
+    return errors
+
+
+def validate(path):
+    """Return a list of problems with the configuration at path (empty means valid)."""
     try:
-      with http.urlopen(url,timeout=2) as r: out["health"]={"status":r.status,"body":json.loads(r.read())}
-    except Exception as e: out["health"]={"error":f"{type(e).__name__}: {e}"}
-    return out
+        config = load_config(path)
+    except ConfigError as exc:
+        return [str(exc)]
+    errors = []
+    try:
+        require(config, "STATE_DB")
+    except ConfigError as exc:
+        errors.append(str(exc))
+    enabled = _enabled(config)
+    unknown = sorted(set(enabled) - set(DOMAINS))
+    if unknown:
+        errors.append("unknown enabled domains: " + ", ".join(unknown))
+    errors += _missing_domain_keys(config, enabled)
+    errors += _broad_permission_errors(config)
+    errors += _hardware_inventory_errors(config, enabled)
+    errors += _plugin_errors()
+    return errors
+
+
+def diagnostic(path):
+    """Non-secret summary of the installation, including a local health probe."""
+    config = load_config(path)
+    database = Path(require(config, "STATE_DB"))
+    report = {
+        "config": str(path),
+        "state_db": str(database),
+        "state_db_exists": database.exists(),
+        "enabled_domains": _enabled(config),
+    }
+    host = config.get("STATUS_API_LISTEN_ADDRESS", "127.0.0.1")
+    port = config.get("STATUS_API_LISTEN_PORT", "9110")
+    try:
+        with http.urlopen(f"http://{host}:{port}/health", timeout=2) as response:
+            report["health"] = {"status": response.status, "body": json.loads(response.read())}
+    except Exception as exc:
+        report["health"] = {"error": f"{type(exc).__name__}: {exc}"}
+    return report
+
+
+def _print_json(value):
+    print(json.dumps(value, indent=2))
+
+
+# One function per subcommand. Each returns the process exit code.
+
+def _cmd_domains(args):
+    print("\n".join(DOMAINS))
+    return 0
+
+
+def _cmd_validate_config(args):
+    errors = validate(args.config)
+    _print_json({"status": "PASS" if not errors else "FAIL", "errors": errors})
+    return 0 if not errors else 2
+
+
+def _cmd_setup_plan(args):
+    from rackmarshal.core.setup import setup_plan
+
+    report = setup_plan(args.config)
+    _print_json(report)
+    return 2 if report["configuration_status"] == "INVALID" else 0
+
+
+def _cmd_investigator_check(args):
+    from rackmarshal.mcp.check import connection_check
+
+    report = connection_check(args.url)
+    _print_json(report)
+    return 0 if report["result"] == "PASS" else 2
+
+
+def _cmd_diagnostic(args):
+    _print_json(diagnostic(args.config))
+    return 0
+
+
+def _cmd_migrate(args):
+    from rackmarshal.db.migrations.migrate import main as migration_main
+
+    # The migration tool reads its own argv and the config path from the environment.
+    migration_argv = ["rackmarshal-migrate", "--apply" if args.apply else "--plan"]
+    if args.apply:
+        migration_argv.append("--yes")
+    saved_argv = sys.argv
+    sys.argv = migration_argv
+    os.environ["RACKMARSHAL_CONFIG"] = args.config
+    try:
+        return migration_main() or 0
+    finally:
+        sys.argv = saved_argv
+
+
+COMMANDS = {
+    "validate-config": _cmd_validate_config,
+    "domains": _cmd_domains,
+    "setup-plan": _cmd_setup_plan,
+    "investigator-check": _cmd_investigator_check,
+    "diagnostic": _cmd_diagnostic,
+    "migrate": _cmd_migrate,
+}
+
+
+def _build_parser():
+    default_config = os.getenv("RACKMARSHAL_CONFIG", DEFAULT_CONFIG)
+
+    def add_config_option(subparser):
+        subparser.add_argument("--config", default=default_config)
+
+    parser = argparse.ArgumentParser(prog="rackmarshal")
+    parser.add_argument("--version", action="version", version=__version__)
+    commands = parser.add_subparsers(dest="cmd", required=True)
+
+    add_config_option(commands.add_parser("validate-config"))
+    commands.add_parser("domains")
+    add_config_option(
+        commands.add_parser("setup-plan", help="Read-only setup guidance; does not enable collection")
+    )
+    check = commands.add_parser("investigator-check", help="Read-only MCP connection and authority check")
+    check.add_argument("--url", default=DEFAULT_INVESTIGATOR_URL)
+    add_config_option(commands.add_parser("diagnostic"))
+    migrate = commands.add_parser("migrate")
+    add_config_option(migrate)
+    migrate.add_argument("--apply", action="store_true")
+    return parser
+
 
 def main(argv=None):
-    p=argparse.ArgumentParser(prog="rackmarshal"); p.add_argument("--version",action="version",version=__version__)
-    s=p.add_subparsers(dest="cmd",required=True); v=s.add_parser("validate-config"); v.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
-    s.add_parser("domains")
-    guide=s.add_parser("setup-plan",help="Read-only setup guidance; does not enable collection")
-    guide.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
-    check=s.add_parser("investigator-check",help="Read-only MCP connection and authority check")
-    check.add_argument("--url",default="http://127.0.0.1:8000/mcp")
-    d=s.add_parser("diagnostic"); d.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf"))
-    m=s.add_parser("migrate"); m.add_argument("--config",default=os.getenv("RACKMARSHAL_CONFIG","/etc/rackmarshal/rackmarshal.conf")); m.add_argument("--apply",action="store_true")
-    a=p.parse_args(argv)
-    if a.cmd=="domains": print("\n".join(DOMAINS)); return 0
-    if a.cmd=="setup-plan":
-      from rackmarshal.core.setup import setup_plan
-      report=setup_plan(a.config); print(json.dumps(report,indent=2)); return 2 if report["configuration_status"]=="INVALID" else 0
-    if a.cmd=="investigator-check":
-      from rackmarshal.mcp.check import connection_check
-      report=connection_check(a.url); print(json.dumps(report,indent=2)); return 0 if report["result"]=="PASS" else 2
-    if a.cmd=="diagnostic": print(json.dumps(diagnostic(a.config),indent=2)); return 0
-    if a.cmd=="migrate":
-      from rackmarshal.db.migrations.migrate import main as migration_main
-      old=sys.argv; sys.argv=["rackmarshal-migrate", "--apply" if a.apply else "--plan"] + (["--yes"] if a.apply else [])
-      os.environ["RACKMARSHAL_CONFIG"]=a.config
-      try: return migration_main() or 0
-      finally: sys.argv=old
-    errs=validate(a.config); print(json.dumps({"status":"PASS" if not errs else "FAIL","errors":errs},indent=2)); return 0 if not errs else 2
-if __name__=="__main__": raise SystemExit(main())
+    args = _build_parser().parse_args(argv)
+    return COMMANDS[args.cmd](args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
