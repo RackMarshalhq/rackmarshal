@@ -1,0 +1,53 @@
+name: Quickstart
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docs match the code
+        run: python3 scripts/check-docs.py
+  fresh-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install build
+      - run: python -m build
+      - run: ./scripts/build-installer-bundle.sh
+      - name: Install exactly as INSTALL.md says
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          tar -xzf dist/rackmarshal-installer-*.tar.gz -C "$work"
+          cd "$work"/rackmarshal-installer-*
+          sudo sh -c 'umask 022; ./scripts/install.sh --wheel ./rackmarshal-*-py3-none-any.whl'
+      - name: Base install is healthy and shows no incidents
+        run: |
+          set -euo pipefail
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9110/health)" = 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9110/)" = 200
+          curl -s http://127.0.0.1:9110/v1/incidents | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["data"]==[], d'
+      - name: Commands the quickstart tells people to run
+        run: |
+          set -euo pipefail
+          cfg=/etc/rackmarshal/rackmarshal.conf
+          sudo /opt/rackmarshal/venv/bin/rackmarshal validate-config --config "$cfg"
+          sudo /opt/rackmarshal/venv/bin/rackmarshal setup-plan --config "$cfg"
+          /opt/rackmarshal/venv/bin/rackmarshal domains
+          systemctl is-active rackmarshal-status.service rackmarshal-notify.timer
+      - name: Standard uninstall keeps config and state
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          tar -xzf dist/rackmarshal-installer-*.tar.gz -C "$work"
+          sudo "$work"/rackmarshal-installer-*/scripts/uninstall.sh
+          test ! -e /opt/rackmarshal
+          test -f /etc/rackmarshal/rackmarshal.conf
+          test -f /var/lib/rackmarshal/state.db

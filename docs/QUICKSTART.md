@@ -1,6 +1,6 @@
 # Quickstart: watch one thing
 
-This takes a fresh base install ([INSTALL.md](INSTALL.md)) to a first real observation. Pick **one** domain. ZFS is the simplest to try if you have a pool; Home Assistant is the simplest if you have a long-lived access token.
+This takes a fresh base install ([INSTALL.md](../INSTALL.md)) to a first real observation. Pick **one** domain. ZFS is the simplest to try if you have a pool; Home Assistant is the simplest if you have a long-lived access token.
 
 Before you start, check the base install:
 
@@ -16,7 +16,7 @@ Open `http://127.0.0.1:9110/` (from the same machine, or through an SSH tunnel).
 - Edit `/etc/rackmarshal/rackmarshal.conf` as root.
 - Check your work with `sudo rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf` and `sudo rackmarshal setup-plan --config /etc/rackmarshal/rackmarshal.conf`. `setup-plan` shows missing key *names* only, never values, and changes nothing.
 - Credentials live in separate files under `/etc/rackmarshal`, readable by the `rackmarshal` account and nobody else. Never commit them.
-- After setting `ENABLED_DOMAINS`, rerun the installer (see [CONFIGURATION.md](CONFIGURATION.md)). It enables one timer per domain.
+- After setting `ENABLED_DOMAINS`, rerun the installer (see [CONFIGURATION.md](../CONFIGURATION.md)). It enables one timer per domain.
 
 ## Option A: ZFS
 
@@ -61,7 +61,7 @@ RackMarshal connects over SSH and runs `zpool status -j -p`. The safe setup is a
 3. Set `ENABLED_DOMAINS=ha` in `rackmarshal.conf`, validate, and rerun the installer.
 4. Run one cycle: `sudo systemctl start rackmarshal-domain@ha.service`.
 
-Other domains (Proxmox, PBS, hardware, mounts) need more keys. [CONFIGURATION.md](CONFIGURATION.md) lists them, and `setup-plan` tells you which ones are still missing.
+Other domains (Proxmox, PBS, hardware, mounts) need more keys. [CONFIGURATION.md](../CONFIGURATION.md) lists them, and `setup-plan` tells you which ones are still missing.
 
 ## Troubleshooting
 
@@ -74,4 +74,4 @@ Other domains (Proxmox, PBS, hardware, mounts) need more keys. [CONFIGURATION.md
 | ZFS cycle fails with an SSH error | Test the key by hand: `sudo -u rackmarshal ssh -i /etc/rackmarshal/ssh/zfs_ed25519 -o UserKnownHostsFile=/etc/rackmarshal/ssh/known_hosts user@host`. It should print `zpool` JSON and exit. |
 | An incident appears on the first run | That may be real. Read its evidence on the status page. If your system is healthy, please report it with the Bug report template. |
 
-Stuck anywhere? That is useful to us. See [TESTING.md](TESTING.md).
+Stuck anywhere? That is useful to us. See [TESTING.md](../TESTING.md).
