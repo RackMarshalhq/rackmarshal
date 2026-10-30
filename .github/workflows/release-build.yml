@@ -1,6 +1,19 @@
 name: Release Build
+# Builds the release assets and checksums.
+#  - Manual run or a pull request touching the release files: build only (dry run).
+#  - Pushing a tag like v1.2.0-rc1: also creates a DRAFT GitHub release with the
+#    assets attached. Nothing is public until a maintainer reviews and publishes it.
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/release-build.yml
+      - scripts/build-installer-bundle.sh
+      - scripts/build-investigator-plugin.py
+      - pyproject.toml
+  push:
+    tags:
+      - 'v*'
 permissions:
   contents: read
 jobs:
@@ -11,13 +24,55 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Tag must match the package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          version="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "${tag//-/}" != "$version" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match pyproject version $version" >&2
+            exit 1
+          fi
       - run: python -m pip install build
       - run: python -m build
       - run: ./scripts/build-installer-bundle.sh
-      - run: sha256sum dist/* | tee SHA256SUMS
+      - name: Build local Investigator package
+        run: |
+          label="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"].replace("rc","-rc"))')"
+          python3 scripts/build-investigator-plugin.py --surface local --output "dist/rackmarshal-investigator-local-${label}.zip"
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum -- * | tee SHA256SUMS
+          sha256sum -c SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: rackmarshal-release-candidate
-          path: |
-            dist/*
-            SHA256SUMS
+          path: dist/*
+  draft-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: rackmarshal-release-candidate
+          path: dist
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          flags=(--draft --verify-tag --title "$GITHUB_REF_NAME")
+          case "$GITHUB_REF_NAME" in *rc*|*dev*|*a[0-9]*|*b[0-9]*) flags+=(--prerelease) ;; esac
+          notes="docs/releases/${GITHUB_REF_NAME}.md"
+          if [ -f "$notes" ]; then
+            flags+=(--notes-file "$notes")
+          else
+            flags+=(--notes "Draft. Replace with release notes before publishing. Verify downloads with: sha256sum -c SHA256SUMS")
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* "${flags[@]}"
