@@ -1,0 +1,409 @@
+[
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/all_domains_bare.conf"
+  ],
+  "case": "all_domains_bare",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"pve: missing PVE_API_ENV\",\n    \"pve: missing PVE_CA_FILE\",\n    \"zfs: missing SITE_NAME\",\n    \"zfs: missing ZFS_SSH_HOST\",\n    \"zfs: missing ZFS_SSH_USER\",\n    \"zfs: missing ZFS_SSH_KEY\",\n    \"zfs: missing ZFS_KNOWN_HOSTS\",\n    \"backup: missing PVE_API_ENV\",\n    \"backup: missing PVE_CA_FILE\",\n    \"backup: missing PBS_API_ENV\",\n    \"backup: missing PBS_CA_FILE\",\n    \"backup: missing PVE_NODE\",\n    \"ha: missing HA_CREDENTIAL_FILE\",\n    \"hardware: missing SITE_NAME\",\n    \"hardware: missing HARDWARE_SSH_HOST\",\n    \"hardware: missing HARDWARE_SSH_USER\",\n    \"hardware: missing HARDWARE_SSH_KEY\",\n    \"hardware: missing HARDWARE_KNOWN_HOSTS\",\n    \"hardware: missing HARDWARE_NVME_SERIALS\",\n    \"hardware: missing HARDWARE_HOT_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_HOT_REQUIRED_SAMPLES\",\n    \"hardware: missing HARDWARE_URGENT_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_RECOVERY_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_RECOVERY_REQUIRED_SAMPLES\",\n    \"mount: missing PVE_API_ENV\",\n    \"mount: missing PVE_CA_FILE\",\n    \"mount: missing PVE_NODE\",\n    \"mount: missing MOUNT_CATALOG_FILE\",\n    \"mount: missing MOUNT_SSH_HOST\",\n    \"mount: missing MOUNT_SSH_USER\",\n    \"mount: missing MOUNT_SSH_KEY\",\n    \"mount: missing MOUNT_KNOWN_HOSTS\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/all_domains_bare.conf"
+  ],
+  "case": "all_domains_bare",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"PVE_API_ENV\",\n        \"PVE_CA_FILE\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"SITE_NAME\",\n        \"ZFS_SSH_HOST\",\n        \"ZFS_SSH_USER\",\n        \"ZFS_SSH_KEY\",\n        \"ZFS_KNOWN_HOSTS\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"PVE_API_ENV\",\n        \"PVE_CA_FILE\",\n        \"PBS_API_ENV\",\n        \"PBS_CA_FILE\",\n        \"PVE_NODE\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"HA_CREDENTIAL_FILE\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"SITE_NAME\",\n        \"HARDWARE_SSH_HOST\",\n        \"HARDWARE_SSH_USER\",\n        \"HARDWARE_SSH_KEY\",\n        \"HARDWARE_KNOWN_HOSTS\",\n        \"HARDWARE_NVME_SERIALS\",\n        \"HARDWARE_HOT_THRESHOLD_C\",\n        \"HARDWARE_HOT_REQUIRED_SAMPLES\",\n        \"HARDWARE_URGENT_THRESHOLD_C\",\n        \"HARDWARE_RECOVERY_THRESHOLD_C\",\n        \"HARDWARE_RECOVERY_REQUIRED_SAMPLES\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"PVE_API_ENV\",\n        \"PVE_CA_FILE\",\n        \"PVE_NODE\",\n        \"MOUNT_CATALOG_FILE\",\n        \"MOUNT_SSH_HOST\",\n        \"MOUNT_SSH_USER\",\n        \"MOUNT_SSH_KEY\",\n        \"MOUNT_KNOWN_HOSTS\"\n      ],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/all_domains_bare.conf"
+  ],
+  "case": "all_domains_bare",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/all_domains_bare.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"pve\",\n    \"zfs\",\n    \"backup\",\n    \"ha\",\n    \"hardware\",\n    \"mount\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/base_only.conf"
+  ],
+  "case": "base_only",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"PASS\",\n  \"errors\": []\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/base_only.conf"
+  ],
+  "case": "base_only",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"VALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"Choose one supported domain and supply its configuration before enabling collection.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/base_only.conf"
+  ],
+  "case": "base_only",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/base_only.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/blank_domains.conf"
+  ],
+  "case": "blank_domains",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"PASS\",\n  \"errors\": []\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/blank_domains.conf"
+  ],
+  "case": "blank_domains",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"VALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"Choose one supported domain and supply its configuration before enabling collection.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/blank_domains.conf"
+  ],
+  "case": "blank_domains",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/blank_domains.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/ha_missing_credential.conf"
+  ],
+  "case": "ha_missing_credential",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"ha: missing HA_CREDENTIAL_FILE\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/ha_missing_credential.conf"
+  ],
+  "case": "ha_missing_credential",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"HA_CREDENTIAL_FILE\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/ha_missing_credential.conf"
+  ],
+  "case": "ha_missing_credential",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/ha_missing_credential.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"ha\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/hardware_serials_incomplete.conf"
+  ],
+  "case": "hardware_serials_incomplete",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"hardware: missing HARDWARE_NVME_AAA_ROLE\",\n    \"hardware: missing HARDWARE_NVME_BBB_MODEL\",\n    \"hardware: missing HARDWARE_NVME_BBB_ROLE\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/hardware_serials_incomplete.conf"
+  ],
+  "case": "hardware_serials_incomplete",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [],\n      \"file_checks\": {\n        \"HARDWARE_SSH_KEY\": \"MISSING\",\n        \"HARDWARE_KNOWN_HOSTS\": \"MISSING\"\n      }\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/hardware_serials_incomplete.conf"
+  ],
+  "case": "hardware_serials_incomplete",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/hardware_serials_incomplete.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"hardware\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/does-not-exist.conf"
+  ],
+  "case": "missing_file",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"unable to read config <TMP>/does-not-exist.conf: [Errno 2] No such file or directory: '<TMP>/does-not-exist.conf'\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/does-not-exist.conf"
+  ],
+  "case": "missing_file",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"next_steps\": [\n    \"Provide a readable UTF-8 RackMarshal configuration file.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/does-not-exist.conf"
+  ],
+  "case": "missing_file",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"unable to read config <TMP>/does-not-exist.conf: [Errno 2] No such file or directory: '<TMP>/does-not-exist.conf'\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/no_state_db.conf"
+  ],
+  "case": "no_state_db",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"required configuration key missing: STATE_DB\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/no_state_db.conf"
+  ],
+  "case": "no_state_db",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": false,\n  \"next_steps\": [\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"Choose one supported domain and supply its configuration before enabling collection.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/no_state_db.conf"
+  ],
+  "case": "no_state_db",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"required configuration key missing: STATE_DB\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/several_problems_at_once.conf"
+  ],
+  "case": "several_problems_at_once",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"required configuration key missing: STATE_DB\",\n    \"unknown enabled domains: nope\",\n    \"zfs: missing ZFS_SSH_USER\",\n    \"hardware: missing HARDWARE_SSH_HOST\",\n    \"hardware: missing HARDWARE_SSH_USER\",\n    \"hardware: missing HARDWARE_SSH_KEY\",\n    \"hardware: missing HARDWARE_KNOWN_HOSTS\",\n    \"hardware: missing HARDWARE_HOT_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_HOT_REQUIRED_SAMPLES\",\n    \"hardware: missing HARDWARE_URGENT_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_RECOVERY_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_RECOVERY_REQUIRED_SAMPLES\",\n    \"ZFS_SSH_KEY: credential/key file permissions are too broad\",\n    \"hardware: missing HARDWARE_NVME_ZZZ_MODEL\",\n    \"hardware: missing HARDWARE_NVME_ZZZ_ROLE\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/several_problems_at_once.conf"
+  ],
+  "case": "several_problems_at_once",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"ZFS_SSH_USER\"\n      ],\n      \"file_checks\": {\n        \"ZFS_SSH_KEY\": \"PERMISSIONS_TOO_BROAD\",\n        \"ZFS_KNOWN_HOSTS\": \"PRESENT\"\n      }\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"HARDWARE_SSH_HOST\",\n        \"HARDWARE_SSH_USER\",\n        \"HARDWARE_SSH_KEY\",\n        \"HARDWARE_KNOWN_HOSTS\",\n        \"HARDWARE_HOT_THRESHOLD_C\",\n        \"HARDWARE_HOT_REQUIRED_SAMPLES\",\n        \"HARDWARE_URGENT_THRESHOLD_C\",\n        \"HARDWARE_RECOVERY_THRESHOLD_C\",\n        \"HARDWARE_RECOVERY_REQUIRED_SAMPLES\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": false,\n  \"next_steps\": [\n    \"Use only supported domain names in ENABLED_DOMAINS.\",\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/several_problems_at_once.conf"
+  ],
+  "case": "several_problems_at_once",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"required configuration key missing: STATE_DB\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/unknown_domain.conf"
+  ],
+  "case": "unknown_domain",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"unknown enabled domains: bar, foo\",\n    \"pve: missing PVE_API_ENV\",\n    \"pve: missing PVE_CA_FILE\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/unknown_domain.conf"
+  ],
+  "case": "unknown_domain",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"PVE_API_ENV\",\n        \"PVE_CA_FILE\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"Use only supported domain names in ENABLED_DOMAINS.\",\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/unknown_domain.conf"
+  ],
+  "case": "unknown_domain",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/unknown_domain.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"pve\",\n    \"foo\",\n    \"bar\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/zfs_key_too_broad.conf"
+  ],
+  "case": "zfs_key_too_broad",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"ZFS_SSH_KEY: credential/key file permissions are too broad\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/zfs_key_too_broad.conf"
+  ],
+  "case": "zfs_key_too_broad",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [],\n      \"file_checks\": {\n        \"ZFS_SSH_KEY\": \"PERMISSIONS_TOO_BROAD\",\n        \"ZFS_KNOWN_HOSTS\": \"PRESENT\"\n      }\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/zfs_key_too_broad.conf"
+  ],
+  "case": "zfs_key_too_broad",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/zfs_key_too_broad.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"zfs\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
+   "<TMP>/zfs_valid.conf"
+  ],
+  "case": "zfs_valid",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"PASS\",\n  \"errors\": []\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/zfs_valid.conf"
+  ],
+  "case": "zfs_valid",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"VALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": true,\n      \"setup_state\": \"CONFIGURATION_COMPLETE\",\n      \"missing_keys\": [],\n      \"file_checks\": {\n        \"ZFS_SSH_KEY\": \"PRESENT\",\n        \"ZFS_KNOWN_HOSTS\": \"PRESENT\"\n      }\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": true,\n  \"next_steps\": [\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/zfs_valid.conf"
+  ],
+  "case": "zfs_valid",
+  "code": 0,
+  "stderr": "",
+  "stdout": "{\n  \"config\": \"<TMP>/zfs_valid.conf\",\n  \"state_db\": \"<TMP>/state.db\",\n  \"state_db_exists\": false,\n  \"enabled_domains\": [\n    \"zfs\"\n  ],\n  \"health\": {\n    \"error\": \"ConnectionRefusedError: [Errno 111] Connection refused\"\n  }\n}\n"
+ },
+ {
+  "argv": [
+   "domains"
+  ],
+  "case": "-",
+  "code": 0,
+  "stderr": "",
+  "stdout": "pve\nzfs\nbackup\nha\nhardware\nmount\n"
+ },
+ {
+  "argv": [
+   "--version"
+  ],
+  "case": "-",
+  "code": 0,
+  "stderr": "",
+  "stdout": "<VER>\n"
+ },
+ {
+  "argv": [],
+  "case": "-",
+  "code": 2,
+  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,migrate} ...\nrackmarshal: error: the following arguments are required: cmd\n",
+  "stdout": ""
+ },
+ {
+  "argv": [
+   "no-such-command"
+  ],
+  "case": "-",
+  "code": 2,
+  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,migrate} ...\nrackmarshal: error: argument cmd: invalid choice: 'no-such-command' (choose from 'validate-config', 'domains', 'setup-plan', 'investigator-check', 'diagnostic', 'migrate')\n",
+  "stdout": ""
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--bogus"
+  ],
+  "case": "-",
+  "code": 2,
+  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,migrate} ...\nrackmarshal: error: unrecognized arguments: --bogus\n",
+  "stdout": ""
+ }
+]
