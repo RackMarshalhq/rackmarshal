@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0rc1 — Release candidate (release gate pending)
+
+RackMarshal 1.2 was never released. 1.3 includes all of the 1.2.0 candidate work listed below.
+
+- **ZFS permanent errors.** A pool that is online but reports permanent data errors now opens an incident, and an incident recovers only on recorded clean evidence. A missing error count is recorded as unknown, not zero. RackMarshal 1.0.0 and 1.1.0 RC1 record such a pool as a counter change that opens no incident and can close an open incident as recovered; they also record a missing error count as zero.
+- **Fresh-install-only installer.** Offline: no `apt`, `pip` or network; unmodified pinned PyPA installer 1.1.0; pip-less virtual environment; refuses any existing installation, account or unit. There is no in-place upgrade in 1.3 (see UPGRADE.md).
+- **Setup guidance.** `rackmarshal setup-plan` reports missing configuration key names and credential-file readiness without writing anything.
+- **Fix:** `rackmarshal diagnostic` with a missing or invalid configuration now prints a JSON `FAIL` result and exits 2 instead of ending with a traceback.
+- **Internal:** the command-line code was rewritten for readability and its exact output is pinned by a test; tests no longer depend on the machine's umask; CI runs the suite as a normal user and as root.
+- Version 1.3.0rc1 has not completed the release gate. The exact-artifact result will be stated in the release notes.
+
 ## 1.2.0rc5 — Local health-policy fix (not published)
 
 - Require current get_health and get_status evidence for RackMarshal health questions in the runtime policy, packaged skill and deterministic health plan.
