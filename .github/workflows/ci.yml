@@ -34,6 +34,7 @@ jobs:
           printf 'STATE_DB=%s/state.db\n' "$tmp" > "$tmp/config"
           RACKMARSHAL_CONFIG="$tmp/config" python -m rackmarshal.db.migrations.migrate --db "$tmp/state.db" --apply --yes
       - name: Publication and smoke gates
-        run: ./scripts/publication-gate.sh
+        run: |
+          sudo sh -c 'umask 022; exec env "PATH=$PATH" PYTHONDONTWRITEBYTECODE=1 GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="*" ./scripts/publication-gate.sh'
       - name: Installer shell validation
         run: bash -n scripts/install.sh scripts/uninstall.sh scripts/build-installer-bundle.sh scripts/publication-gate.sh
