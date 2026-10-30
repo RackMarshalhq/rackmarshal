@@ -56,6 +56,14 @@ def build_cases(tmp):
     _write(hosts_ok, "h", 0o600)
     zfs = "STATE_DB=%s/state.db\nENABLED_DOMAINS=zfs\nSITE_NAME=x\nZFS_SSH_HOST=h\nZFS_SSH_USER=u\n" % tmp
     conf("zfs_key_too_broad", zfs + f"ZFS_SSH_KEY={key_broad}\nZFS_KNOWN_HOSTS={hosts_ok}\n")
+    # Both a missing setting and a too-open key file, plus an unknown domain and a hardware gap,
+    # so the order in which problems are reported is pinned too.
+    conf(
+        "several_problems_at_once",
+        "ENABLED_DOMAINS=zfs,hardware,nope\nSITE_NAME=x\nZFS_SSH_HOST=h\n"
+        f"ZFS_SSH_KEY={key_broad}\nZFS_KNOWN_HOSTS={hosts_ok}\n"
+        "HARDWARE_NVME_SERIALS=ZZZ\n",
+    )
     conf("zfs_valid", zfs + f"ZFS_SSH_KEY={key_ok}\nZFS_KNOWN_HOSTS={hosts_ok}\n")
     conf("ha_missing_credential", "STATE_DB=%s/state.db\nENABLED_DOMAINS=ha\n" % tmp)
     return cases
@@ -112,6 +120,56 @@ class CliCharacterizationTests(unittest.TestCase):
         for got, want in zip(results, expected):
             with self.subTest(case=want["case"], argv=want["argv"]):
                 self.assertEqual(got, want)
+
+
+class CliDispatchTests(unittest.TestCase):
+    """The two subcommands that touch the database or the network, checked with stand-ins."""
+
+    def test_migrate_plan_and_apply_pass_arguments_and_restore_argv(self):
+        import sys
+        from unittest import mock
+
+        seen = []
+
+        def fake_migration_main():
+            seen.append((list(sys.argv), os.environ.get("RACKMARSHAL_CONFIG")))
+            return None
+
+        saved_argv, saved_env = list(sys.argv), os.environ.get("RACKMARSHAL_CONFIG")
+        try:
+            with mock.patch("rackmarshal.db.migrations.migrate.main", fake_migration_main):
+                self.assertEqual(cli.main(["migrate", "--config", "/x/a.conf"]), 0)
+                self.assertEqual(cli.main(["migrate", "--config", "/x/b.conf", "--apply"]), 0)
+            self.assertEqual(sys.argv, saved_argv)
+        finally:
+            if saved_env is None:
+                os.environ.pop("RACKMARSHAL_CONFIG", None)
+            else:
+                os.environ["RACKMARSHAL_CONFIG"] = saved_env
+        self.assertEqual(seen[0], (["rackmarshal-migrate", "--plan"], "/x/a.conf"))
+        self.assertEqual(seen[1], (["rackmarshal-migrate", "--apply", "--yes"], "/x/b.conf"))
+
+    def test_migrate_returns_the_tools_exit_code(self):
+        from unittest import mock
+
+        with mock.patch("rackmarshal.db.migrations.migrate.main", lambda: 7):
+            self.assertEqual(cli.main(["migrate", "--config", "/x/c.conf"]), 7)
+        os.environ.pop("RACKMARSHAL_CONFIG", None)
+
+    def test_investigator_check_exit_codes_and_default_url(self):
+        from unittest import mock
+
+        urls = []
+
+        def fake_check(url):
+            urls.append(url)
+            return {"result": "PASS" if len(urls) == 1 else "FAIL"}
+
+        out = io.StringIO()
+        with mock.patch("rackmarshal.mcp.check.connection_check", fake_check), contextlib.redirect_stdout(out):
+            self.assertEqual(cli.main(["investigator-check"]), 0)
+            self.assertEqual(cli.main(["investigator-check", "--url", "http://h:1/mcp"]), 2)
+        self.assertEqual(urls, ["http://127.0.0.1:8000/mcp", "http://h:1/mcp"])
 
 
 if __name__ == "__main__":

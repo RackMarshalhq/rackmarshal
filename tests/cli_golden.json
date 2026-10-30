@@ -234,6 +234,39 @@
   "argv": [
    "validate-config",
    "--config",
+   "<TMP>/several_problems_at_once.conf"
+  ],
+  "case": "several_problems_at_once",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"status\": \"FAIL\",\n  \"errors\": [\n    \"required configuration key missing: STATE_DB\",\n    \"unknown enabled domains: nope\",\n    \"zfs: missing ZFS_SSH_USER\",\n    \"hardware: missing HARDWARE_SSH_HOST\",\n    \"hardware: missing HARDWARE_SSH_USER\",\n    \"hardware: missing HARDWARE_SSH_KEY\",\n    \"hardware: missing HARDWARE_KNOWN_HOSTS\",\n    \"hardware: missing HARDWARE_HOT_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_HOT_REQUIRED_SAMPLES\",\n    \"hardware: missing HARDWARE_URGENT_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_RECOVERY_THRESHOLD_C\",\n    \"hardware: missing HARDWARE_RECOVERY_REQUIRED_SAMPLES\",\n    \"ZFS_SSH_KEY: credential/key file permissions are too broad\",\n    \"hardware: missing HARDWARE_NVME_ZZZ_MODEL\",\n    \"hardware: missing HARDWARE_NVME_ZZZ_ROLE\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "setup-plan",
+   "--config",
+   "<TMP>/several_problems_at_once.conf"
+  ],
+  "case": "several_problems_at_once",
+  "code": 2,
+  "stderr": "",
+  "stdout": "{\n  \"authority\": \"DERIVED\",\n  \"read_only\": true,\n  \"configuration_status\": \"INVALID\",\n  \"domains\": [\n    {\n      \"domain\": \"PVE\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"ZFS\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"ZFS_SSH_USER\"\n      ],\n      \"file_checks\": {\n        \"ZFS_SSH_KEY\": \"PERMISSIONS_TOO_BROAD\",\n        \"ZFS_KNOWN_HOSTS\": \"PRESENT\"\n      }\n    },\n    {\n      \"domain\": \"BACKUP\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HA\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"HARDWARE\",\n      \"enabled\": true,\n      \"setup_state\": \"NEEDS_CONFIGURATION\",\n      \"missing_keys\": [\n        \"HARDWARE_SSH_HOST\",\n        \"HARDWARE_SSH_USER\",\n        \"HARDWARE_SSH_KEY\",\n        \"HARDWARE_KNOWN_HOSTS\",\n        \"HARDWARE_HOT_THRESHOLD_C\",\n        \"HARDWARE_HOT_REQUIRED_SAMPLES\",\n        \"HARDWARE_URGENT_THRESHOLD_C\",\n        \"HARDWARE_RECOVERY_THRESHOLD_C\",\n        \"HARDWARE_RECOVERY_REQUIRED_SAMPLES\"\n      ],\n      \"file_checks\": {}\n    },\n    {\n      \"domain\": \"MOUNT\",\n      \"enabled\": false,\n      \"setup_state\": \"DISABLED\",\n      \"missing_keys\": [],\n      \"file_checks\": {}\n    }\n  ],\n  \"limitations\": [\n    \"Configuration is not proof of collection, resource health or recovery.\",\n    \"File checks do not verify credential validity, certificate trust or target access.\",\n    \"Domain selection does not establish coverage of every resource in that domain.\",\n    \"No files are written, services started, collectors invoked or network requests made.\"\n  ],\n  \"state_database_configured\": false,\n  \"next_steps\": [\n    \"Use only supported domain names in ENABLED_DOMAINS.\",\n    \"Resolve configuration/file checks; run validate-config locally for details.\",\n    \"After validation, explicitly enable the selected domain timers using the installation guide.\",\n    \"Verify a recorded observation and current cycle result; inspect freshness and incident evidence independently.\",\n    \"Keep Investigator read-only; configure any hosted connection privately.\"\n  ]\n}\n"
+ },
+ {
+  "argv": [
+   "diagnostic",
+   "--config",
+   "<TMP>/several_problems_at_once.conf"
+  ],
+  "case": "several_problems_at_once",
+  "code": "EXC ConfigError",
+  "stderr": "",
+  "stdout": ""
+ },
+ {
+  "argv": [
+   "validate-config",
+   "--config",
    "<TMP>/unknown_domain.conf"
   ],
   "case": "unknown_domain",
