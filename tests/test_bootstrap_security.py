@@ -37,6 +37,23 @@ def wheel(extra=None):
     return output.getvalue()
 
 
+_ORIGINAL_UMASK = None
+
+
+def setUpModule():
+    """Make these tests independent of the machine's umask.
+
+    The code under test refuses group-writable inputs, so the tests must
+    create their files with a known umask instead of inheriting one.
+    """
+    global _ORIGINAL_UMASK
+    _ORIGINAL_UMASK = os.umask(0o022)
+
+
+def tearDownModule():
+    os.umask(_ORIGINAL_UMASK)
+
+
 class BootstrapSecurityTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

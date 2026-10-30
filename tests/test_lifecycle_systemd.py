@@ -2,6 +2,20 @@ import json,os,tempfile,unittest
 from pathlib import Path
 from rackmarshal.maintenance.lifecycle_systemd import SystemdRuntime,BASE
 from rackmarshal.maintenance.lifecycle import Refused
+_ORIGINAL_UMASK = None
+
+def setUpModule():
+    """Make these tests independent of the machine's umask.
+
+    The code under test refuses group-writable inputs, so the tests must
+    create their files with a known umask instead of inheriting one.
+    """
+    global _ORIGINAL_UMASK
+    _ORIGINAL_UMASK = os.umask(0o022)
+
+def tearDownModule():
+    os.umask(_ORIGINAL_UMASK)
+
 class RuntimeTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name).resolve();self.units=self.root/'units';self.units.mkdir(mode=0o700)

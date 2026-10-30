@@ -4,6 +4,23 @@ from contextlib import closing
 from pathlib import Path
 from rackmarshal.maintenance.lifecycle import Lifecycle, Refused, inventory, database_snapshot
 
+_ORIGINAL_UMASK = None
+
+
+def setUpModule():
+    """Make these tests independent of the machine's umask.
+
+    The code under test refuses group-writable inputs, so the tests must
+    create their files with a known umask instead of inheriting one.
+    """
+    global _ORIGINAL_UMASK
+    _ORIGINAL_UMASK = os.umask(0o022)
+
+
+def tearDownModule():
+    os.umask(_ORIGINAL_UMASK)
+
+
 class Runtime:
     def __init__(self): self.calls=[]; self.guarded=False; self.fail_accept=False
     def snapshot(self):return {'active':['status'],'enabled':[]}
