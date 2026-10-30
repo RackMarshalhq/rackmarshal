@@ -15,7 +15,7 @@ import sys
 import tempfile
 import zipfile
 
-VERSION = '1.2.0rc6.dev3'
+VERSION = '1.3.0rc1'
 INSTALLER_VERSION = '1.1.0'
 INSTALLER_NAME = 'installer-1.1.0-py3-none-any.whl'
 INSTALLER_SHA256 = 'f55f5728ff61d3dd54dbc5a397cf3f7307cb64b180c20b72afbebf01c9e2c8a0'
