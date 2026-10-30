@@ -15,8 +15,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      # Lifecycle and bootstrap tests assert root ownership, as on the qualified Linux hosts.
-      - run: sudo env "PATH=$PATH" python -m unittest discover -s tests -v
+      # Lifecycle and bootstrap tests assert root ownership and non-group-writable files, as on the qualified Linux hosts (runner default umask is 002).
+      - run: |
+          sudo sh -c 'umask 022; exec env "PATH=$PATH" PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v'
       - run: python -m compileall -q rackmarshal
       - run: python -m pip install build
       - run: python -m build
