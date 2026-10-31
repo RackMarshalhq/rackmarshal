@@ -156,7 +156,7 @@ chown rackmarshal:rackmarshal /var/lib/rackmarshal/state.db
 chmod 0640 /var/lib/rackmarshal/state.db
 
 UNIT_DIR="${SCRIPT_DIR%/scripts}/packaging/systemd"
-for unit in rackmarshal-status.service rackmarshal-notify.service rackmarshal-notify.timer rackmarshal-domain@.service rackmarshal-domain@.timer; do
+for unit in rackmarshal-status.service rackmarshal-notify.service rackmarshal-notify.timer rackmarshal-db-snapshot.service rackmarshal-db-snapshot.timer rackmarshal-domain@.service rackmarshal-domain@.timer; do
   [[ -f "$UNIT_DIR/$unit" ]] || { echo "ERROR: missing unit template $UNIT_DIR/$unit" >&2; exit 4; }
   install -o root -g root -m 0644 "$UNIT_DIR/$unit" "/etc/systemd/system/$unit"
 done
@@ -171,19 +171,22 @@ for unit in rackmarshal-domain@.service rackmarshal-self-watch.service; do
 done
 
 systemctl daemon-reload
-systemd-analyze verify /etc/systemd/system/rackmarshal-status.service /etc/systemd/system/rackmarshal-notify.service /etc/systemd/system/rackmarshal-notify.timer
+systemd-analyze verify /etc/systemd/system/rackmarshal-status.service /etc/systemd/system/rackmarshal-notify.service /etc/systemd/system/rackmarshal-notify.timer /etc/systemd/system/rackmarshal-db-snapshot.service /etc/systemd/system/rackmarshal-db-snapshot.timer
 
 if [[ "$NO_START" -eq 0 ]]; then
-  systemctl enable --now rackmarshal-status.service rackmarshal-notify.timer
+  systemctl enable --now rackmarshal-status.service rackmarshal-notify.timer rackmarshal-db-snapshot.timer
   ENABLED_DOMAINS="$(sed -n 's/^ENABLED_DOMAINS=//p' /etc/rackmarshal/rackmarshal.conf | tail -1 | tr ',' ' ')"
   for domain in $ENABLED_DOMAINS; do
     case "$domain" in pve|zfs|backup|ha|hardware|mount) systemctl enable --now "rackmarshal-domain@${domain}.timer" ;; *) echo "ERROR: unknown ENABLED_DOMAINS entry: $domain" >&2; exit 5 ;; esac
   done
   systemctl start rackmarshal-notify.service
+  systemctl start rackmarshal-db-snapshot.service
   sleep 1
   systemctl is-active --quiet rackmarshal-status.service
   systemctl is-active --quiet rackmarshal-notify.timer
+  systemctl is-active --quiet rackmarshal-db-snapshot.timer
   [[ "$(systemctl show rackmarshal-notify.service -p Result --value)" == "success" ]]
+  [[ "$(systemctl show rackmarshal-db-snapshot.service -p Result --value)" == "success" ]]
   /opt/rackmarshal/venv/bin/python -I -B -c 'import urllib.request; r=urllib.request.urlopen("http://127.0.0.1:9110/health",timeout=5); assert r.status==200'
 fi
 

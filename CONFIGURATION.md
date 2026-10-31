@@ -54,14 +54,23 @@ Operator tools in the installer bundle record them. Both are insert-only: they n
 2. Look at what that observation contains, then adopt the pools you have checked are healthy. From the extracted bundle:
 
    ```bash
-   sudo mkdir -m 700 /root/rackmarshal-baseline-backups
+   sudo mkdir -m 700 /root/baseline-backups
    sudo /opt/rackmarshal/venv/bin/python -I -B scripts/adopt-zfs-baseline.py --db /var/lib/rackmarshal/state.db \
      --observation-id 1 --pool tank --approval-note "I checked zpool status -v on 2026-11-01" \
-     --backup-dir /root/rackmarshal-baseline-backups          # prints the plan only
+     --backup-dir /root/baseline-backups          # prints the plan only
    # add --apply once the plan is what you expect
    ```
 
 The ZFS tool refuses a pool that is not `ONLINE`, that does not report a permanent error count of exactly zero, or whose devices are not `ONLINE`. Check `zpool status -v` yourself first: the baseline says "this is normal", and a pool that already has damage should be fixed, not recorded as normal. Home Assistant works the same way with `scripts/adopt-ha-baseline.py`: record one observation with `rackmarshal.domains.ha.collector | rackmarshal.domains.ha.observation` (run it as the service account, like the ZFS command above), then adopt with `--observation-id N --resource home_assistant_api --resource home_assistant_core`. It adopts a resource only when it reports the status the collector expects (`OK` or `RUNNING`). Without a Home Assistant baseline the Home Assistant cycle stops with the error "Home Assistant baseline is empty". PVE guests use `scripts/adopt-pve-baseline.py` (see [PVE baseline adoption](docs/architecture/PVE_BASELINE_ADOPTION.md)). **There is no tool for backup baselines yet in this release candidate**, because a backup baseline needs policy choices (schedules, retention, how old a snapshot may be) that an observation cannot supply; do not enable the `backup` domain until there is one.
+
+## Database snapshots
+
+The installer enables a daily timer, `rackmarshal-db-snapshot.timer` (03:15 UTC), that writes a consistent copy of the state database to `/var/lib/rackmarshal/db-snapshots/`. Each copy is checked with SQLite's `quick_check` before it is kept, and a copy that fails is discarded. The newest copy is also kept as `state.db.latest`. The installer runs one snapshot at the end of a normal install and fails if it does not succeed.
+
+- **Disk space.** Each snapshot is a full copy of the database. Plan for roughly (kept snapshots + 1) times the database size; with the default of 7 kept, that is 8 times. A snapshot is refused, with an error in the journal, when the disk has less than twice the database size free, so it cannot fill the disk. 1.3 does not prune old observations, so the database grows with use.
+- **Keep more or fewer.** Set `RACKMARSHAL_DB_SNAPSHOT_RETENTION` (and, if you want another folder, `RACKMARSHAL_DB_SNAPSHOT_DIR`) with `sudo systemctl edit rackmarshal-db-snapshot.service` and an `[Service]` section containing `Environment=` lines. If you move the folder, also add it to `ReadWritePaths=` there.
+- **Restore.** Snapshots are ordinary SQLite files. Stop the services and timers, keep a copy of the current database, copy the snapshot over `state.db` with the same owner and mode (`rackmarshal:rackmarshal`, `0640`), run `PRAGMA integrity_check` on it, then start them again. Practise this once on a spare machine before you need it.
+- **Not a backup of the machine.** The copies live on the same disk as the database. Copy them off the machine if you want protection against disk loss.
 
 ## Optional path overrides
 
