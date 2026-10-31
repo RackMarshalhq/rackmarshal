@@ -64,6 +64,14 @@ jobs:
         run: |
           sudo test -f /var/lib/rackmarshal/db-snapshots/state.db.latest
           sudo python3 -I -B -c 'import sqlite3; c=sqlite3.connect("file:/var/lib/rackmarshal/db-snapshots/state.db.latest?mode=ro", uri=True); assert c.execute("PRAGMA quick_check").fetchone()[0]=="ok"'
+      - name: Let systemd finish starting (the soak requires a fully running system)
+        run: |
+          state=$(timeout 120 sudo systemctl is-system-running --wait || true)
+          echo "systemd: $state"
+          if [ "$state" != running ]; then
+            sudo systemctl --failed --plain --no-legend --no-pager | tee "$RUNNER_TEMP/failed-units.txt" || true
+            sudo systemctl list-jobs --no-pager | tee "$RUNNER_TEMP/jobs.txt" || true
+          fi
       - name: Soak preflight refuses a machine that was not declared disposable
         run: |
           cd qualification/soak
@@ -87,6 +95,7 @@ jobs:
       - name: Show the soak evidence if it failed
         if: failure()
         run: |
+          { echo "systemd:"; sudo systemctl is-system-running; cat "$RUNNER_TEMP/failed-units.txt" "$RUNNER_TEMP/jobs.txt" 2>/dev/null; } | head -20 | while IFS= read -r line; do echo "::error title=systemd-state::${line:0:240}"; done || true
           cat "$RUNNER_TEMP/preflight2.out" "$RUNNER_TEMP/launch.out" 2>/dev/null | head -30 | while IFS= read -r line; do echo "::error title=soak-launch::${line:0:240}"; done || true
           sudo journalctl -u rmq-soak.service --no-pager -n 60 | tail -40 | while IFS= read -r line; do echo "::error title=soak::${line:0:240}"; done || true
           sudo cat /var/lib/rackmarshal-soak/STOP.json 2>/dev/null | head -c 1500 | while IFS= read -r line; do echo "::error title=soak-stop::${line:0:240}"; done || true
