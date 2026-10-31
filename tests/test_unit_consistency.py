@@ -28,6 +28,17 @@ class UnitConsistency(unittest.TestCase):
             self.assertIn(name, install, f"install.sh does not install {name}")
             self.assertIn(name, uninstall, f"uninstall.sh does not remove {name}")
 
+    def test_optional_units_are_bundled_removed_and_not_enabled(self):
+        text = (ROOT / "scripts" / "bootstrap-wheel.py").read_text()
+        listed = set(re.search(r"^OPTIONAL_UNITS = \((.*?)\)$", text, re.M | re.S).group(1).replace("'", "").replace(" ", "").split(",")) - {""}
+        shipped = {p.name for p in (UNIT_DIR / "optional").iterdir() if p.is_file()}
+        self.assertEqual(listed, shipped)
+        install = (ROOT / "scripts" / "install.sh").read_text()
+        uninstall = (ROOT / "scripts" / "uninstall.sh").read_text()
+        for name in shipped:
+            self.assertNotIn(name, install, f"installer must not enable optional unit {name}")
+            self.assertIn(name, uninstall, f"uninstall.sh does not remove optional unit {name}")
+
     def test_prune_timer_is_enabled_and_checked(self):
         install = (ROOT / "scripts" / "install.sh").read_text()
         self.assertRegex(install, r"systemctl enable --now [^\n]*rackmarshal-observation-prune\.timer")
