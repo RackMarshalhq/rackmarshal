@@ -19,7 +19,7 @@ RackMarshal watches your Proxmox, ZFS, Home Assistant, hardware and mounts, keep
 
 ## Try it
 
-1. **Install** on a fresh Debian 12 or Ubuntu machine with systemd (a small LXC container is fine): [INSTALL.md](INSTALL.md).
+1. **Install** on a fresh Debian 12 machine with systemd (a small LXC container is fine): [INSTALL.md](INSTALL.md).
 2. **Confirm the base install:** `curl http://127.0.0.1:9110/health` returns HTTP 200 and the status page at `http://127.0.0.1:9110/` shows no incidents.
 3. **Add one thing to watch.** Follow the [quickstart](docs/QUICKSTART.md).
 

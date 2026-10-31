@@ -2,10 +2,12 @@
 
 ## What this installs, and what it needs
 
-RackMarshal 1.3 installs on a **fresh** Debian or Ubuntu machine (a small LXC container or VM is fine) that uses systemd and has Python 3.11 or newer with the `venv` module. Debian 12 is the reference platform.
+RackMarshal 1.3 installs on a **fresh Debian 12** machine (a small LXC container or VM is fine) that uses systemd and has Python 3.11 or newer with the `venv` module. Debian 12 is the only qualified platform.
+
+**Ubuntu is not supported in 1.3.** The installer refuses to create its directories under a folder that the group or others can write to. Stock Ubuntu makes `/var/log` writable by the `syslog` group (`drwxrwxr-x root:syslog`), so the installer stops with `writable/foreign installation ancestor`. Debian's `/var/log` is `drwxr-xr-x root:root`. Do not change the permissions of system folders to get past this.
 
 - **Fresh installs only.** The installer refuses to run if any RackMarshal directory, service account or systemd unit already exists. It never upgrades, repairs or reinstalls over an existing installation. See [UPGRADE.md](UPGRADE.md) for moving from an earlier release.
-- **Nothing is downloaded.** The installer does not run `apt`, `pip` or any network operation. Install Python 3.11+, `python3-venv` and the standard systemd tools yourself first (on Debian or Ubuntu: `sudo apt install python3 python3-venv`).
+- **Nothing is downloaded.** The installer does not run `apt`, `pip` or any network operation. Install Python 3.11+, `python3-venv` and the standard systemd tools yourself first (on Debian 12: `sudo apt install python3 python3-venv`).
 - **Root is required**, and the installer must be run from the extracted bundle.
 - **Release candidate.** 1.3.0 release candidates have not completed the release gate. The exact-artifact qualification result for each release is stated in its release notes. Use a disposable container or VM, or take a snapshot, until you are comfortable.
 

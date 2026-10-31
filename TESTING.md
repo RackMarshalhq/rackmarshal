@@ -2,7 +2,7 @@
 
 We are looking for **5 to 10 people** to try the 1.3 release candidate on a real setup and tell us honestly what confused or broke.
 
-**You need:** a fresh Debian 12 or Ubuntu machine or container with systemd, about 30 minutes, and at least one of Proxmox, ZFS or Home Assistant to watch.
+**You need:** a fresh Debian 12 machine or container with systemd, about 30 minutes, and at least one of Proxmox, ZFS or Home Assistant to watch.
 
 **What we ask:**
 1. Install it ([INSTALL.md](INSTALL.md)). Note how long it took and where you got stuck.

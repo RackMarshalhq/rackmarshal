@@ -28,6 +28,11 @@ jobs:
       - run: python -m pip install build
       - run: python -m build
       - run: ./scripts/build-installer-bundle.sh
+      - name: Make the runner look like Debian 12 (the installer rightly refuses writable parent folders)
+        run: |
+          # GitHub's Ubuntu image has /opt at 0777 and /var/log at root:syslog 0775. Debian 12 has 0755 root:root.
+          sudo chmod 0755 /opt /var/log
+          sudo chown root:root /var/log
       - name: Install exactly as INSTALL.md says
         run: |
           work=$(mktemp -d)
