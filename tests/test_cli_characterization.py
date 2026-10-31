@@ -126,8 +126,12 @@ class CliCharacterizationTests(unittest.TestCase):
         self.assertEqual(len(results), len(expected))
         for got, want in zip(results, expected):
             with self.subTest(case=want["case"], argv=want["argv"]):
-                # argparse wraps its usage line differently across Python versions; compare the words, not the wrapping.
-                self.assertEqual(dict(got, stderr=" ".join(got["stderr"].split())), dict(want, stderr=" ".join(want["stderr"].split())))
+                # argparse wraps its usage line, and quotes the choices in "invalid choice", differently across
+                # Python versions; compare the words, not the wrapping or quoting.
+                def words(text):
+                    return " ".join(text.replace("'", "").split())
+
+                self.assertEqual(dict(got, stderr=words(got["stderr"])), dict(want, stderr=words(want["stderr"])))
 
 
 class CliDispatchTests(unittest.TestCase):
