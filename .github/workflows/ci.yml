@@ -17,7 +17,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       # Plain, as a normal user with the runner's default umask (002): tests must not depend on the machine.
       - name: Unit tests
-        run: python -m unittest discover -s tests -v 2>&1 | tee "$RUNNER_TEMP/unittest.log"
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -v 2>&1 | tee "$RUNNER_TEMP/unittest.log"
       - name: Surface test failures as annotations
         if: failure()
         run: |
@@ -38,7 +40,9 @@ jobs:
           printf 'STATE_DB=%s/state.db\n' "$tmp" > "$tmp/config"
           RACKMARSHAL_CONFIG="$tmp/config" python -m rackmarshal.db.migrations.migrate --db "$tmp/state.db" --apply --yes
       - name: Publication and smoke gates
-        run: ./scripts/publication-gate.sh 2>&1 | tee "$RUNNER_TEMP/gate.log"
+        run: |
+          set -o pipefail
+          ./scripts/publication-gate.sh 2>&1 | tee "$RUNNER_TEMP/gate.log"
       - name: Surface gate failures as annotations
         if: failure()
         run: |
@@ -54,7 +58,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Unit tests as root
-        run: sudo sh -c 'exec env "PATH=$PATH" PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v' 2>&1 | tee "$RUNNER_TEMP/unittest-root.log"
+        run: |
+          set -o pipefail
+          sudo sh -c 'exec env "PATH=$PATH" PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v' 2>&1 | tee "$RUNNER_TEMP/unittest-root.log"
       - name: Surface test failures as annotations
         if: failure()
         run: |
