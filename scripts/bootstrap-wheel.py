@@ -22,7 +22,7 @@ INSTALLER_SHA256 = 'f55f5728ff61d3dd54dbc5a397cf3f7307cb64b180c20b72afbebf01c9e2
 APP_NAME = 'rackmarshal-' + VERSION + '-py3-none-any.whl'
 LIMIT = 32 * 1024 * 1024
 DOCS = ('LICENSE', 'README.md', 'INSTALL.md', 'CONFIGURATION.md', 'UPGRADE.md', 'UNINSTALL.md', 'SECURITY.md', 'CHANGELOG.md', 'THIRD-PARTY-NOTICES.txt')
-UNITS = ('rackmarshal-status.service', 'rackmarshal-notify.service', 'rackmarshal-notify.timer', 'rackmarshal-domain@.service', 'rackmarshal-domain@.timer', 'rackmarshal-domain@.service.d/20-cycle-health.conf', 'rackmarshal-self-watch.service.d/20-cycle-health.conf')
+UNITS = ('rackmarshal-status.service', 'rackmarshal-notify.service', 'rackmarshal-notify.timer', 'rackmarshal-db-snapshot.service', 'rackmarshal-db-snapshot.timer', 'rackmarshal-domain@.service', 'rackmarshal-domain@.timer', 'rackmarshal-domain@.service.d/20-cycle-health.conf', 'rackmarshal-self-watch.service.d/20-cycle-health.conf')
 TOOLS = ('scripts/adopt-pve-baseline.py', 'scripts/adopt-zfs-baseline.py', 'scripts/adopt-ha-baseline.py')
 LIFECYCLE_FILES = {'scripts/lifecycle.py','rackmarshal/__init__.py','rackmarshal/maintenance/__init__.py'} | {'rackmarshal/maintenance/'+n+'.py' for n in ('lifecycle','lifecycle_systemd','lifecycle_semantics')}
 BUNDLE_FILES = LIFECYCLE_FILES | set(DOCS) | set(TOOLS) | {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-wheel.py', 'packaging/bootstrap/manifest.json', 'packaging/bootstrap/' + INSTALLER_NAME, APP_NAME, 'config/rackmarshal.conf.example', 'config/mounts.catalog.example.toml'} | {'packaging/systemd/' + n for n in UNITS}
@@ -200,7 +200,7 @@ def validate_target(target, owner=0):
             if path.parent == target / 'bin':
                 require(path.resolve() == Path(sys.executable).resolve(), 'unexpected interpreter link')
         else:
-            require(not info.st_mode & 0o022 and (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)), 'unsafe venv entry')
+            require(not info.st_mode & 0o022 and (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)), 'unsafe venv entry %s mode %o' % (path, info.st_mode))
             require(not stat.S_ISREG(info.st_mode) or info.st_nlink == 1, 'hard-linked venv entry')
         require(path.suffix != '.pth' and path.name not in ('sitecustomize.py', 'usercustomize.py'), 'venv startup hook')
     cfg = (target / 'pyvenv.cfg').read_text()

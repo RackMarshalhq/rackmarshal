@@ -76,6 +76,8 @@ class BootstrapSecurityTests(unittest.TestCase):
     def target(self):
         target = self.root / 'venv'
         venv.EnvBuilder(with_pip=False, symlinks=True).create(target)
+        # install.sh runs `chmod -R go-w` on the fresh venv: some Pythons ship venv helper scripts as 0777.
+        subprocess.run(['chmod', '-R', 'go-w', str(target)], check=True)
         # Homebrew 3.14 adds a non-Linux alias; model the supported Linux layout.
         for entry in (target / 'bin').iterdir():
             if entry.is_symlink() and not entry.name.startswith('python'):
@@ -209,3 +211,13 @@ class BootstrapSecurityTests(unittest.TestCase):
         self.assertFalse(list(target.rglob('*.pyc')))
         self.assertFalse(list((target / 'bin').glob('pip*')))
         self.assertFalse((target / 'bin/installer').exists())
+
+
+class InstallScriptVenvTests(unittest.TestCase):
+    def test_install_script_drops_group_other_write_right_after_creating_the_venv(self):
+        lines = (Path(__file__).resolve().parents[1] / 'scripts' / 'install.sh').read_text().splitlines()
+        create = next(i for i, line in enumerate(lines) if 'm venv --without-pip /opt/rackmarshal/venv' in line)
+        chmod = next(i for i, line in enumerate(lines) if line.strip() == 'chmod -R go-w /opt/rackmarshal/venv')
+        validate = next(i for i, line in enumerate(lines) if 'bootstrap-wheel.py" install' in line)
+        self.assertLess(create, chmod)
+        self.assertLess(chmod, validate)
