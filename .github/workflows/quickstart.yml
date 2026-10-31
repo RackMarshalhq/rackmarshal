@@ -87,6 +87,7 @@ jobs:
       - name: Show the soak evidence if it failed
         if: failure()
         run: |
+          cat "$RUNNER_TEMP/preflight2.out" "$RUNNER_TEMP/launch.out" 2>/dev/null | head -30 | while IFS= read -r line; do echo "::error title=soak-launch::${line:0:240}"; done || true
           sudo journalctl -u rmq-soak.service --no-pager -n 60 | tail -40 | while IFS= read -r line; do echo "::error title=soak::${line:0:240}"; done || true
           sudo cat /var/lib/rackmarshal-soak/STOP.json 2>/dev/null | head -c 1500 | while IFS= read -r line; do echo "::error title=soak-stop::${line:0:240}"; done || true
           sudo find /var/lib/rackmarshal-soak/samples -name '*.json' -path '*checks*' 2>/dev/null | head -20 | while IFS= read -r f; do sudo grep -l '"FAIL"' "$f" 2>/dev/null | while IFS= read -r bad; do echo "::error title=soak-check::$bad: $(sudo head -c 300 "$bad")"; done; done || true
