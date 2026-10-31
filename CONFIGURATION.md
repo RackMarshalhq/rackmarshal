@@ -51,7 +51,7 @@ Operator tools in the installer bundle record them. Both are insert-only: they n
 
    It prints an `observation_id`. The observation must be less than 15 minutes old when you adopt it.
 
-2. Look at what that observation contains, then adopt the pools you have checked are healthy. From the extracted bundle:
+2. Look at what that observation contains, then adopt the pools you have checked are healthy. As root, from the extracted bundle folder (`/root/rm-install/rackmarshal-installer-<version>`, see [INSTALL.md](INSTALL.md)):
 
    ```bash
    sudo mkdir -m 700 /root/baseline-backups
