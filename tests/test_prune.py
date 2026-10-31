@@ -56,34 +56,37 @@ class PruneTests(unittest.TestCase):
         self.seed()
         result = prune.prune(self.db, 35, now=NOW)
         for table in prune.TABLES:
-            self.assertEqual(result[table], 3, table)
-            self.assertEqual(count(self.db, table), 1, table)
+            self.assertEqual(result[table], 2, table)
+            self.assertEqual(count(self.db, table), 2, table)
 
     def test_dry_run_changes_nothing(self):
         self.seed()
         result = prune.prune(self.db, 35, dry_run=True, now=NOW)
-        self.assertEqual(result["zfs_observations"], 3)
+        self.assertEqual(result["zfs_observations"], 2)
         self.assertEqual(count(self.db, "zfs_observations"), 4)
 
-    def test_keeps_newest_even_when_everything_is_old(self):
+    def test_keeps_newest_two_even_when_everything_is_old(self):
         with contextlib.closing(sqlite3.connect(self.db)) as c:
-            insert(c, "zfs_observations", OLD); insert(c, "zfs_observations", "2026-08-02T00:00:00"); c.commit()
+            for stamp in (OLD, "2026-08-02T00:00:00", "2026-08-03T00:00:00", "2026-08-04T00:00:00"):
+                insert(c, "zfs_observations", stamp)
+            c.commit()
         prune.prune(self.db, 35, now=NOW)
-        self.assertEqual(count(self.db, "zfs_observations"), 1)
+        self.assertEqual(count(self.db, "zfs_observations"), 2)
 
     def test_observations_keep_newest_per_collector(self):
         with contextlib.closing(sqlite3.connect(self.db)) as c:
             for collector in ("pve", "ha"):
-                insert(c, "observations", OLD, collector); insert(c, "observations", "2026-08-02T00:00:00", collector)
+                for stamp in (OLD, "2026-08-02T00:00:00", "2026-08-03T00:00:00"):
+                    insert(c, "observations", stamp, collector)
             c.commit()
         prune.prune(self.db, 35, now=NOW)
-        self.assertEqual(count(self.db, "observations"), 2)
+        self.assertEqual(count(self.db, "observations"), 4)
 
     def test_referenced_old_observation_is_kept(self):
         with contextlib.closing(sqlite3.connect(self.db)) as c:
             keep = insert(c, "mount_observations", OLD)
-            insert(c, "mount_observations", "2026-08-02T00:00:00")
-            insert(c, "mount_observations", "2026-08-03T00:00:00")
+            for stamp in ("2026-08-02T00:00:00", "2026-08-03T00:00:00", "2026-08-04T00:00:00"):
+                insert(c, "mount_observations", stamp)
             c.execute("INSERT INTO mount_events (observation_id, mount_id, guest_kind, guest_id, mountpoint, outcome, changes_json, observed_at) VALUES (?,?,?,?,?,?,?,?)", (keep, "m", "lxc", "1", "/x", "MISSING", "{}", OLD))
             c.commit()
         result = prune.prune(self.db, 35, now=NOW)
@@ -97,8 +100,52 @@ class PruneTests(unittest.TestCase):
                 insert(c, "zfs_observations", "2026-08-%02dT00:00:00" % (i + 1) if i < 28 else OLD)
             c.commit()
         result = prune.prune(self.db, 35, now=NOW, batch=10)
-        self.assertEqual(result["zfs_observations"], 24)
-        self.assertEqual(count(self.db, "zfs_observations"), 1)
+        self.assertEqual(result["zfs_observations"], 23)
+        self.assertEqual(count(self.db, "zfs_observations"), 2)
+
+    def add_processing(self, c, table, ids):
+        if table == "zfs_incident_processing":
+            for i in ids:
+                c.execute("INSERT INTO zfs_incident_processing (observation_id, differences_detected, incidents_opened, incidents_ongoing, incidents_recovered, note) VALUES (?,?,?,?,?,?)", (i, 0, 0, 0, 0, "t"))
+        else:
+            for i in ids:
+                c.execute("INSERT INTO %s (observation_id, processing_kind) VALUES (?, 'PROCESSED')" % table, (i,))
+
+    def test_processing_rows_are_retired_with_their_observation_but_checkpoint_stays(self):
+        pairs = [("incident_processing", "observations"), ("ha_incident_processing", "observations"),
+                 ("backup_incident_processing", "observations"), ("zfs_incident_processing", "zfs_observations")]
+        for proc, obs in pairs:
+            with self.subTest(proc):
+                db = str(Path(self.dir.name) / (proc + ".db")); make_db(db)
+                with contextlib.closing(sqlite3.connect(db)) as c:
+                    ids = [insert(c, obs, "2026-08-%02dT00:00:00" % (d + 1)) for d in range(6)] + [insert(c, obs, NEW)]
+                    self.add_processing(c, proc, ids)
+                    c.commit()
+                result = prune.prune(db, 35, now=NOW)
+                # the newest two (ids 6 old, 7 new) stay; the other five go with their processing rows
+                self.assertEqual(result[obs], 5); self.assertEqual(result[proc], 5)
+                with contextlib.closing(sqlite3.connect(db)) as c:
+                    self.assertEqual([r[0] for r in c.execute("SELECT observation_id FROM %s ORDER BY 1" % proc)], ids[5:])
+
+    def test_checkpoint_is_kept_even_if_it_is_old_and_not_newest(self):
+        db = self.db
+        with contextlib.closing(sqlite3.connect(db)) as c:
+            ids = [insert(c, "observations", "2026-08-%02dT00:00:00" % (d + 1), "pve") for d in range(5)]
+            self.add_processing(c, "incident_processing", ids[:3])  # processor stopped at the third observation
+            c.commit()
+        prune.prune(db, 35, now=NOW)
+        with contextlib.closing(sqlite3.connect(db)) as c:
+            self.assertEqual([r[0] for r in c.execute("SELECT observation_id FROM incident_processing")], [ids[2]])
+            self.assertEqual([r[0] for r in c.execute("SELECT id FROM observations ORDER BY id")], ids[2:])
+
+    def test_dry_run_reports_processing_rows(self):
+        with contextlib.closing(sqlite3.connect(self.db)) as c:
+            ids = [insert(c, "observations", "2026-08-%02dT00:00:00" % (d + 1), "pve") for d in range(5)]
+            self.add_processing(c, "incident_processing", ids)
+            c.commit()
+        result = prune.prune(self.db, 35, dry_run=True, now=NOW)
+        self.assertEqual((result["observations"], result["incident_processing"]), (3, 3))
+        self.assertEqual(count(self.db, "incident_processing"), 5)
 
     def test_refuses_short_retention(self):
         with self.assertRaises(ValueError):
@@ -111,7 +158,7 @@ class PruneTests(unittest.TestCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             self.assertEqual(prune.main(["--dry-run", "--days", "35"]), 0)
-        self.assertIn("would delete 3 rows", out.getvalue())
+        self.assertIn("would delete 2 rows", out.getvalue())
         err = io.StringIO()
         with contextlib.redirect_stderr(err):
             self.assertEqual(prune.main(["--days", "2"]), 1)

@@ -1,9 +1,16 @@
 """Conservative retention prune for observation tables.
 
-Deletes observation rows older than the retention window that nothing else
-references, in small batches. It always keeps the newest row of each table (the
-newest per collector for the shared observations table), so a collector that
-stopped for a long time does not lose its last known state.
+Deletes observation rows older than the retention window, in small batches,
+together with their per-observation processing bookkeeping rows
+(incident_processing and its siblings). Rows that real evidence refers to
+(events, incidents, baselines) are kept, and so is each processor's checkpoint
+(the processing row with the highest observation id). It always keeps the
+newest two rows of each table (per collector for the shared observations
+table), so a collector that stopped for a long time does not lose its last
+known state.
+
+The database file does not shrink: freed space is reused by new rows, so growth
+levels off at about the retention window.
 
     python -m rackmarshal.maintenance.prune [--dry-run] [--days N]
 
@@ -21,7 +28,15 @@ import sys
 
 DEFAULT_DAYS = 35
 MIN_DAYS = 7
-BATCH = 5000
+BATCH = 500
+KEEP_NEWEST = 2
+# processing bookkeeping tables, one row per processed observation -> observation table
+PROCESSING = {
+    "incident_processing": "observations",
+    "ha_incident_processing": "observations",
+    "backup_incident_processing": "observations",
+    "zfs_incident_processing": "zfs_observations",
+}
 TABLES = ("observations", "zfs_observations", "mount_observations", "hardware_observations")
 
 
@@ -42,9 +57,9 @@ def _references(connection, table):
 
 def _keep_newest(connection, table):
     columns = [row[1] for row in connection.execute("PRAGMA table_info(%s)" % _quote(table))]
-    if "collector" in columns:
-        return "id NOT IN (SELECT MAX(id) FROM %s GROUP BY collector)" % _quote(table)
-    return "id <> (SELECT MAX(id) FROM %s)" % _quote(table)
+    partition = "PARTITION BY collector " if "collector" in columns else ""
+    return ("id NOT IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (%sORDER BY id DESC) AS rn FROM %s) WHERE rn <= %d)"
+            % (partition, _quote(table), KEEP_NEWEST))
 
 
 def prune(db_path, days=DEFAULT_DAYS, dry_run=False, now=None, batch=BATCH):
@@ -62,23 +77,42 @@ def prune(db_path, days=DEFAULT_DAYS, dry_run=False, now=None, batch=BATCH):
             if table not in existing:
                 continue
             clauses = ["observed_at < ?", _keep_newest(connection, table)]
-            clauses += ["NOT EXISTS (SELECT 1 FROM %s r WHERE r.%s = %s.id)" % (_quote(child), _quote(col), _quote(table))
-                        for child, col in _references(connection, table)]
+            processing = []
+            for child, col in _references(connection, table):
+                if PROCESSING.get(child) == table and col == "observation_id":
+                    processing.append(child)
+                    # the processor's checkpoint (highest processed id) must stay
+                    clauses.append("id <> COALESCE((SELECT MAX(observation_id) FROM %s), -1)" % _quote(child))
+                else:
+                    clauses.append("NOT EXISTS (SELECT 1 FROM %s r WHERE r.%s = %s.id)"
+                                   % (_quote(child), _quote(col), _quote(table)))
             where = " AND ".join(clauses)
             if dry_run:
                 result[table] = connection.execute(
                     "SELECT COUNT(*) FROM %s WHERE %s" % (_quote(table), where), (cutoff,)).fetchone()[0]
+                for child in processing:
+                    result[child] = connection.execute(
+                        "SELECT COUNT(*) FROM %s WHERE observation_id IN (SELECT id FROM %s WHERE %s)"
+                        % (_quote(child), _quote(table), where), (cutoff,)).fetchone()[0]
                 continue
             total = 0
+            retired = dict.fromkeys(processing, 0)
             while True:
-                cursor = connection.execute(
-                    "DELETE FROM %s WHERE id IN (SELECT id FROM %s WHERE %s ORDER BY id LIMIT ?)"
-                    % (_quote(table), _quote(table), where), (cutoff, batch))
+                ids = [row[0] for row in connection.execute(
+                    "SELECT id FROM %s WHERE %s ORDER BY id LIMIT ?" % (_quote(table), where), (cutoff, batch))]
+                if not ids:
+                    break
+                marks = ",".join("?" * len(ids))
+                for child in processing:
+                    retired[child] += connection.execute(
+                        "DELETE FROM %s WHERE observation_id IN (%s)" % (_quote(child), marks), ids).rowcount
+                total += connection.execute(
+                    "DELETE FROM %s WHERE id IN (%s)" % (_quote(table), marks), ids).rowcount
                 connection.commit()
-                total += cursor.rowcount
-                if cursor.rowcount < batch:
+                if len(ids) < batch:
                     break
             result[table] = total
+            result.update(retired)
         if not dry_run:
             check = connection.execute("PRAGMA quick_check").fetchall()
             if check != [("ok",)]:
