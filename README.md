@@ -1,74 +1,63 @@
 # RackMarshal™
 
-**Development: 1.2.0rc5.** Local health-policy fix; fresh exact-artifact qualification is pending. Frozen rc2, rc3 and rc4 remain separate artifacts.
+**Know when your homelab is actually unhealthy, and when it has recovered.**
 
-Local-first infrastructure operations and incident management for self-hosted systems.
+RackMarshal watches your Proxmox, ZFS, Home Assistant, hardware and mounts, keeps a local history in SQLite, and opens one incident per real problem instead of a pile of repeat alerts. An incident closes only when RackMarshal records evidence of recovery. It runs on your own hardware and does not send data to any cloud service.
 
-RackMarshal observes infrastructure, records durable operational state, detects and tracks incidents, and verifies recovery. It grew from a working homelab operations system and is now available for broader use across homelabs, self-hosted infrastructure, edge systems, and small infrastructure environments.
+## Who it is for
 
-> **Project status:** RackMarshal 1.1.0 RC1 is a tester preview. RackMarshal 1.0.0 remains the stable release.
+- You run Proxmox, ZFS or Home Assistant at home or in a small lab.
+- You have been bitten by a pool that went DEGRADED, a mount that vanished, or a backup that quietly stopped.
+- You want a short, trustworthy "what is wrong right now" page rather than another wall of graphs.
 
-## 1.1.0 RC1 tester preview
+## What you get
 
-[Download 1.1.0 RC1](https://github.com/RackMarshalhq/rackmarshal/releases/tag/v1.1.0-rc1) for the incident dashboard, versioned read APIs, eleven read-only MCP tools, recorded provenance and lifecycle evidence, and portable Investigator policy. **1.0.0 remains the stable release.**
+- A status page and read-only API, served on `127.0.0.1:9110` by default (local only).
+- Incidents with evidence, a timeline and a recovery check.
+- Notifications through Home Assistant, queued with retry.
+- A SQLite history you own, copied daily to a local snapshot folder.
 
-The release includes SHA256SUMS and a sanitized qualification summary. Exact-artifact checks cover fresh Debian 12 installation/reboot, stable upgrade/rollback/reupgrade, state/configuration preservation, and MCP protocol boundaries. CI passes on Python 3.11–3.13. See the summary for security findings and qualification limits.
+## Try it
 
-Read the [tagged changelog](https://github.com/RackMarshalhq/rackmarshal/blob/v1.1.0-rc1/CHANGELOG.md), [upgrade guide](https://github.com/RackMarshalhq/rackmarshal/blob/v1.1.0-rc1/UPGRADE.md), and [hosted Investigator setup](https://github.com/RackMarshalhq/rackmarshal/blob/v1.1.0-rc1/docs/architecture/HOSTED_INVESTIGATOR_SETUP.md). Hosted use requires a private connection binding; private workspace configuration and operational records are excluded from public assets. Local plugin client installation and implicit activation are not qualified.
+1. **Install** on a fresh Debian 12 or Ubuntu machine with systemd (a small LXC container is fine): [INSTALL.md](INSTALL.md).
+2. **Confirm the base install:** `curl http://127.0.0.1:9110/health` returns HTTP 200 and the status page at `http://127.0.0.1:9110/` shows no incidents.
+3. **Add one thing to watch.** Follow the [quickstart](docs/QUICKSTART.md).
 
-## What exists today
+A fresh install with nothing enabled should show no incidents. If it shows one, that is a bug. Please [open an issue](../../issues/new/choose).
 
-The current codebase contains operational domains for:
+## Status
 
-- Proxmox VE resources
-- ZFS storage health
-- backup/PBS observations (not supported for new installations in 1.3, see [CONFIGURATION.md](CONFIGURATION.md))
-- Home Assistant observations
-- hardware health
-- mount availability
+| Release | State |
+|---|---|
+| 1.0.0 | Stable, but see the ZFS note below |
+| 1.1.0 RC1 | Tester preview, same ZFS note |
+| 1.3.0 | Release candidate, in qualification. Looking for outside testers: [TESTING.md](TESTING.md) |
 
-RackMarshal stores observations, events, incidents, cycle health, and related state in SQLite. Domain manifests describe the available collector/processing entrypoints, and the local status API exposes `/health` and `/status`.
+**ZFS note for 1.0.0 and 1.1.0 RC1:** a pool that is ONLINE but reports permanent data errors is recorded as a counter change, opens no incident, and can close an open incident as recovered. A missing error count is recorded as zero. 1.3 fixes this. If you run an earlier release on ZFS, check `zpool status -v` yourself.
 
-## Design principles
+1.2 was never released; 1.3 includes its work. For anything beyond trying it out, install from a tagged release rather than from a development branch.
 
-- Local-first operation
-- Durable operational history
-- Evidence-based incident detection and recovery
-- Configuration-driven monitoring
-- Reproducible installation and database migration
-- Minimal dependence on external services
-- Designed for infrastructure you control
+## What it does not do
 
-## Installation
+- It does not repair anything. It observes, records and reports.
+- It is not a metrics or graphing tool. Run Grafana alongside it if you want graphs.
+- It does not discover your infrastructure. You choose what it watches, and a base install watches nothing.
+- Monitoring a domain requires site configuration, credentials and a baseline that says what healthy looks like. The installer never copies or invents them.
+- In 1.3 the backup domain is not supported for new installations (it has no baseline tool yet). See [CONFIGURATION.md](CONFIGURATION.md).
+- There is no in-place upgrade in 1.3. See [UPGRADE.md](UPGRADE.md).
 
-The reference installer currently targets Debian/Ubuntu-compatible systems using systemd and Python 3.11 or newer. It creates a dedicated unprivileged `rackmarshal` account, installs the wheel into `/opt/rackmarshal/venv`, creates the configuration/state directories, applies database migrations, installs systemd units, and verifies the local health endpoint.
+## Safety
 
-See [INSTALL.md](INSTALL.md) before installing. Configuration details are in [CONFIGURATION.md](CONFIGURATION.md).
-
-## Important current boundary
-
-A successful base installation proves the RackMarshal runtime, database, status API, and notification queue can run. It does **not** automatically configure access to your Proxmox, PBS, Home Assistant, ZFS, hardware, or mount targets. Those integrations require site-specific configuration and credentials.
-
-The installer does not copy production credentials or discover your infrastructure automatically.
+Collectors only read: Proxmox uses an API token you create, and ZFS, hardware and mount checks use SSH keys that you restrict to a single fixed command on the target. The service runs as an unprivileged `rackmarshal` account and the status API listens on loopback unless you change it. See [SECURITY.md](SECURITY.md) and [CONFIGURATION.md](CONFIGURATION.md).
 
 ## Documentation
 
-- [Architecture and agent roadmap](docs/architecture/README.md)
-- [Installation](INSTALL.md)
-- [Configuration](CONFIGURATION.md)
-- [Upgrade](UPGRADE.md)
-- [Uninstall](UNINSTALL.md)
-- [Security](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md)
+[Quickstart](docs/QUICKSTART.md) · [Install](INSTALL.md) · [Configure](CONFIGURATION.md) · [Upgrade](UPGRADE.md) · [Uninstall](UNINSTALL.md) · [Architecture](docs/architecture/README.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Testing](TESTING.md) · [Soak test](SOAK.md)
 
 ## License
 
-RackMarshal is licensed under the Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).
 
-## Project links
-
-Website: https://rackmarshal.com  
-Source: https://github.com/RackMarshalhq/rackmarshal
+Website: https://rackmarshal.com · Source: https://github.com/RackMarshalhq/rackmarshal
 
 RackMarshal™ is an independent project and is not affiliated with Proxmox Server Solutions GmbH.
