@@ -22,7 +22,7 @@ The current codebase contains operational domains for:
 
 - Proxmox VE resources
 - ZFS storage health
-- backup/PBS observations
+- backup/PBS observations (not supported for new installations in 1.3, see [CONFIGURATION.md](CONFIGURATION.md))
 - Home Assistant observations
 - hardware health
 - mount availability

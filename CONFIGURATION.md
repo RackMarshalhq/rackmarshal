@@ -135,6 +135,8 @@ Hardware inventory requires `HARDWARE_NVME_SERIALS`; for each serial, define `HA
 
 ## Backup and mount policy settings
 
+**The `backup` domain is not supported for new installations in 1.3.** A backup baseline records choices only the operator can make (which jobs and guests, schedules, retention, how old a snapshot may be), and 1.3 has no tool to create one. The comparator also contains checks written for one particular site. Do not add `backup` to `ENABLED_DOMAINS` on a new installation. A supported setup path is planned for a later release.
+
 Current backup comparison logic recognizes `BACKUP_TM_SLA_HOURS`, `BACKUP_TM_ALERT_TARGETS`, and `BACKUP_EXCLUDE_VMIDS`. The optional PBS store probe uses `BACKUP_SSH_HOST`, `BACKUP_SSH_USER`, `BACKUP_SSH_KEY`, and `BACKUP_KNOWN_HOSTS`.
 
 Mount collection can use `MOUNT_CATALOG_FILE`, `MOUNT_SSH_HOST`, `MOUNT_SSH_USER`, `MOUNT_SSH_KEY`, `MOUNT_KNOWN_HOSTS`, and `MOUNT_DELIVER_TIMEOUT_S`. A generic catalog placeholder is provided at `config/mounts.catalog.example.toml`; it intentionally contains no real topology.
