@@ -71,6 +71,9 @@ install -d -o root -g root -m 0755 /opt/rackmarshal
 install -d -o root -g rackmarshal -m 0750 /etc/rackmarshal
 install -d -o rackmarshal -g rackmarshal -m 0750 /var/lib/rackmarshal /var/log/rackmarshal
 python3 -I -B -m venv --without-pip /opt/rackmarshal/venv
+# Some Python builds ship venv helper scripts as 0777; the installer refuses group/other-writable entries.
+# The venv was created a moment ago by root, so removing those bits here is safe.
+chmod -R go-w /opt/rackmarshal/venv
 python3 -I -B "$STAGE/scripts/bootstrap-wheel.py" install --stage "$STAGE"
 [[ -z "$CONFIG_SOURCE" ]] || CONFIG_SOURCE="$STAGE/supplied.conf"
 SCRIPT_DIR="$STAGE/scripts"
