@@ -27,6 +27,7 @@ from rackmarshal.api.status import (
     build_freshness,
     build_self_watch_notifications,
     build_self_watch_units,
+    enabled_status_domains,
     connect_db,
     latest_generic_observation,
     latest_hardware_observation,
@@ -130,8 +131,9 @@ def collect_signals():
             for row in cycle_health_rows
         }
 
-    freshness = build_freshness(observations)
-    units = build_self_watch_units()
+    watched = enabled_status_domains()
+    freshness = build_freshness(observations, domains=watched)
+    units = build_self_watch_units(watched)
     return freshness, units, notifications, cycle_health
 
 

@@ -633,8 +633,11 @@ def load_stale_after_seconds(diagnostics=None):
     return thresholds
 
 
-def build_freshness(observations, now=None):
-    """Phase 3 Step 4.2: read-only observation freshness for self_watch."""
+def build_freshness(observations, now=None, domains=None):
+    """Phase 3 Step 4.2: read-only observation freshness for self_watch.
+
+    domains: restrict to these domains (default: all of STATUS_DOMAINS).
+    """
     if now is None:
         now = datetime.now(timezone.utc)
     elif now.tzinfo is None:
@@ -644,7 +647,7 @@ def build_freshness(observations, now=None):
     thresholds = load_stale_after_seconds(diagnostics)
     freshness = {}
 
-    for domain in STATUS_DOMAINS:
+    for domain in (STATUS_DOMAINS if domains is None else domains):
         obs = observations.get(domain)
         stale_after = thresholds.get(domain, 900)
         if not obs or not obs.get("observed_at"):
@@ -691,22 +694,37 @@ def build_freshness(observations, now=None):
 
 NOTIFY_PENDING_MAX_AGE_SECONDS = 900
 
-SELF_WATCH_UNITS = (
-    "rackmarshal-status-api.service",
-    "rackmarshal-pve-cycle.timer",
-    "rackmarshal-pve-cycle.service",
-    "rackmarshal-zfs-cycle.timer",
-    "rackmarshal-zfs-cycle.service",
-    "rackmarshal-ha-cycle.timer",
-    "rackmarshal-ha-cycle.service",
-    "rackmarshal-backup-cycle.timer",
-    "rackmarshal-backup-cycle.service",
-    "rackmarshal-hardware-cycle.timer",
-    "rackmarshal-hardware-cycle.service",
-    "rackmarshal-self-watch-cycle.timer",
-    "rackmarshal-mount-cycle.timer",
-    "rackmarshal-mount-cycle.service",
-)
+STATUS_UNIT = "rackmarshal-status.service"
+SELF_WATCH_TIMER = "rackmarshal-self-watch.timer"
+# Names used before 1.3. Still recognised so older databases and tools keep working.
+LEGACY_STATUS_UNITS = ("rackmarshal-status-api.service",)
+
+
+def enabled_status_domains(config=None):
+    """Domains that are switched on in ENABLED_DOMAINS (STATUS_DOMAINS order).
+
+    A configuration without the key at all is an older layout and watches every domain;
+    a key that is present (even empty) names exactly the domains to watch.
+    """
+    raw = (CONFIG if config is None else config).get("ENABLED_DOMAINS")
+    if raw is None:
+        return STATUS_DOMAINS
+    wanted = {part.strip().upper() for part in str(raw).split(",") if part.strip()}
+    return tuple(domain for domain in STATUS_DOMAINS if domain in wanted)
+
+
+def self_watch_unit_names(domains=None, exists=None):
+    """Units whose state self-watch reports, for the installed 1.3 layout."""
+    domains = enabled_status_domains() if domains is None else domains
+    exists = unit_exists if exists is None else exists
+    names = [STATUS_UNIT]
+    for domain in domains:
+        key = domain.lower()
+        names.append("rackmarshal-domain@%s.timer" % key)
+        names.append("rackmarshal-domain@%s.service" % key)
+    if exists(SELF_WATCH_TIMER):
+        names.append(SELF_WATCH_TIMER)
+    return tuple(names)
 
 
 def unit_active_state(unit_name):
@@ -735,8 +753,20 @@ def unit_active_state(unit_name):
     return value
 
 
-def build_self_watch_units():
-    return {name: unit_active_state(name) for name in SELF_WATCH_UNITS}
+def unit_exists(unit_name):
+    """True when systemd has a unit file for this name (read-only)."""
+    try:
+        result = subprocess.run(
+            ["systemctl", "show", unit_name, "-p", "LoadState", "--value"],
+            check=False, capture_output=True, text=True, timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return (result.stdout or "").strip() == "loaded"
+
+
+def build_self_watch_units(domains=None):
+    return {name: unit_active_state(name) for name in self_watch_unit_names(domains)}
 
 
 def build_self_watch_notifications(conn, now=None):
@@ -796,9 +826,9 @@ def self_watch_status_from_parts(freshness, units, notifications):
     if "MISSING" in states or "STALE" in states:
         return "DEGRADED"
 
-    status_api = units.get("rackmarshal-status-api.service")
-    if status_api not in (None, "active"):
-        return "CRITICAL"
+    for status_name in (STATUS_UNIT,) + LEGACY_STATUS_UNITS:
+        if units.get(status_name) not in (None, "active"):
+            return "CRITICAL"
 
     for name, state in units.items():
         if state == "failed":
@@ -1004,8 +1034,9 @@ def build_status():
 
     # Phase 3 Step 4.3: freshness + units + notify backlog (still additive).
     # overall_status remains incident-based (unchanged); coupling later.
-    freshness = build_freshness(observations)
-    units = build_self_watch_units()
+    watched = enabled_status_domains()
+    freshness = build_freshness(observations, domains=watched)
+    units = build_self_watch_units(watched)
     self_watch = {
         "status": self_watch_status_from_parts(
             freshness,
