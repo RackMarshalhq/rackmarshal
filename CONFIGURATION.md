@@ -32,7 +32,7 @@ sudo /opt/rackmarshal/venv/bin/rackmarshal validate-config --config /etc/rackmar
 sudo systemctl enable --now rackmarshal-domain@zfs.timer     # use the domain you are enabling
 ```
 
-The installer cannot be run again for this: it refuses to run over an existing installation. **For `pve`, `zfs`, `backup` and `ha`, record a baseline first** (next section; there is no backup tool yet), or every resource they find is reported as new and opens an incident.
+The installer cannot be run again for this: it refuses to run over an existing installation. **For `pve`, `zfs`, `backup` and `ha`, record a baseline first** (next section; the backup tool exists but the domain is still unsupported for new installs, see below), or every resource they find is reported as new and opens an incident.
 
 Run `rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf` before enabling a domain. Use `sudo /opt/rackmarshal/venv/bin/rackmarshal domains` to list supported domain identifiers and `sudo /opt/rackmarshal/venv/bin/rackmarshal diagnostic` for a non-secret operational summary (the application folder is readable only by root and the `rackmarshal` group).
 
@@ -60,6 +60,8 @@ Operator tools in the installer bundle record them. Both are insert-only: they n
      --backup-dir /root/baseline-backups          # prints the plan only
    # add --apply once the plan is what you expect
    ```
+
+**Backup baseline (new, domain still unsupported).** `scripts/adopt-backup-baseline.py` records one backup job and the guests you name. Record a `backup_domain` observation first (`python -m rackmarshal.domains.backup.collector | python -m rackmarshal.domains.backup.observation`; it must be less than 2 hours old), look at it, then run the tool with `--job <job id>`, one `--guest <id>` per guest, `--max-age-hours <n>` (how old the newest backup of each guest may get before RackMarshal alerts; your choice), `--approval-note` and `--backup-dir`. It prints a plan and writes nothing until you add `--apply`. It refuses a disabled job, a guest that is not covered by the job, has no backup, or whose newest backup is not verified `ok` or is already older than your limit, and anything that would overwrite an existing baseline. RackMarshal supports exactly one backup job baseline.
 
 The ZFS tool refuses a pool that is not `ONLINE`, that does not report a permanent error count of exactly zero, or whose devices are not `ONLINE`. Check `zpool status -v` yourself first: the baseline says "this is normal", and a pool that already has damage should be fixed, not recorded as normal. Home Assistant works the same way with `scripts/adopt-ha-baseline.py`: record one observation with `rackmarshal.domains.ha.collector | rackmarshal.domains.ha.observation` (run it as the service account, like the ZFS command above), then adopt with `--observation-id N --resource home_assistant_api --resource home_assistant_core`. It adopts a resource only when it reports the status the collector expects (`OK` or `RUNNING`). Without a Home Assistant baseline the Home Assistant cycle stops with the error "Home Assistant baseline is empty". PVE guests use `scripts/adopt-pve-baseline.py` (see [PVE baseline adoption](docs/architecture/PVE_BASELINE_ADOPTION.md)). **There is no tool for backup baselines yet in this release candidate**, because a backup baseline needs policy choices (schedules, retention, how old a snapshot may be) that an observation cannot supply; do not enable the `backup` domain until there is one.
 
@@ -144,7 +146,7 @@ Hardware inventory requires `HARDWARE_NVME_SERIALS`; for each serial, define `HA
 
 ## Backup and mount policy settings
 
-**The `backup` domain is not supported for new installations in 1.3.** A backup baseline records choices only the operator can make (which jobs and guests, schedules, retention, how old a snapshot may be), and 1.3 has no tool to create one. The comparator also contains checks written for one particular site. Do not add `backup` to `ENABLED_DOMAINS` on a new installation. A supported setup path is planned for a later release.
+**The `backup` domain is not supported for new installations in 1.3.** A backup baseline records choices only the operator can make (which jobs and guests, schedules, retention, how old a snapshot may be), and the tool that creates one (`scripts/adopt-backup-baseline.py`, below) is new and has not yet been proven on a fresh install. The comparator also contains checks written for one particular site. Do not add `backup` to `ENABLED_DOMAINS` on a new installation. A supported setup path is planned for a later release.
 
 Current backup comparison logic recognizes `BACKUP_TM_SLA_HOURS`, `BACKUP_TM_ALERT_TARGETS`, and `BACKUP_EXCLUDE_VMIDS`. The optional PBS store probe uses `BACKUP_SSH_HOST`, `BACKUP_SSH_USER`, `BACKUP_SSH_KEY`, and `BACKUP_KNOWN_HOSTS`.
 
