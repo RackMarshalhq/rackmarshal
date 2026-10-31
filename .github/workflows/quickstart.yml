@@ -39,6 +39,7 @@ jobs:
         if: failure()
         run: |
           tail -30 "$RUNNER_TEMP/install.log" | while IFS= read -r line; do echo "::error title=install::${line:0:240}"; done || true
+          stat -c '%A %U:%G %n' / /opt /etc /var /var/lib /var/log | while IFS= read -r line; do echo "::error title=install-ancestors::$line"; done || true
       - name: Base install is healthy and shows no incidents
         run: |
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9110/health)" = 200
