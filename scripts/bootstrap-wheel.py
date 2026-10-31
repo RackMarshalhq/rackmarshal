@@ -23,7 +23,7 @@ APP_NAME = 'rackmarshal-' + VERSION + '-py3-none-any.whl'
 LIMIT = 32 * 1024 * 1024
 DOCS = ('LICENSE', 'README.md', 'INSTALL.md', 'CONFIGURATION.md', 'UPGRADE.md', 'UNINSTALL.md', 'SECURITY.md', 'CHANGELOG.md', 'THIRD-PARTY-NOTICES.txt')
 UNITS = ('rackmarshal-status.service', 'rackmarshal-notify.service', 'rackmarshal-notify.timer', 'rackmarshal-db-snapshot.service', 'rackmarshal-db-snapshot.timer', 'rackmarshal-domain@.service', 'rackmarshal-domain@.timer', 'rackmarshal-domain@.service.d/20-cycle-health.conf', 'rackmarshal-self-watch.service.d/20-cycle-health.conf')
-TOOLS = ('scripts/adopt-pve-baseline.py', 'scripts/adopt-zfs-baseline.py', 'scripts/adopt-ha-baseline.py')
+TOOLS = ('scripts/adopt-pve-baseline.py', 'scripts/adopt-zfs-baseline.py', 'scripts/adopt-ha-baseline.py', 'scripts/adopt-backup-baseline.py')
 LIFECYCLE_FILES = {'scripts/lifecycle.py','rackmarshal/__init__.py','rackmarshal/maintenance/__init__.py'} | {'rackmarshal/maintenance/'+n+'.py' for n in ('lifecycle','lifecycle_systemd','lifecycle_semantics')}
 BUNDLE_FILES = LIFECYCLE_FILES | set(DOCS) | set(TOOLS) | {'scripts/install.sh', 'scripts/uninstall.sh', 'scripts/bootstrap-wheel.py', 'packaging/bootstrap/manifest.json', 'packaging/bootstrap/' + INSTALLER_NAME, APP_NAME, 'config/rackmarshal.conf.example', 'config/mounts.catalog.example.toml'} | {'packaging/systemd/' + n for n in UNITS}
 

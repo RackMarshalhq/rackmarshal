@@ -43,7 +43,7 @@ A fresh install with nothing enabled should show no incidents. If it shows one, 
 - It is not a metrics or graphing tool. Run Grafana alongside it if you want graphs.
 - It does not discover your infrastructure. You choose what it watches, and a base install watches nothing.
 - Monitoring a domain requires site configuration, credentials and a baseline that says what healthy looks like. The installer never copies or invents them.
-- In 1.3 the backup domain is not supported for new installations (it has no baseline tool yet). See [CONFIGURATION.md](CONFIGURATION.md).
+- In 1.3 the backup domain is not supported for new installations (a baseline tool now exists but has not yet been proven on a fresh install). See [CONFIGURATION.md](CONFIGURATION.md).
 - There is no in-place upgrade in 1.3. See [UPGRADE.md](UPGRADE.md).
 
 ## Safety
