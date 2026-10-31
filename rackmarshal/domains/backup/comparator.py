@@ -1194,6 +1194,18 @@ def main():
     results.extend(rsync_filebackups_results(pbs_store_probe))
     # --- STEP7_HOST_VERIFY results end ---
 
+    # Optional second datastore check; returns [] unless BACKUP_SECONDARY_STORE is set.
+    from rackmarshal.domains.backup import secondary_monitor
+
+    results.extend(
+        secondary_monitor.secondary_results(
+            payload.get("secondary_pbs"),
+            resources,
+            observation_time.timestamp(),
+            secondary_monitor.configured_store(),
+        )
+    )
+
 
     counts = {
         "MATCH": 0,
