@@ -31,3 +31,14 @@ merely to undo eight baseline entries: that would erase unrelated later evidence
 The private full snapshot is retained for recovery/reference, never committed or
 returned to Investigator. Already recorded observations/recoveries stay history.
 
+## Retiring the baseline of a deleted guest
+
+When you delete a guest in Proxmox its baseline row stays, and RackMarshal reports the guest as MISSING until the row is removed. `scripts/retire-pve-baseline.py` removes those rows. It is the mirror image of the adoption tool and follows the same rules: it plans first and writes nothing without `--apply`; apply needs root, an approval note, a private backup directory and a fresh PVE observation (under 900 seconds, verified TLS) given by ID.
+
+Every named guest (`--resource lxc:<id>` or `qemu:<id>`, repeated) must have a baseline row and must be **absent** from that observation. A guest that still exists is refused, so the tool cannot be used to stop watching a live guest. Only `resource_baseline` rows are deleted, in one transaction after a consistent database copy; incidents, events and observations are never changed. At the next Proxmox cycle the MISSING incident recovers by itself.
+
+```text
+sudo python3 -I -B retire-pve-baseline.py --db /var/lib/rackmarshal/state.db --observation-id N --resource lxc:123 --approval-note "why" --backup-dir /root/baseline-backups          # plan only
+```
+
+Add `--apply` after reading the plan. To undo, restore the database copy the tool printed, or insert the rows again with the adoption tool while the guest exists.
