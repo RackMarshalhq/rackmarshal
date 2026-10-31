@@ -154,9 +154,27 @@ def messages_results(pbs_store_probe):
 
 # --- STEP7_HOST_VERIFY begin ---
 
+def _conf_enabled(key):
+    """True only when the key is set to 1/true/yes/on in the environment or rackmarshal.conf."""
+    import os
+    from pathlib import Path
+    raw = os.environ.get(key, "")
+    if not raw:
+        conf = Path("/etc/rackmarshal/rackmarshal.conf")
+        if conf.is_file():
+            for line in conf.read_text(encoding="utf-8", errors="replace").splitlines():
+                if line.startswith(key + "="):
+                    raw = line.split("=", 1)[1].strip()
+                    break
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
 def rsync_filebackups_results(pbs_store_probe):
     results = []
     if not isinstance(pbs_store_probe, dict) or pbs_store_probe.get("_error"):
+        return results
+    # Site-specific check: runs only when the operator turns it on.
+    if not _conf_enabled("BACKUP_RSYNC_FILEBACKUPS_CHECK"):
         return results
     rb = pbs_store_probe.get("rsync_filebackups")
     if not isinstance(rb, dict):
