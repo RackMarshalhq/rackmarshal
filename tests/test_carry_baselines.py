@@ -87,6 +87,46 @@ class CarryBaselinesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'different schema versions'):
             carry.carry(self.old, self.new, True, self.root)
 
+    def test_edited_unrelated_migrations_do_not_block_the_copy(self):
+        with closing(sqlite3.connect(self.old)) as c:
+            c.execute("UPDATE schema_migrations SET checksum='customised' WHERE id IN ('000_metadata','006_hardware_observations','010_cycle_health')")
+            c.commit()
+        receipt = carry.carry(self.old, self.new, True, self.root)
+        self.assertEqual(receipt['state'], 'APPLIED')
+        self.assertEqual(self.counts(self.new)['ha_resource_baseline'], 1)
+
+    def test_each_copied_table_migration_must_match(self):
+        for migration in carry.COPIED_TABLE_MIGRATIONS:
+            with self.subTest(migration=migration):
+                with closing(sqlite3.connect(self.old)) as c:
+                    c.execute("UPDATE schema_migrations SET checksum='x' WHERE id=?", (migration,))
+                    c.commit()
+                with self.assertRaisesRegex(ValueError, 'different schema versions'):
+                    carry.carry(self.old, self.new)
+                with closing(sqlite3.connect(self.new)) as c:
+                    value = c.execute("SELECT checksum FROM schema_migrations WHERE id=?", (migration,)).fetchone()[0]
+                with closing(sqlite3.connect(self.old)) as c:
+                    c.execute("UPDATE schema_migrations SET checksum=? WHERE id=?", (value, migration))
+                    c.commit()
+
+    def test_old_database_with_a_migration_the_new_one_lacks_is_refused(self):
+        with closing(sqlite3.connect(self.old)) as c:
+            c.execute("INSERT INTO schema_migrations(id,checksum,applied_at) SELECT '999_future','z',applied_at FROM schema_migrations LIMIT 1")
+            c.commit()
+        with self.assertRaisesRegex(ValueError, 'different schema versions'):
+            carry.carry(self.old, self.new)
+
+    def test_old_database_missing_a_copied_table_migration_is_refused(self):
+        with closing(sqlite3.connect(self.old)) as c:
+            c.execute("DELETE FROM schema_migrations WHERE id='004_backup_ledger'")
+            c.commit()
+        with self.assertRaisesRegex(ValueError, 'different schema versions'):
+            carry.carry(self.old, self.new)
+
+    def test_the_checked_migrations_are_exactly_the_table_creating_ones(self):
+        self.assertEqual(carry.COPIED_TABLE_MIGRATIONS,
+                         ('001_pve_ledger', '002_ha_ledger', '003_zfs_ledger', '004_backup_ledger'))
+
     def test_a_table_that_differs_between_the_databases_is_refused(self):
         with closing(sqlite3.connect(self.new)) as c:
             c.execute('ALTER TABLE zfs_pool_baseline ADD COLUMN surprise TEXT')
