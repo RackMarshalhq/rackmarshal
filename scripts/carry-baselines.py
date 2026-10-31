@@ -26,6 +26,8 @@ BASELINES = (
     ('zfs_vdev_baseline', 'source_observation_id', 'zfs_observations'),
 )
 OBSERVATION_TABLES = ('observations', 'zfs_observations')
+# Migrations that create the copied tables (PVE, Home Assistant, ZFS, backup).
+COPIED_TABLE_MIGRATIONS = ('001_pve_ledger', '002_ha_ledger', '003_zfs_ledger', '004_backup_ledger')
 
 
 def _schema(conn, schema, table):
@@ -39,9 +41,18 @@ def _count(conn, schema, table):
 
 def check(conn):
     """Raise ValueError unless the new database is fresh and the schemas match."""
-    query = 'SELECT id, checksum FROM %s.schema_migrations ORDER BY id'
-    if conn.execute(query % 'old').fetchall() != conn.execute(query % 'main').fetchall():
+    query = 'SELECT id, checksum FROM %s.schema_migrations'
+    old_migrations = dict(conn.execute(query % 'old').fetchall())
+    new_migrations = dict(conn.execute(query % 'main').fetchall())
+    # The old database may not be newer than the new one.
+    if not set(old_migrations) <= set(new_migrations):
         raise ValueError('The two databases are at different schema versions; refusing to copy')
+    # Only the migrations that create the tables this tool copies must be identical.
+    # Other migrations (for example, edited ones on a customised site) do not matter
+    # here; each copied table is still compared in full below.
+    for migration in COPIED_TABLE_MIGRATIONS:
+        if migration not in old_migrations or old_migrations[migration] != new_migrations.get(migration):
+            raise ValueError('The two databases are at different schema versions; refusing to copy')
     for table in [b[0] for b in BASELINES] + list(OBSERVATION_TABLES):
         if _schema(conn, 'old', table) != _schema(conn, 'main', table):
             raise ValueError('Table %s differs between the two databases; refusing to copy' % table)
