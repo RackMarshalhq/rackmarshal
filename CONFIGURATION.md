@@ -74,6 +74,20 @@ The installer enables a daily timer, `rackmarshal-db-snapshot.timer` (03:15 UTC)
 - **Restore.** Snapshots are ordinary SQLite files. Stop the services and timers, keep a copy of the current database, copy the snapshot over `state.db` with the same owner and mode (`rackmarshal:rackmarshal`, `0640`), run `PRAGMA integrity_check` on it, then start them again. Practise this once on a spare machine before you need it.
 - **Not a backup of the machine.** The copies live on the same disk as the database. Copy them off the machine if you want protection against disk loss.
 
+## Investigator MCP service (optional)
+
+The read-only MCP server that the Investigator uses can run as a service. It listens on loopback only, so nothing outside the machine can reach it. The installer does not start it. Install it into the same environment, then:
+
+```bash
+sudo /opt/rackmarshal/venv/bin/pip install 'rackmarshal[mcp]'   # or the wheel you installed, with [mcp]
+sudo install -m 0644 packaging/systemd/optional/rackmarshal-mcp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now rackmarshal-mcp.service
+/opt/rackmarshal/venv/bin/rackmarshal investigator-check          # expect exit 0
+```
+
+Reaching it from a hosted assistant needs a secure connection that you set up and own (for example your provider's tunnel program with your own profile and credentials). RackMarshal does not ship one, and no credential belongs in the repository or in `rackmarshal.conf`. See `docs/architecture/INVESTIGATOR_INSTALLATION.md`.
+
 ## Self-watch (optional)
 
 Self-watch is RackMarshal watching itself every five minutes. It opens an incident, with the usual notification, when the status service is down, when the timer of a domain you enabled is not running or its service has failed, when a domain you enabled has no data or stale data, or when notifications cannot be delivered. It only looks at the domains in `ENABLED_DOMAINS` and the real 1.3 units (`rackmarshal-status.service`, `rackmarshal-domain@<name>.timer` and `.service`). It also adds a `self_watch` section to the status page. Turn it on with:
