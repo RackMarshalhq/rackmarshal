@@ -74,6 +74,20 @@ The installer enables a daily timer, `rackmarshal-db-snapshot.timer` (03:15 UTC)
 - **Restore.** Snapshots are ordinary SQLite files. Stop the services and timers, keep a copy of the current database, copy the snapshot over `state.db` with the same owner and mode (`rackmarshal:rackmarshal`, `0640`), run `PRAGMA integrity_check` on it, then start them again. Practise this once on a spare machine before you need it.
 - **Not a backup of the machine.** The copies live on the same disk as the database. Copy them off the machine if you want protection against disk loss.
 
+## Daily evidence export (optional)
+
+`rackmarshal.evidence.export` writes a dated folder of evidence (the status page contents, a schema and some database extras, with an `EVIDENCE.md` summary) under `/var/lib/rackmarshal/evidence/`, and deletes dated folders older than the retention you give. It reads the status page, so the status service must be running. To run it every day at 04:30 UTC:
+
+```bash
+sudo install -m 0644 packaging/systemd/optional/rackmarshal-evidence-export.service packaging/systemd/optional/rackmarshal-evidence-export.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now rackmarshal-evidence-export.timer
+sudo systemctl start rackmarshal-evidence-export.service       # run once now
+sudo ls /var/lib/rackmarshal/evidence/                           # a dated folder appears
+```
+
+The unit keeps 35 days (`--retain-days 35`; edit the `ExecStart` line with `sudo systemctl edit --full rackmarshal-evidence-export.service` to change it). If you changed the status page address, set `RACKMARSHAL_STATUS_URL` in the same way. The installer does not enable it, and the uninstaller removes it. The evidence folder is not part of the database snapshots.
+
 ## Restricting who can read the status page (optional)
 
 By default the status page listens on `127.0.0.1` only and needs nothing more. If you set `STATUS_API_LISTEN_ADDRESS` to a network address so that other machines (Home Assistant, a monitor) can read it, anyone who can reach that address can read your incident list. To limit it to named callers with the machine's own firewall (nftables; the Proxmox firewall is not involved):

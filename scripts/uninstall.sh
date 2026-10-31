@@ -18,8 +18,9 @@ for unit in rackmarshal-domain@.service rackmarshal-self-watch.service; do
   rm -f "/etc/systemd/system/$unit.d/20-cycle-health.conf"
   rmdir "/etc/systemd/system/$unit.d" 2>/dev/null || true
 done
-systemctl disable --now rackmarshal-status-acl.service 2>/dev/null || true
-rm -f /etc/systemd/system/rackmarshal-status-acl.service
+systemctl disable --now rackmarshal-status-acl.service rackmarshal-evidence-export.timer 2>/dev/null || true
+systemctl stop rackmarshal-evidence-export.service 2>/dev/null || true
+rm -f /etc/systemd/system/rackmarshal-status-acl.service /etc/systemd/system/rackmarshal-evidence-export.service /etc/systemd/system/rackmarshal-evidence-export.timer
 systemctl daemon-reload
 rm -rf /opt/rackmarshal
 

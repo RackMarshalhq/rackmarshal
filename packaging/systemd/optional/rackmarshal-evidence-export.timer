@@ -1,0 +1,11 @@
+[Unit]
+Description=Run RackMarshal evidence export daily
+
+[Timer]
+OnCalendar=*-*-* 04:30:00 UTC
+Persistent=true
+RandomizedDelaySec=90s
+Unit=rackmarshal-evidence-export.service
+
+[Install]
+WantedBy=timers.target
