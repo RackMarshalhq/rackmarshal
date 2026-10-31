@@ -83,11 +83,19 @@ def _missing_domain_keys(config, enabled):
     return errors
 
 
+# Files that the root-owned service units read through the `rackmarshal` group.
+# They may be group-readable (mode 0640, owner root, group rackmarshal) as the
+# documentation says, but never group-writable and never open to anyone else.
+GROUP_READABLE_KEYS = ("PVE_API_ENV", "PBS_API_ENV", "HA_CREDENTIAL_FILE")
+
+
 def _broad_permission_errors(config):
     errors = []
-    too_open = stat.S_IRWXG | stat.S_IRWXO
+    strict = stat.S_IRWXG | stat.S_IRWXO
+    group_readable = stat.S_IWGRP | stat.S_IXGRP | stat.S_IRWXO
     for key in CREDENTIAL_FILE_KEYS:
         value = config.get(key, "").strip()
+        too_open = group_readable if key in GROUP_READABLE_KEYS else strict
         if value and Path(value).exists() and (Path(value).stat().st_mode & too_open):
             errors.append(f"{key}: credential/key file permissions are too broad")
     return errors

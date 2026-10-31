@@ -62,7 +62,7 @@ RackMarshal connects over SSH and runs `zpool status -j -p`. The safe setup is a
    HA_URL=http://your-home-assistant:8123
    HA_TOKEN=your-token
    ```
-3. Set `ENABLED_DOMAINS=ha` in `rackmarshal.conf` and validate it.
+3. Set `ENABLED_DOMAINS=ha` and `HA_CREDENTIAL_FILE=/etc/rackmarshal/home-assistant-api.env` in `rackmarshal.conf` and validate it.
 4. Record the Home Assistant baseline ([CONFIGURATION.md](../CONFIGURATION.md#baselines-telling-rackmarshal-what-healthy-looks-like)). Without it the cycle stops with "Home Assistant baseline is empty".
 5. Start the timer and run one cycle: `sudo systemctl enable --now rackmarshal-domain@ha.timer`, then `sudo systemctl start rackmarshal-domain@ha.service`.
 
