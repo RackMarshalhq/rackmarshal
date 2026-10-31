@@ -79,7 +79,9 @@ The installer enables a daily timer, `rackmarshal-db-snapshot.timer` (03:15 UTC)
 The read-only MCP server that the Investigator uses can run as a service. It listens on loopback only, so nothing outside the machine can reach it. The installer does not start it. Install it into the same environment, then:
 
 ```bash
-sudo /opt/rackmarshal/venv/bin/pip install 'rackmarshal[mcp]'   # or the wheel you installed, with [mcp]
+# The 1.3 environment has no pip of its own. Use a separate pip (22.3 or newer) and point it at that environment:
+sudo python3 -m venv /root/pip-tool
+sudo /root/pip-tool/bin/pip --python /opt/rackmarshal/venv/bin/python install 'mcp>=1.28,<2'
 sudo install -m 0644 packaging/systemd/optional/rackmarshal-mcp.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now rackmarshal-mcp.service

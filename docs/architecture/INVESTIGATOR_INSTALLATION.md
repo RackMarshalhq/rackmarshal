@@ -7,7 +7,9 @@ Core works without AI. Investigator is optional and read-only. A connection chec
 Install the exact candidate wheel using the installer. Install its optional MCP dependencies into the same environment:
 
 ```bash
-sudo /opt/rackmarshal/venv/bin/pip install '/path/to/rackmarshal-1.2.0rc5-py3-none-any.whl[mcp]'
+# A 1.3 installation has no pip inside /opt/rackmarshal/venv. Use a separate pip (22.3 or newer) pointed at it:
+sudo python3 -m venv /root/pip-tool
+sudo /root/pip-tool/bin/pip --python /opt/rackmarshal/venv/bin/python install 'mcp>=1.28,<2'
 sudo RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf /opt/rackmarshal/venv/bin/rackmarshal-mcp
 ```
 
