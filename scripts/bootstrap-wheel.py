@@ -200,7 +200,7 @@ def validate_target(target, owner=0):
             if path.parent == target / 'bin':
                 require(path.resolve() == Path(sys.executable).resolve(), 'unexpected interpreter link')
         else:
-            require(not info.st_mode & 0o022 and (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)), 'unsafe venv entry')
+            require(not info.st_mode & 0o022 and (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)), 'unsafe venv entry %s mode %o' % (path, info.st_mode))
             require(not stat.S_ISREG(info.st_mode) or info.st_nlink == 1, 'hard-linked venv entry')
         require(path.suffix != '.pth' and path.name not in ('sitecustomize.py', 'usercustomize.py'), 'venv startup hook')
     cfg = (target / 'pyvenv.cfg').read_text()

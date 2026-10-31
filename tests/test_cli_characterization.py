@@ -126,7 +126,8 @@ class CliCharacterizationTests(unittest.TestCase):
         self.assertEqual(len(results), len(expected))
         for got, want in zip(results, expected):
             with self.subTest(case=want["case"], argv=want["argv"]):
-                self.assertEqual(got, want)
+                # argparse wraps its usage line differently across Python versions; compare the words, not the wrapping.
+                self.assertEqual(dict(got, stderr=" ".join(got["stderr"].split())), dict(want, stderr=" ".join(want["stderr"].split())))
 
 
 class CliDispatchTests(unittest.TestCase):
