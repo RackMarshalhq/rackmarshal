@@ -148,6 +148,8 @@ Hardware inventory requires `HARDWARE_NVME_SERIALS`; for each serial, define `HA
 
 Current backup comparison logic recognizes `BACKUP_TM_SLA_HOURS`, `BACKUP_TM_ALERT_TARGETS`, and `BACKUP_EXCLUDE_VMIDS`. The optional PBS store probe uses `BACKUP_SSH_HOST`, `BACKUP_SSH_USER`, `BACKUP_SSH_KEY`, and `BACKUP_KNOWN_HOSTS`.
 
+Optional second Proxmox Backup Server datastore check (off by default). Set `BACKUP_SECONDARY_STORE` to the datastore name to turn it on. It uses the same PBS token and verified TLS as the primary collection, makes read-only calls, and reports two results: coverage (every enrolled guest has a copy, the copy is fresh, it is not behind the primary, and a verify task ran on that datastore) and capacity. A failure here never stops primary collection. Optional limits, with defaults: `BACKUP_SECONDARY_SNAPSHOT_SLA_HOURS` (36), `BACKUP_SECONDARY_SOURCE_LAG_GRACE_HOURS` (8), `BACKUP_SECONDARY_VERIFY_SLA_HOURS` (36), `BACKUP_SECONDARY_MIN_AVAILABLE_GIB` (64), `BACKUP_SECONDARY_MAX_UTILIZATION_PERCENT` (90). This does not change the "backup is not supported for new installations" rule above.
+
 Mount collection can use `MOUNT_CATALOG_FILE`, `MOUNT_SSH_HOST`, `MOUNT_SSH_USER`, `MOUNT_SSH_KEY`, `MOUNT_KNOWN_HOSTS`, and `MOUNT_DELIVER_TIMEOUT_S`. A generic catalog placeholder is provided at `config/mounts.catalog.example.toml`; it intentionally contains no real topology.
 
 ## Local AI and evidence options

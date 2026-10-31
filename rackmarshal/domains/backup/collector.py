@@ -38,6 +38,11 @@ class CollectionError(Exception):
 
 
 
+from rackmarshal.domains.backup.secondary_monitor import (
+    collect_secondary,
+    configured_store,
+)
+
 # --- STEP3_PBS_STORE_PROBE begin ---
 def _backup_conf(key: str, default: str = "") -> str:
     if os.environ.get(key):
@@ -648,6 +653,13 @@ def main():
                 targets,
         }
 
+
+        # Optional second datastore check; off unless BACKUP_SECONDARY_STORE is set.
+        secondary_store = configured_store()
+        if secondary_store:
+            observation['secondary_pbs'] = collect_secondary(
+                pbs_get, pbs, secondary_store
+            )
 
         # --- STEP3_PBS_STORE_PROBE attach ---
         if backup_ssh_configured():
