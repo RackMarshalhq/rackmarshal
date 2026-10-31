@@ -33,6 +33,9 @@ jobs:
           # GitHub's Ubuntu image has /opt at 0777 and /var/log at root:syslog 0775. Debian 12 has 0755 root:root.
           sudo chmod 0755 /opt /var/log
           sudo chown root:root /var/log
+          # A default ACL on a parent makes new folders ignore the installer's umask.
+          sudo setfacl -k /opt /var/log /etc /var/lib || true
+          getfacl -p /opt | tee "$RUNNER_TEMP/opt-acl.txt"
       - name: Install exactly as INSTALL.md says
         run: |
           # The same steps as INSTALL.md: root extracts into a root-owned folder and runs the installer there.
@@ -44,6 +47,7 @@ jobs:
         run: |
           tail -30 "$RUNNER_TEMP/install.log" | while IFS= read -r line; do echo "::error title=install::${line:0:240}"; done || true
           stat -c '%A %U:%G %n' / /opt /etc /var /var/lib /var/log | while IFS= read -r line; do echo "::error title=install-ancestors::$line"; done || true
+          { getfacl -p /opt; sudo find /opt/rackmarshal -maxdepth 6 -type d -perm /022 -exec stat -c '%A %U:%G %n' {} + 2>/dev/null | head -10; sudo sh -c 'umask'; } | while IFS= read -r line; do echo "::error title=install-acl::$line"; done || true
       - name: Base install is healthy and shows no incidents
         run: |
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9110/health)" = 200
