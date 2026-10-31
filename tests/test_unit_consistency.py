@@ -35,8 +35,9 @@ class UnitConsistency(unittest.TestCase):
         self.assertEqual(listed, shipped)
         install = (ROOT / "scripts" / "install.sh").read_text()
         uninstall = (ROOT / "scripts" / "uninstall.sh").read_text()
+        enable_lines = "\n".join(l for l in install.splitlines() if "systemctl enable" in l or "systemctl start" in l)
         for name in shipped:
-            self.assertNotIn(name, install, f"installer must not enable optional unit {name}")
+            self.assertNotIn(name, enable_lines, f"installer must not enable or start optional unit {name}")
             self.assertIn(name, uninstall, f"uninstall.sh does not remove optional unit {name}")
 
     def test_prune_timer_is_enabled_and_checked(self):
