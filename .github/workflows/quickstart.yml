@@ -70,7 +70,13 @@ jobs:
           echo "systemd: $state"
           if [ "$state" != running ]; then
             sudo systemctl --failed --plain --no-legend --no-pager | tee "$RUNNER_TEMP/failed-units.txt" || true
-            sudo systemctl list-jobs --no-pager | tee "$RUNNER_TEMP/jobs.txt" || true
+            # GitHub's image has a failed mnt.mount that has nothing to do with RackMarshal. Only that unit may be cleared.
+            if [ "$(awk '{print $1}' "$RUNNER_TEMP/failed-units.txt" | sort -u | tr '\n' ' ')" = "mnt.mount " ]; then
+              sudo systemctl reset-failed mnt.mount
+            fi
+            state=$(sudo systemctl is-system-running || true)
+            echo "systemd after clearing the runner's own failure: $state"
+            test "$state" = running
           fi
       - name: Soak preflight refuses a machine that was not declared disposable
         run: |
