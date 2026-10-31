@@ -60,6 +60,7 @@ On success the installer ends with `RACKMARSHAL_INSTALL_OK`. It also prints a st
 - `rackmarshal-notify.service`
 - `rackmarshal-notify.timer`
 - `rackmarshal-db-snapshot.service` and `rackmarshal-db-snapshot.timer` (a daily copy of the database, see [CONFIGURATION.md](CONFIGURATION.md))
+- `rackmarshal-observation-prune.service` and `rackmarshal-observation-prune.timer` (a weekly removal of observations older than 35 days, see [CONFIGURATION.md](CONFIGURATION.md))
 - one `rackmarshal-domain@<name>` timer for each domain listed in `ENABLED_DOMAINS`
 
 The configuration directory is root-owned and group-readable by RackMarshal. State and log directories are owned by the RackMarshal service account. A base install enables no monitoring domains.

@@ -59,7 +59,7 @@ jobs:
           sudo /opt/rackmarshal/venv/bin/rackmarshal validate-config --config "$cfg"
           sudo /opt/rackmarshal/venv/bin/rackmarshal setup-plan --config "$cfg"
           sudo /opt/rackmarshal/venv/bin/rackmarshal domains
-          systemctl is-active rackmarshal-status.service rackmarshal-notify.timer rackmarshal-db-snapshot.timer
+          systemctl is-active rackmarshal-status.service rackmarshal-notify.timer rackmarshal-db-snapshot.timer rackmarshal-observation-prune.timer
       - name: The installer's database snapshot exists and is valid
         run: |
           sudo test -f /var/lib/rackmarshal/db-snapshots/state.db.latest

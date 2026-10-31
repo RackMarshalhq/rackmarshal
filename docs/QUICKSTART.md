@@ -5,7 +5,7 @@ This takes a fresh base install ([INSTALL.md](../INSTALL.md)) to a first real ob
 Before you start, check the base install:
 
 ```bash
-systemctl is-active rackmarshal-status.service rackmarshal-notify.timer rackmarshal-db-snapshot.timer
+systemctl is-active rackmarshal-status.service rackmarshal-notify.timer rackmarshal-db-snapshot.timer rackmarshal-observation-prune.timer
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9110/health   # expect 200
 ```
 

@@ -74,6 +74,14 @@ The installer enables a daily timer, `rackmarshal-db-snapshot.timer` (03:15 UTC)
 - **Restore.** Snapshots are ordinary SQLite files. Stop the services and timers, keep a copy of the current database, copy the snapshot over `state.db` with the same owner and mode (`rackmarshal:rackmarshal`, `0640`), run `PRAGMA integrity_check` on it, then start them again. Practise this once on a spare machine before you need it.
 - **Not a backup of the machine.** The copies live on the same disk as the database. Copy them off the machine if you want protection against disk loss.
 
+## Observation retention
+
+The installer enables a weekly timer, `rackmarshal-observation-prune.timer` (Sundays 04:05 UTC), that deletes stored observations older than 35 days. Without it the database grows without limit. It always keeps the newest two observations of each kind, never deletes the observation a processor is still working from, and removes an observation together with its processing record in one transaction per batch. It does not delete baselines or incidents, and it does not shrink the file: freed space is reused by new data.
+
+- **Check what it would do.** `sudo -u rackmarshal env RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf RACKMARSHAL_STATE_DB=/var/lib/rackmarshal/state.db /opt/rackmarshal/venv/bin/python -m rackmarshal.maintenance.prune --dry-run`
+- **Keep more or fewer days.** Set `RACKMARSHAL_OBSERVATION_RETAIN_DAYS` (minimum 7) with `sudo systemctl edit rackmarshal-observation-prune.service` and an `[Service]` section containing an `Environment=` line.
+- **Snapshots first.** Take a manual snapshot (see Database snapshots) before the first prune on a database that is already large.
+
 ## Optional path overrides
 
 The shared configuration layer also supports:
