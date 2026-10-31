@@ -34,7 +34,7 @@ sudo systemctl enable --now rackmarshal-domain@zfs.timer     # use the domain yo
 
 The installer cannot be run again for this: it refuses to run over an existing installation. **For `pve`, `zfs`, `backup` and `ha`, record a baseline first** (next section; there is no backup tool yet), or every resource they find is reported as new and opens an incident.
 
-Run `rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf` before enabling a domain. Use `rackmarshal domains` to list supported domain identifiers and `rackmarshal diagnostic` for a non-secret operational summary.
+Run `rackmarshal validate-config --config /etc/rackmarshal/rackmarshal.conf` before enabling a domain. Use `sudo /opt/rackmarshal/venv/bin/rackmarshal domains` to list supported domain identifiers and `sudo /opt/rackmarshal/venv/bin/rackmarshal diagnostic` for a non-secret operational summary (the application folder is readable only by root and the `rackmarshal` group).
 
 ## Baselines: telling RackMarshal what healthy looks like
 
@@ -51,7 +51,7 @@ Operator tools in the installer bundle record them. Both are insert-only: they n
 
    It prints an `observation_id`. The observation must be less than 15 minutes old when you adopt it.
 
-2. Look at what that observation contains, then adopt the pools you have checked are healthy. From the extracted bundle:
+2. Look at what that observation contains, then adopt the pools you have checked are healthy. As root, from the extracted bundle folder (`/root/rm-install/rackmarshal-installer-<version>`, see [INSTALL.md](INSTALL.md)):
 
    ```bash
    sudo mkdir -m 700 /root/baseline-backups

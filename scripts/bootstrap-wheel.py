@@ -46,13 +46,13 @@ def trusted_read(path, owner=0):
     path = Path(path).absolute()
     for parent in path.parents:
         info = parent.lstat()
-        require(stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(info.st_mode), 'unsafe input ancestor')
+        require(stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(info.st_mode), 'unsafe input ancestor: %s' % parent)
         # The input itself must be in owner-controlled storage. A sticky system
         # temporary ancestor may contain private fixtures/staging, but not files
         # directly supplied from that shared directory.
-        require(info.st_uid in (0, owner), 'foreign input ancestor')
+        require(info.st_uid in (0, owner), 'foreign input ancestor: %s' % parent)
         if info.st_mode & 0o022:
-            require(info.st_uid == 0 and info.st_mode & stat.S_ISVTX and parent != path.parent, 'writable input ancestor')
+            require(info.st_uid == 0 and info.st_mode & stat.S_ISVTX and parent != path.parent, 'writable input ancestor: %s (reading %s)' % (parent, path))
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     try:
         info = os.fstat(fd)
@@ -119,8 +119,8 @@ def assert_fresh_paths(paths, owner=0):
         require(not os.path.lexists(path), 'existing installation path; preserve and review')
         for parent in path.parents:
             info = parent.lstat()
-            require(stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(info.st_mode), 'unsafe installation ancestor')
-            require(info.st_uid in (0, owner) and not info.st_mode & 0o022, 'writable/foreign installation ancestor')
+            require(stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(info.st_mode), 'unsafe installation ancestor: %s' % parent)
+            require(info.st_uid in (0, owner) and not info.st_mode & 0o022, 'writable/foreign installation ancestor: %s' % parent)
 
 def prepare(bundle, wheel, staging_parent='/run', owner=0, config=None):
     """Validate all inputs before creating private staging or persistent install paths."""

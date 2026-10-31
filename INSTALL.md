@@ -2,11 +2,13 @@
 
 ## What this installs, and what it needs
 
-RackMarshal 1.3 installs on a **fresh** Debian or Ubuntu machine (a small LXC container or VM is fine) that uses systemd and has Python 3.11 or newer with the `venv` module. Debian 12 is the reference platform.
+RackMarshal 1.3 installs on a **fresh Debian 12** machine (a small LXC container or VM is fine) that uses systemd and has Python 3.11 or newer with the `venv` module. Debian 12 is the only qualified platform.
+
+**Ubuntu is not supported in 1.3.** The installer refuses to create its directories under a folder that the group or others can write to. Stock Ubuntu makes `/var/log` writable by the `syslog` group (`drwxrwxr-x root:syslog`), so the installer stops with `writable/foreign installation ancestor`. Debian's `/var/log` is `drwxr-xr-x root:root`. Do not change the permissions of system folders to get past this.
 
 - **Fresh installs only.** The installer refuses to run if any RackMarshal directory, service account or systemd unit already exists. It never upgrades, repairs or reinstalls over an existing installation. See [UPGRADE.md](UPGRADE.md) for moving from an earlier release.
-- **Nothing is downloaded.** The installer does not run `apt`, `pip` or any network operation. Install Python 3.11+, `python3-venv` and the standard systemd tools yourself first (on Debian or Ubuntu: `sudo apt install python3 python3-venv`).
-- **Root is required**, and the installer must be run from the extracted bundle.
+- **Nothing is downloaded.** The installer does not run `apt`, `pip` or any network operation. Install Python 3.11+, `python3-venv` and the standard systemd tools yourself first (on Debian 12: `sudo apt install python3 python3-venv`).
+- **Root is required**, and the installer must be run from a bundle that root extracted into a root-owned folder. The installer refuses to run files that a normal user owns or can change, so extracting the bundle in your own home folder fails with `foreign input ancestor`.
 - **Release candidate.** 1.3.0 release candidates have not completed the release gate. The exact-artifact qualification result for each release is stated in its release notes. Use a disposable container or VM, or take a snapshot, until you are comfortable.
 
 ## Get and verify the files
@@ -27,9 +29,12 @@ Every file you downloaded should report `OK`. Get `SHA256SUMS` from the release 
 ## Install
 
 ```bash
-tar -xzf rackmarshal-installer-<version>.tar.gz
+sudo -i                                    # become root for the next steps
+umask 022                                  # the installer refuses folders that others can write
+mkdir /root/rm-install && cd /root/rm-install
+tar --no-same-owner -xzf /path/to/rackmarshal-installer-<version>.tar.gz
 cd rackmarshal-installer-<version>
-sudo ./scripts/install.sh --wheel ./rackmarshal-<version>-py3-none-any.whl
+./scripts/install.sh --wheel ./rackmarshal-<version>-py3-none-any.whl
 ```
 
 Use the version in your file names, for example `rackmarshal-installer-1.3.0-rc1` and `rackmarshal-1.3.0rc1-py3-none-any.whl`.
