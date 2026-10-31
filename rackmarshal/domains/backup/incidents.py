@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from rackmarshal.core.config import state_db
+from rackmarshal.domains.start_marker import StartMarkerRefused, resolve_checkpoint
 
 
 DEFAULT_DB = state_db()
@@ -260,10 +261,12 @@ def main():
         ).fetchone()[0]
 
         if checkpoint is None:
-            fail(
-                "backup incident processor has "
-                "no bootstrap checkpoint"
-            )
+            try:
+                checkpoint = resolve_checkpoint(
+                    conn, "backup", observation_id, True
+                )
+            except StartMarkerRefused as exc:
+                fail(str(exc))
 
         expected_next = conn.execute(
             """
