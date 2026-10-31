@@ -69,7 +69,7 @@ The ZFS tool refuses a pool that is not `ONLINE`, that does not report a permane
 
 The installer enables a daily timer, `rackmarshal-db-snapshot.timer` (03:15 UTC), that writes a consistent copy of the state database to `/var/lib/rackmarshal/db-snapshots/`. Each copy is checked with SQLite's `quick_check` before it is kept, and a copy that fails is discarded. The newest copy is also kept as `state.db.latest`. The installer runs one snapshot at the end of a normal install and fails if it does not succeed.
 
-- **Disk space.** Each snapshot is a full copy of the database. Plan for roughly (kept snapshots + 1) times the database size; with the default of 7 kept, that is 8 times. A snapshot is refused, with an error in the journal, when the disk has less than twice the database size free, so it cannot fill the disk. 1.3 does not prune old observations, so the database grows with use.
+- **Disk space.** Each snapshot is a full copy of the database. Plan for roughly (kept snapshots + 1) times the database size; with the default of 7 kept, that is 8 times. A snapshot is refused, with an error in the journal, when the disk has less than twice the database size free, so it cannot fill the disk. The weekly observation prune (see the prune section below) keeps the observation tables from growing without limit; events and incidents are kept.
 - **Keep more or fewer.** Set `RACKMARSHAL_DB_SNAPSHOT_RETENTION` (and, if you want another folder, `RACKMARSHAL_DB_SNAPSHOT_DIR`) with `sudo systemctl edit rackmarshal-db-snapshot.service` and an `[Service]` section containing `Environment=` lines. If you move the folder, also add it to `ReadWritePaths=` there.
 - **Restore.** Snapshots are ordinary SQLite files. Stop the services and timers, keep a copy of the current database, copy the snapshot over `state.db` with the same owner and mode (`rackmarshal:rackmarshal`, `0640`), run `PRAGMA integrity_check` on it, then start them again. Practise this once on a spare machine before you need it.
 - **Not a backup of the machine.** The copies live on the same disk as the database. Copy them off the machine if you want protection against disk loss.
@@ -138,7 +138,7 @@ The rule only affects the status port; loopback is always allowed and everything
 
 ## Observation retention
 
-The installer enables a weekly timer, `rackmarshal-observation-prune.timer` (Sundays 04:05 UTC), that deletes stored observations older than 35 days. Without it the database grows without limit. It always keeps the newest two observations of each kind, never deletes the observation a processor is still working from, and removes an observation together with its processing record in one transaction per batch. It does not delete baselines or incidents, and it does not shrink the file: freed space is reused by new data.
+The installer enables a weekly timer, `rackmarshal-observation-prune.timer` (Sundays 04:05 UTC), that deletes stored observations older than 35 days. Without it the database grows without limit. It always keeps the newest two observations of each kind, never deletes the observation a processor is still working from, and removes an observation together with its processing record in one transaction per batch. It does not delete baselines, incidents or events (the evidence behind incidents), so those rows still accumulate slowly; they are small compared with observations. It does not shrink the file: freed space is reused by new data.
 
 - **Check what it would do.** `sudo -u rackmarshal env RACKMARSHAL_CONFIG=/etc/rackmarshal/rackmarshal.conf RACKMARSHAL_STATE_DB=/var/lib/rackmarshal/state.db /opt/rackmarshal/venv/bin/python -m rackmarshal.maintenance.prune --dry-run`
 - **Keep more or fewer days.** Set `RACKMARSHAL_OBSERVATION_RETAIN_DAYS` (minimum 7) with `sudo systemctl edit rackmarshal-observation-prune.service` and an `[Service]` section containing an `Environment=` line.
@@ -183,6 +183,8 @@ PBS_TOKEN_ID=...
 PBS_TOKEN_SECRET=...
 PBS_DATASTORE=...
 ```
+
+`PBS_API_URL` is the address of the backup server with the port and nothing after it, for example `https://pbs.example.invalid:8007`. Unlike `PVE_API_URL` it must **not** end in `/api2/json`, because the collector adds that itself. RackMarshal always verifies the server certificate, so the name in the URL must be one of the names the certificate is issued for (`PBS_CA_FILE` points at that certificate). A bare IP address fails with "certificate is not valid for" unless the certificate lists it. If the certificate lists a short name, use it and map it to the server's address in `/etc/hosts` on the RackMarshal machine (for example `192.0.2.10 pbs`). The token needs only a read-only role such as `DatastoreAudit` on the datastore.
 
 The Home Assistant collector expects its credential file to provide `HA_URL` and `HA_TOKEN`.
 
