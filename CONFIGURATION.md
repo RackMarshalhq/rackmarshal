@@ -164,10 +164,14 @@ Default credential/certificate paths are under `/etc/rackmarshal`; these files a
 The PVE collector expects the PVE environment file to contain:
 
 ```text
-PVE_API_URL=...
-PVE_TOKEN_ID=...
+PVE_API_URL=https://pve.example.invalid:8006/api2/json
+PVE_TOKEN_ID=user@realm!tokenname
 PVE_TOKEN_SECRET=...
 ```
+
+`PVE_API_URL` must end in `/api2/json`; the collector adds its own paths to it, and without the ending Proxmox answers HTTP 500 "no such file". Give the token the read-only `PVEAuditor` role (for example `pveum acl modify / --tokens 'user@realm!tokenname' --roles PVEAuditor`); a token created with privilege separation has no permissions until you do. Certificate files named by `PVE_CA_FILE` must be owned by the service account with mode 0600.
+
+**First run.** The Proxmox and backup incident processors work through observations strictly in order, so each needs a starting marker. You do not create it: the first time a processor runs on an empty ledger it writes the marker itself, at the newest earlier observation of the same kind if there is one (for example after carrying baselines from an older site), so the observation being processed is handled normally and a difference from the baseline opens an incident straight away. It logs `first run: ... starting marker created at observation N`. If the ledger is empty but incidents already exist, it refuses and tells you, because that suggests a restored or damaged database. After the first run a skipped observation is still reported as a gap. Do not start a domain service by hand right after enabling its timer: the timer runs it at once, and two runs in a row can create a gap.
 
 PVE-backed backup and mount collection also require `PVE_NODE` in `rackmarshal.conf`.
 

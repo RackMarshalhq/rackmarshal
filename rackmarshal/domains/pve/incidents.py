@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from rackmarshal.core.config import install_root, state_db, venv_python
+from rackmarshal.domains.start_marker import StartMarkerRefused, resolve_checkpoint
 
 # Phase 2 Step 13: derive PYTHON/COMPARATOR from config helpers
 # (defaults = today's layout).
@@ -227,9 +228,12 @@ def preflight_processing_order(observation_id):
         checkpoint = checkpoint_row["observation_id"]
 
         if checkpoint is None:
-            raise IncidentProcessorError(
-                "incident processing ledger has no checkpoint"
-            )
+            try:
+                checkpoint = resolve_checkpoint(
+                    connection, "pve", observation_id, False
+                )
+            except StartMarkerRefused as exc:
+                raise IncidentProcessorError(str(exc)) from None
 
         expected_observation_id = (
             expected_next_pve_observation(
@@ -349,9 +353,12 @@ def process(observation_id):
         checkpoint = checkpoint_row["observation_id"]
 
         if checkpoint is None:
-            raise IncidentProcessorError(
-                "incident processing ledger has no checkpoint"
-            )
+            try:
+                checkpoint = resolve_checkpoint(
+                    connection, "pve", observation_id, True
+                )
+            except StartMarkerRefused as exc:
+                raise IncidentProcessorError(str(exc)) from None
 
         expected_observation_id = (
             expected_next_pve_observation(
