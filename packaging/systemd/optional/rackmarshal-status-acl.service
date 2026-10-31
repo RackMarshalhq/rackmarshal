@@ -1,0 +1,16 @@
+[Unit]
+Description=Limit RackMarshal status page to known callers
+After=nftables.service network-online.target
+PartOf=nftables.service
+Before=rackmarshal-status.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/sbin/nft -c -f /etc/rackmarshal/status-acl.nft
+ExecStartPre=-/usr/sbin/nft delete table inet rm_status_acl
+ExecStart=/usr/sbin/nft -f /etc/rackmarshal/status-acl.nft
+ExecStop=-/usr/sbin/nft delete table inet rm_status_acl
+
+[Install]
+WantedBy=multi-user.target

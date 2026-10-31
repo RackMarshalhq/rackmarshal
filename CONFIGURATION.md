@@ -74,6 +74,24 @@ The installer enables a daily timer, `rackmarshal-db-snapshot.timer` (03:15 UTC)
 - **Restore.** Snapshots are ordinary SQLite files. Stop the services and timers, keep a copy of the current database, copy the snapshot over `state.db` with the same owner and mode (`rackmarshal:rackmarshal`, `0640`), run `PRAGMA integrity_check` on it, then start them again. Practise this once on a spare machine before you need it.
 - **Not a backup of the machine.** The copies live on the same disk as the database. Copy them off the machine if you want protection against disk loss.
 
+## Restricting who can read the status page (optional)
+
+By default the status page listens on `127.0.0.1` only and needs nothing more. If you set `STATUS_API_LISTEN_ADDRESS` to a network address so that other machines (Home Assistant, a monitor) can read it, anyone who can reach that address can read your incident list. To limit it to named callers with the machine's own firewall (nftables; the Proxmox firewall is not involved):
+
+1. Install nftables if it is missing (`sudo apt install nftables`; the RackMarshal installer itself is offline).
+2. As root, from the extracted bundle folder, list the callers and write the rule file. Include this machine's own address if it reads its own page, and check the result before using it:
+
+   ```bash
+   sudo sh -c 'umask 022; python3 -I -B scripts/status-acl.py --allow 192.0.2.10 --allow 192.0.2.0/28 > /etc/rackmarshal/status-acl.nft'
+   cat /etc/rackmarshal/status-acl.nft
+   sudo nft -c -f /etc/rackmarshal/status-acl.nft    # syntax check; changes nothing
+   ```
+
+3. Install and start the rule: `sudo install -m 0644 packaging/systemd/optional/rackmarshal-status-acl.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now rackmarshal-status-acl.service`
+4. Test from an allowed machine (the page answers) and from one that is not listed (the connection hangs and then times out). Keep another way into the machine open until you have tested.
+
+The rule only affects the status port; loopback is always allowed and everything else is untouched. To remove it: `sudo systemctl disable --now rackmarshal-status-acl.service`. The uninstaller removes the unit. After you change the caller list, regenerate the file and run `sudo systemctl restart rackmarshal-status-acl.service`.
+
 ## Observation retention
 
 The installer enables a weekly timer, `rackmarshal-observation-prune.timer` (Sundays 04:05 UTC), that deletes stored observations older than 35 days. Without it the database grows without limit. It always keeps the newest two observations of each kind, never deletes the observation a processor is still working from, and removes an observation together with its processing record in one transaction per batch. It does not delete baselines or incidents, and it does not shrink the file: freed space is reused by new data.
