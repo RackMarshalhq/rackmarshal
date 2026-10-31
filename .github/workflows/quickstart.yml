@@ -35,6 +35,10 @@ jobs:
           cd "$work"/rackmarshal-installer-*
           sudo sh -c 'umask 022; ./scripts/install.sh --wheel ./rackmarshal-*-py3-none-any.whl' 2>&1 | tee "$RUNNER_TEMP/install.log"
           grep -q RACKMARSHAL_INSTALL_OK "$RUNNER_TEMP/install.log"
+      - name: Show the installer output if it failed
+        if: failure()
+        run: |
+          tail -30 "$RUNNER_TEMP/install.log" | while IFS= read -r line; do echo "::error title=install::${line:0:240}"; done || true
       - name: Base install is healthy and shows no incidents
         run: |
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9110/health)" = 200
