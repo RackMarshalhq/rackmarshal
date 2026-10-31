@@ -5,7 +5,7 @@ Optional. The status page listens on 127.0.0.1 by default and then needs no rule
 If you set STATUS_API_LISTEN_ADDRESS to a network address, run this to list who may
 connect. It only prints; it changes nothing. See CONFIGURATION.md.
 
-  python3 status-acl.py --allow 192.168.1.10 --allow 192.168.1.0/28 > status-acl.nft
+  python3 status-acl.py --allow 192.0.2.10 --allow 192.0.2.0/28 > status-acl.nft
 """
 import argparse
 import ipaddress
