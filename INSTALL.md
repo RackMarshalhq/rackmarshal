@@ -30,6 +30,7 @@ Every file you downloaded should report `OK`. Get `SHA256SUMS` from the release 
 
 ```bash
 sudo -i                                    # become root for the next steps
+umask 022                                  # the installer refuses folders that others can write
 mkdir /root/rm-install && cd /root/rm-install
 tar --no-same-owner -xzf /path/to/rackmarshal-installer-<version>.tar.gz
 cd rackmarshal-installer-<version>

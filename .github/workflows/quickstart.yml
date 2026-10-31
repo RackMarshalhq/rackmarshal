@@ -36,8 +36,7 @@ jobs:
       - name: Install exactly as INSTALL.md says
         run: |
           # The same steps as INSTALL.md: root extracts into a root-owned folder and runs the installer there.
-          sudo mkdir /root/rm-install
-          sudo tar --no-same-owner -xzf dist/rackmarshal-installer-*.tar.gz -C /root/rm-install
+          sudo sh -c 'umask 022; mkdir /root/rm-install && tar --no-same-owner -xzf "$1" -C /root/rm-install' sh "$PWD"/dist/rackmarshal-installer-*.tar.gz
           sudo sh -c 'umask 022; cd /root/rm-install/rackmarshal-installer-* && ./scripts/install.sh --wheel ./rackmarshal-*-py3-none-any.whl' 2>&1 | tee "$RUNNER_TEMP/install.log"
           grep -q RACKMARSHAL_INSTALL_OK "$RUNNER_TEMP/install.log"
       - name: Show the installer output if it failed
