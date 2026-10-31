@@ -21,8 +21,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - uses: actions/download-artifact@v4
@@ -43,7 +43,7 @@ jobs:
         env:
           CANDIDATE_SOURCE: ${{ github.sha }}
         run: python scripts/release-candidate-gate.py --source "$CANDIDATE_SOURCE" --record .qualification/release.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: rackmarshal-release-candidate
           path: |
@@ -58,7 +58,7 @@ jobs:
     env:
       TAG: ${{ inputs.draft_release_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v4
         with:
           name: rackmarshal-release-candidate
