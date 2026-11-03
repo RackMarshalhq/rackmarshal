@@ -62,6 +62,34 @@ class CandidateGateTests(unittest.TestCase):
             if change=='scope':r['kind']='production_routine_use'
             self.write('synthetic_72h',r)
             with self.subTest(change=change),self.assertRaises(ValueError):self.verify()
+    def installer_rc_record(self,hours=25,count=300,step=300):
+        record={'source_commit':self.source,'artifacts':self.assets,'supported_activation':[],'gates':{'production_routine_72h':{'status':'PENDING'}}}
+        for name in gate.INSTALLER_RC_REQUIRED:
+            receipt={'gate':name,'result':'PASS','source_commit':self.source,'artifacts':self.assets}
+            if name=='installer_soak_24h':
+                start=datetime.now(timezone.utc)-timedelta(hours=hours)
+                samples=[{'sequence':i,'result':'PASS','at':(start+timedelta(seconds=i*step)).isoformat()} for i in range(count)]
+                receipt.update(kind='installer_soak',start=samples[0]['at'],finished=samples[-1]['at'],samples=samples)
+            p=self.root/(name+'-rc.json');p.write_text(json.dumps(receipt));record['gates'][name]={'status':'PASS','receipt':p.name,'sha256':gate.digest(p)}
+        return record
+    def test_installer_rc_scope_needs_installer_soak_and_no_client_activation(self):
+        record=self.installer_rc_record(hours=25,count=300,step=300)
+        self.assertTrue(gate.verify(record,self.root,self.source,self.assets,'installer-rc'))
+        # The same evidence never satisfies the default candidate scope or the stable scope.
+        for scope in ('candidate','stable'):
+            with self.subTest(scope=scope),self.assertRaises(ValueError):gate.verify(record,self.root,self.source,self.assets,scope)
+    def test_installer_rc_scope_rejects_short_or_sparse_soak_and_missing_gate(self):
+        for hours,count,step in ((23,280,300),(30,100,1000),(25,300,500)):
+            with self.subTest(hours=hours,count=count),self.assertRaises(ValueError):
+                gate.verify(self.installer_rc_record(hours,count,step),self.root,self.source,self.assets,'installer-rc')
+        record=self.installer_rc_record();record['gates']['installer_soak_24h']['status']='PENDING'
+        with self.assertRaises(ValueError):gate.verify(record,self.root,self.source,self.assets,'installer-rc')
+        record=self.installer_rc_record();record['gates']['synthetic_72h']={'status':'PENDING'}
+        with self.assertRaises(ValueError):gate.verify(record,self.root,self.source,self.assets,'installer-rc')
+    def test_installer_rc_scope_does_not_accept_activation_pass_outside_supported_scope(self):
+        record=self.installer_rc_record()
+        record['gates']['activation_local_explicit']=dict(record['gates']['tests'])
+        with self.assertRaises(ValueError):gate.verify(record,self.root,self.source,self.assets,'installer-rc')
     def test_duplicate_and_receipt_escape_fail(self):
         p=self.root/'duplicate.json';p.write_text('{"result":"FAIL","result":"PASS"}')
         with self.assertRaises(ValueError):gate.read_json(p)

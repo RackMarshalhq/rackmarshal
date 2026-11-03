@@ -11,6 +11,9 @@ import sys
 import tomllib
 
 REQUIRED = ('tests', 'lifecycle', 'privacy_review', 'dependency_review', 'synthetic_72h')
+# The installer-rc scope qualifies a release candidate of the installable product only: the 24-hour installer soak
+# replaces the 72-hour synthetic window, and no MCP client activation mode is claimed or required.
+INSTALLER_RC_REQUIRED = ('tests', 'lifecycle', 'privacy_review', 'dependency_review', 'installer_soak_24h')
 CLIENTS = {'local_explicit', 'private_hosted_explicit', 'desktop', 'implicit', 'other_clients', 'broader_distribution'}
 
 
@@ -36,10 +39,10 @@ def instant(value):
     return result.astimezone(timezone.utc)
 
 
-def verify_window(receipt, kind):
+def verify_window(receipt, kind, min_hours=72, min_samples=2):
     if receipt.get('kind') != kind: raise ValueError('wrong evidence scope')
     samples = receipt.get('samples', [])
-    if len(samples) < 2: raise ValueError('missing window samples')
+    if len(samples) < max(2, min_samples): raise ValueError('missing window samples')
     times = []
     for index, sample in enumerate(samples):
         if sample.get('sequence') != index or sample.get('result') != 'PASS':
@@ -47,7 +50,7 @@ def verify_window(receipt, kind):
         times.append(instant(sample['at']))
     if any(not 0 < (b-a).total_seconds() <= 420 for a,b in zip(times,times[1:])):
         raise ValueError('invalid sample gap')
-    if (times[-1]-times[0]).total_seconds() < 72*3600 or times[-1] > datetime.now(timezone.utc):
+    if (times[-1]-times[0]).total_seconds() < min_hours*3600 or times[-1] > datetime.now(timezone.utc):
         raise ValueError('window incomplete or in the future')
     if instant(receipt['start']) != times[0] or instant(receipt['finished']) != times[-1]:
         raise ValueError('window identity mismatch')
@@ -58,13 +61,15 @@ def verify(record, root, source, artifacts, scope):
         raise ValueError('qualification source mismatch')
     if record.get('artifacts') != artifacts: raise ValueError('qualification artifact mismatch')
     supported = record.get('supported_activation', [])
-    if not isinstance(supported, list) or len(set(supported)) != len(supported) or not {'local_explicit','private_hosted_explicit'} <= set(supported) or not set(supported) <= CLIENTS:
+    installer_rc = scope == 'installer-rc'
+    if not isinstance(supported, list) or len(set(supported)) != len(supported) or not set(supported) <= CLIENTS or (not installer_rc and not {'local_explicit','private_hosted_explicit'} <= set(supported)):
         raise ValueError('activation scope must be explicit')
     gates = record.get('gates', {})
     if 'production_routine_72h' not in gates: raise ValueError('production evidence state missing')
-    required = set(REQUIRED) | {'activation_' + name for name in supported}
+    required = set(INSTALLER_RC_REQUIRED if installer_rc else REQUIRED) | {'activation_' + name for name in supported}
     if scope == 'stable': required.add('production_routine_72h')
     allowed = set(REQUIRED) | {'production_routine_72h'} | {'activation_' + name for name in CLIENTS}
+    if installer_rc: allowed = (allowed - {'synthetic_72h'}) | {'installer_soak_24h'}
     if not set(gates) <= allowed: raise ValueError('unknown evidence gate')
     for name in required:
         if gates.get(name, {}).get('status', 'PENDING') != 'PASS': raise ValueError('gate not passed: ' + name)
@@ -82,6 +87,7 @@ def verify(record, root, source, artifacts, scope):
         if receipt.get('result') != 'PASS' or receipt.get('gate') != name or receipt.get('source_commit') != source or receipt.get('artifacts') != artifacts:
             raise ValueError('receipt identity/result mismatch: ' + name)
         if name == 'synthetic_72h': verify_window(receipt, 'disposable_synthetic')
+        if name == 'installer_soak_24h': verify_window(receipt, 'installer_soak', min_hours=24, min_samples=280)
         if name == 'production_routine_72h': verify_window(receipt, 'production_routine_use')
         if name.startswith('activation_') and receipt.get('activation') != name[len('activation_'):]:
             raise ValueError('activation receipt scope mismatch')
@@ -93,7 +99,7 @@ def main():
     parser.add_argument('--record', type=Path, required=True)
     parser.add_argument('--dist', type=Path, default=Path('dist'))
     parser.add_argument('--source', required=True)
-    parser.add_argument('--scope', choices=('candidate','stable'), default='candidate')
+    parser.add_argument('--scope', choices=('candidate','stable','installer-rc'), default='candidate')
     args = parser.parse_args()
     try:
         actual = subprocess.check_output(['git','rev-parse','HEAD'],text=True,timeout=30).strip()
@@ -101,6 +107,7 @@ def main():
         if subprocess.check_output(['git','status','--porcelain','--untracked-files=all'],text=True,timeout=30).strip():
             raise ValueError('tracked source edits are not qualified')
         version = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
+        if 'rc' not in version and args.scope == 'installer-rc': raise ValueError('installer-rc scope is for release candidates only')
         if 'rc' not in version and args.scope != 'stable': raise ValueError('stable version requires routine-use evidence')
         label = version.replace('rc','-rc')
         expected = {f'rackmarshal-{version}-py3-none-any.whl', f'rackmarshal-{version}.tar.gz',
