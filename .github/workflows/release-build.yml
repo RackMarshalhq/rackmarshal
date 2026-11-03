@@ -9,6 +9,14 @@ on:
         description: Same-repository run containing release-qualification receipts
         required: true
         type: string
+      gate_scope:
+        description: Evidence profile. installer-rc = 24-hour installer soak, no MCP client activation claimed (release candidates only)
+        required: false
+        default: candidate
+        type: choice
+        options:
+          - candidate
+          - installer-rc
       draft_release_tag:
         description: Optional. An existing tag (for example v1.3.0-rc1) to attach the assets to as a DRAFT release
         required: false
@@ -42,7 +50,8 @@ jobs:
       - name: Verify qualification and scan exact assets before checksums
         env:
           CANDIDATE_SOURCE: ${{ github.sha }}
-        run: python scripts/release-candidate-gate.py --source "$CANDIDATE_SOURCE" --record .qualification/release.json
+          GATE_SCOPE: ${{ inputs.gate_scope }}
+        run: python scripts/release-candidate-gate.py --source "$CANDIDATE_SOURCE" --record .qualification/release.json --scope "$GATE_SCOPE"
       - uses: actions/upload-artifact@v7
         with:
           name: rackmarshal-release-candidate
