@@ -13,13 +13,14 @@ defaults:
     shell: bash
 jobs:
   docs:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, where the installer (qualified on Debian 12 only) stops at "unexpected venv link".
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - name: Docs match the code
         run: python3 scripts/check-docs.py
   fresh-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
