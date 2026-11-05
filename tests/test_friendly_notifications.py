@@ -136,6 +136,30 @@ CASES = {
         "resource_type": "rackmarshal_self", "resource_key": "unit:rackmarshal-zfs-cycle.timer",
         "incident_type": "UNIT_INACTIVE",
     },
+    "guest_no_snapshot": {
+        "resource_type": "backup_guest", "resource_key": "109", "display_name": "game-server",
+        "incident_type": "STATUS-CHANGED",
+        "note": "Observed differences: snapshot_present: expected 1, actual 0; latest_snapshot: expected 'present', actual None",
+    },
+    "guest_secondary_missing": {
+        "resource_type": "backup_guest", "resource_key": "106", "display_name": "web",
+        "incident_type": "STATUS-CHANGED",
+        "note": "Observed differences: secondary_copy: expected 'present_when_primary_stale', actual 'missing:ct/106'",
+    },
+    "host_verify_failed": {
+        "resource_type": "backup_host_verify", "resource_key": "host-backup-verification",
+        "display_name": "Host backup verification", "incident_type": "STATUS-CHANGED",
+        "note": "Observed differences: failed_count: expected 0, actual 1; failing_checks: expected 'none', actual 'integrity /etc/example.cfg'; status: expected 'OK', actual None",
+    },
+    "phone_probe": {
+        "resource_type": "backup_phone", "resource_key": "sam", "incident_type": "STATUS-CHANGED",
+        "note": "Observed differences: phone_backup: expected 'present', actual 'missing_probe'",
+    },
+    "vdev_cant_open": {
+        "resource_type": "zfs_vdev", "resource_key": "tank/disk-a", "display_name": "disk-a",
+        "incident_type": "STATUS-CHANGED", "expected_status": "ONLINE", "actual_status": "CANT_OPEN",
+        "note": "Observed differences: state: expected 'ONLINE', actual 'CANT_OPEN'; read_errors: expected 0, actual 3",
+    },
     "unknown_type": {
         "resource_type": "something_new", "resource_key": "x", "display_name": "widget",
         "incident_type": "STATUS-CHANGED", "expected_status": "green", "actual_status": "red",
@@ -208,6 +232,14 @@ class FriendlyRenderTests(unittest.TestCase):
         self.assertIn("RackMarshal's ZFS storage check isn't scheduled", render(packet("self_timer"), "OPENED", UTC)[0])
         self.assertIn("RackMarshal's ZFS storage check failed to run", render(packet("self_unit"), "OPENED", UTC)[0])
         self.assertIn("rebuild failed", render(packet("messages_search_failed"), "OPENED", UTC)[0])
+        self.assertIn("No backup was found.", render(packet("guest_no_snapshot"), "OPENED", UTC)[1])
+        self.assertIn("1 check failed; failing: integrity /etc/example.cfg; no status was reported.",
+                      render(packet("host_verify_failed"), "OPENED", UTC)[1])
+        self.assertEqual(render(packet("phone_probe"), "OPENED", UTC)[0],
+                         "⚠️ Sam's phone backup status couldn't be read")
+        title, msg = render(packet("vdev_cant_open"), "OPENED", UTC)
+        self.assertEqual(title, "🔴 Storage device disk-a (pool tank) is failing (can't be opened) (should be online)")
+        self.assertIn("3 read errors reported", msg)
 
     def test_settings(self):
         s = settings_from_config({

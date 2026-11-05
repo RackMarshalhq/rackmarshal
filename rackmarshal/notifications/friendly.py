@@ -190,25 +190,76 @@ def _guest_label(kind_and_id):
     return f"VM {vid}" if kind == "vm" else f"container {vid}"
 
 
+_AGE_LABELS = {
+    "snapshot": "the latest backup",
+    "verify": "the last verification",
+    "log": "the last run",
+}
+
+_STATES = {
+    "SUSPENDED": "suspended",
+    "FAULTED": "failed (faulted)",
+    "CANT_OPEN": "failing (can't be opened)",
+    "ONLINE": "online",
+    "DEGRADED": "degraded",
+    "UNAVAIL": "unavailable",
+    "OFFLINE": "offline",
+    "REMOVED": "removed",
+}
+
+
+def _state(value):
+    return _STATES.get(str(value).upper(), str(value))
+
+
 def _field_text(field, expected, actual):
     f = field.lower()
-    if f.startswith("secondary_verification_metadata:"):
+    base = f.split(":", 1)[0]
+    if base == "secondary_verification_metadata":
         return None  # summarised by the caller
-    if "age_hours" in f:
+    if base == "secondary_copy":
+        if str(actual).startswith("missing"):
+            return "there is no second copy while the main backup is overdue"
+        return f"the second copy is {_hours_text(_num(actual)) or actual} old (limit {_hours_text(_num(expected)) or expected})"
+    if base == "secondary_lag":
+        return "the second copy is behind the main backup"
+    if f.endswith("age_hours"):
+        if _missing(actual):
+            return "no result was found"
+        prefix = f[: -len("age_hours")].rstrip("_")
+        what = _AGE_LABELS.get(prefix, "the last success")
         return (
-            f"last success was {_hours_text(_num(actual)) or actual} ago "
+            f"{what} was {_hours_text(_num(actual)) or actual} ago "
             f"(limit {_hours_text(_num(expected)) or expected})"
         )
     if f == "verification_state":
         if _missing(actual):
             return "the backup hasn't been verified yet"
         return f"verification result is '{actual}'"
+    if f in ("snapshot_present", "latest_snapshot"):
+        if str(actual) in ("0", "None", "") or _missing(actual):
+            return "no backup was found"
+        return "a backup was found where none was expected"
+    if f == "name" and _missing(actual):
+        return "it no longer appears in the backup list"
     if f == "finished":
         return "the run hasn't finished"
+    if f in ("unit_result", "exec_main_status", "status_json"):
+        return "the last run failed"
+    if f == "failed_count":
+        return f"{_plural(int(_num(actual) or 0), 'check')} failed"
+    if f == "failing_checks":
+        return f"failing: {actual}"
+    if f == "probe_errors":
+        return "the check itself reported an error"
     if f in ("status", "state"):
-        return f"{f} is {actual} (normally {expected})"
+        if _missing(actual):
+            return "no status was reported"
+        return f"{f} is {_state(actual)} (normally {_state(expected)})"
     if f.endswith("error_count") or f.endswith("errors"):
-        return f"{field.replace('_', ' ')}: {actual} (normally {expected})"
+        return f"{_plural(int(_num(actual) or 0), field.replace('_', ' ').replace('errors', 'error').replace('error count', 'error').strip())} reported"
+    if _missing(actual):
+        return f"{field.replace('_', ' ')} is missing"
     return f"{field.replace('_', ' ')}: {actual} (expected {expected})"
 
 
@@ -237,9 +288,26 @@ def _sentence(text):
 # severity ("urgent", "info"; default warning).
 
 
+def _probe_problem(i):
+    for field, _e, actual in _diffs(i):
+        if field in ("phone_backup", "messages"):
+            return "unreadable" if "probe" in str(actual) else "missing"
+    return None
+
+
 def _t_phone(i, s):
     who = _person(i.get("resource_key"), s)
     age, limit = _age(i, "phone_age_hours")
+    probe = _probe_problem(i)
+    if probe:
+        return dict(
+            subject=f"{who}'s phone backup",
+            problem=(f"{who}'s phone backup status couldn't be read" if probe == "unreadable"
+                     else f"No backup found for {who}'s phone"),
+            why="RackMarshal can't confirm the phone is backed up.",
+            todo=s["help"] if probe == "unreadable"
+            else f"Back up the phone from its computer. The backup is saved to {s['server']}.",
+        )
     return dict(
         subject=f"{who}'s phone backup",
         problem=f"{who}'s phone hasn't backed up in {_hours_text(age) or 'a while'}",
@@ -302,7 +370,10 @@ def _t_messages(i, s):
             failed = True
         elif field.endswith("_age_hours"):
             age = _num(actual)
-    if failed:
+    if _probe_problem(i) == "unreadable":
+        problem = f"{who}'s Messages backup status couldn't be read"
+        why, todo = "RackMarshal can't confirm the Messages archive is up to date.", None
+    elif failed:
         problem = f"{who}'s nightly message-search rebuild failed"
     elif age is not None:
         problem += f" for {_hours_text(age)}"
@@ -466,8 +537,8 @@ def _t_zfs(i, s):
     if i.get("incident_type") == "MISSING" or _missing(actual):
         problem = f"{what} {label} is missing"
     else:
-        problem = f"{what} {label} is {actual}" + (
-            f" (should be {expected})" if not _missing(expected) else ""
+        problem = f"{what} {label} is {_state(actual)}" + (
+            f" (should be {_state(expected)})" if not _missing(expected) else ""
         )
     detail = _detail_sentence(i)
     return dict(
