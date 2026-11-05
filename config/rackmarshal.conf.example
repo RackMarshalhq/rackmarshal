@@ -39,3 +39,10 @@ STATUS_API_LISTEN_PORT=9110
 # HARDWARE_URGENT_THRESHOLD_C=75
 # HARDWARE_RECOVERY_THRESHOLD_C=55
 # HARDWARE_RECOVERY_REQUIRED_SAMPLES=2
+
+# Notification wording (optional; see CONFIGURATION.md)
+# NOTIFY_STYLE=plain
+# NOTIFY_TIMEZONE=America/New_York
+# NOTIFY_HELP_TEXT=If it doesn't clear on its own, check the RackMarshal status page.
+# NOTIFY_SERVER_NAME=the backup server
+# NOTIFY_DISPLAY_NAMES=alex:Alex,sam:Sam
