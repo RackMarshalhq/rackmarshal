@@ -83,7 +83,8 @@ jobs:
             echo "Tag $TAG does not point at the commit that was qualified and built ($GITHUB_SHA)" >&2; exit 1
           fi
       - name: Checksums still match
-        run: cd release && sha256sum -c SHA256SUMS
+        # The download keeps the upload layout: files under release/dist, SHA256SUMS at release/.
+        run: cd release/dist && sha256sum -c ../SHA256SUMS
       - name: Create the draft release
         env:
           GH_TOKEN: ${{ github.token }}
