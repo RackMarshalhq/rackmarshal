@@ -228,6 +228,16 @@ def secondary_results(packet, resources, observed_epoch, store, settings=None):
                     _change("secondary_lag:" + key, "latest primary copied in time", "behind_primary")
                 )
             verified = _verification_time(row.get("verification_upid"), store)
+            if (
+                row.get("verification_state") in (None, "")
+                and not row.get("verification_upid")
+                and observed_epoch - stamp <= lag_grace
+            ):
+                # A copy that arrived moments ago has not been verified yet; that is the
+                # normal order of work. Only a copy with no verification record at all is
+                # tolerated, and only while it is younger than the lag grace. Any recorded
+                # state other than ok (failed, running, unknown) still reports at once.
+                continue
             if row.get("verification_state") != "ok" or verified is None:
                 coverage.append(
                     _change(

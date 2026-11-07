@@ -112,6 +112,24 @@ class Comparison(unittest.TestCase):
         self.assertTrue(one("ok", upid(at=NOW - 40 * H)))     # too old
         self.assertTrue(one("ok", upid(at=NOW + 3600)))       # in the future
 
+    def test_unverified_new_copy_is_pending_not_a_finding(self):
+        def one(age_hours, state=None, u=None):
+            stamp = NOW - int(age_hours * H)
+            row = {"backup_time": stamp}
+            if state is not None:
+                row["verification_state"] = state
+            if u is not None:
+                row["verification_upid"] = u
+            res = guests(stamp)
+            return changes(run(packet(latest={"vm/100": row}), res))["pbs-secondary-coverage"]
+        self.assertEqual(one(4), [])                                   # copied, not yet verified
+        self.assertEqual(one(7.9), [])                                 # still inside the 8 h grace
+        self.assertIn("secondary_verification_metadata:vm/100", one(8.5))   # grace over
+        self.assertTrue(one(4, state="failed"))                        # a recorded failure reports now
+        self.assertTrue(one(4, state="running"))                       # any other state reports now
+        self.assertTrue(one(4, state="ok"))                            # ok without a verify task reference
+        self.assertTrue(one(4, u=upid(store="elsewhere")))             # a reference to another store
+
     def test_capacity_thresholds(self):
         low = packet(capacity={"total": 1000 * GIB, "used": 960 * GIB, "avail": 40 * GIB})
         self.assertEqual(changes(run(low))["pbs-secondary-capacity"],
