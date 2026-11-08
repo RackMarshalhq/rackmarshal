@@ -100,14 +100,14 @@ class Comparison(unittest.TestCase):
         self.assertIn("secondary_lag:vm/100", out)
 
     def test_verification_rules(self):
-        def one(state, u):
+        def one(state, u, age=2):
             return changes(run(packet(latest={"vm/100": {
-                "backup_time": NOW - 2 * H, "verification_state": state,
+                "backup_time": NOW - age * H, "verification_state": state,
                 "verification_upid": u}})))["pbs-secondary-coverage"]
         self.assertEqual(one("ok", upid()), [])
         self.assertTrue(one("failed", upid()))
         self.assertTrue(one("ok", None))
-        self.assertTrue(one("ok", upid(store="elsewhere")))   # verified a different store
+        self.assertTrue(one("ok", upid(store="elsewhere"), age=10))   # other store, copy older than the grace
         self.assertTrue(one("ok", upid(kind="backup")))       # not a verify task
         self.assertTrue(one("ok", upid(at=NOW - 40 * H)))     # too old
         self.assertTrue(one("ok", upid(at=NOW + 3600)))       # in the future
@@ -128,7 +128,20 @@ class Comparison(unittest.TestCase):
         self.assertTrue(one(4, state="failed"))                        # a recorded failure reports now
         self.assertTrue(one(4, state="running"))                       # any other state reports now
         self.assertTrue(one(4, state="ok"))                            # ok without a verify task reference
-        self.assertTrue(one(4, u=upid(store="elsewhere")))             # a reference to another store
+        self.assertTrue(one(4, u=upid(store="elsewhere")))             # a reference with no state
+        # The "ok" record a copy brings from its source datastore is pending, not a finding.
+        source_ref = upid(store="elsewhere")
+        self.assertEqual(one(4, state="ok", u=source_ref), [])
+        self.assertEqual(one(7.9, state="ok", u=source_ref), [])
+        self.assertIn("secondary_verification_metadata:vm/100", one(8.5, state="ok", u=source_ref))
+        self.assertTrue(one(4, state="failed", u=source_ref))          # failed still reports
+        self.assertTrue(one(4, state="ok", u="not-a-task-id"))         # malformed reference still reports
+        self.assertTrue(one(4, state="ok", u=upid(kind="backup", store="elsewhere")))  # not a verify task
+        self.assertEqual(one(4, state="ok", u=upid()), [])             # verified here: fine
+        # The exact shape a real sync produced (verification job of the source datastore).
+        real = "UPID:pbs:0000025A:0000015B:00000B45:6AF04118:verificationjob:homelab\\x2dbackups\\x3aweekly\\x2dhomelab:root@pam:"
+        self.assertEqual(one(4, state="ok", u=real), [])
+        self.assertTrue(one(10, state="ok", u=real))
 
     def test_capacity_thresholds(self):
         low = packet(capacity={"total": 1000 * GIB, "used": 960 * GIB, "avail": 40 * GIB})
