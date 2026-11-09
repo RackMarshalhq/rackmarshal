@@ -8,6 +8,7 @@ import subprocess
 from rackmarshal.process import run as run_process, CREDENTIAL_TIMEOUT_SECONDS
 import urllib.error
 from rackmarshal import http
+from rackmarshal.notifications import plain_language
 
 from rackmarshal.core.config import (
     ha_credential_file,
@@ -100,7 +101,9 @@ def deterministic_opened(packet):
     if count is not None:
         lines.append(f"Occurrence count: {count}.")
 
-    return " ".join(lines)
+    return plain_language.opened_text(
+        packet.get("source_domain"), incident, " ".join(lines)
+    )
 
 
 def deterministic_recovery(packet):
@@ -128,7 +131,9 @@ def deterministic_recovery(packet):
     if recovered_at:
         text += f" Recovered at {recovered_at}."
 
-    return text
+    return plain_language.recovery_text(
+        packet.get("source_domain"), incident, text
+    )
 
 
 

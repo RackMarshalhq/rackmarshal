@@ -238,7 +238,32 @@ def _cmd_migrate(args):
         sys.argv = saved_argv
 
 
+def _cmd_doctor(args):
+    from rackmarshal.core.doctor import describe, run_doctor
+
+    report = run_doctor(args.config)
+    print(describe(report))
+    return 2 if report["failed"] else 0
+
+
+def _cmd_retire_guest(args):
+    from rackmarshal.maintenance.retire_guest import RetireError, describe, retire
+
+    try:
+        if args.apply and os.geteuid() != 0:
+            raise RetireError("Applying changes the database, so run this as root (for example with sudo).")
+        database = require(load_config(args.config), "STATE_DB")
+        result = retire(database, args.guests, args.note or "", args.apply, args.backup_dir)
+    except (RetireError, ConfigError) as exc:
+        print("Refused: %s" % exc)
+        return 2
+    print(describe(result))
+    return 2 if result["state"] == "REFUSED" else 0
+
+
 COMMANDS = {
+    "doctor": _cmd_doctor,
+    "retire-guest": _cmd_retire_guest,
     "validate-config": _cmd_validate_config,
     "domains": _cmd_domains,
     "setup-plan": _cmd_setup_plan,
@@ -266,6 +291,15 @@ def _build_parser():
     check = commands.add_parser("investigator-check", help="Read-only MCP connection and authority check")
     check.add_argument("--url", default=DEFAULT_INVESTIGATOR_URL)
     add_config_option(commands.add_parser("diagnostic"))
+    add_config_option(
+        commands.add_parser("doctor", help="Read-only first-run health check in plain words")
+    )
+    retire = commands.add_parser("retire-guest", help="Forget Proxmox guests you deleted (plan first; --apply changes)")
+    add_config_option(retire)
+    retire.add_argument("guests", nargs="+", metavar="GUEST", help="guest number as shown in Proxmox, e.g. 123")
+    retire.add_argument("--note", help="why (required with --apply)")
+    retire.add_argument("--backup-dir", help="where to save the database copy (default: beside the database)")
+    retire.add_argument("--apply", action="store_true")
     migrate = commands.add_parser("migrate")
     add_config_option(migrate)
     migrate.add_argument("--apply", action="store_true")

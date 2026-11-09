@@ -537,6 +537,52 @@ def main():
 
                 incidents_ongoing += 1
 
+        #
+        # A NEW incident means "this guest or job is not in the baseline".
+        # If it is no longer reported at all (the guest was deleted, the job
+        # was removed) there is no later MATCH to recover it, so recover it
+        # here. Only NEW incidents are handled; a MISSING one must stay open.
+        #
+        reported = {
+            (item["resource_type"], item["resource_key"])
+            for item in results
+        }
+
+        for open_row in conn.execute(
+            """
+            SELECT id, resource_type, resource_key
+            FROM backup_incidents
+            WHERE incident_state = 'OPEN'
+              AND incident_type = 'NEW'
+              AND resource_type IN ('backup_guest', 'backup_job')
+            ORDER BY id
+            """
+        ).fetchall():
+            if (open_row["resource_type"], open_row["resource_key"]) in reported:
+                continue
+
+            conn.execute(
+                """
+                UPDATE backup_incidents
+                SET
+                    incident_state = 'RECOVERED',
+                    recovered_observation_id = ?,
+                    recovered_at = ?,
+                    updated_at = strftime(
+                        '%Y-%m-%dT%H:%M:%fZ',
+                        'now'
+                    )
+                WHERE id = ?
+                """,
+                (
+                    observation_id,
+                    observed_at,
+                    open_row["id"],
+                ),
+            )
+
+            incidents_recovered += 1
+
         conn.execute(
             """
             INSERT INTO backup_incident_processing (
