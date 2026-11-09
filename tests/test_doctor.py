@@ -20,7 +20,7 @@ class DoctorTests(unittest.TestCase):
         self.conf = self.root / "rackmarshal.conf"
         self.conf.write_text("STATE_DB=%s\nSITE_NAME=fictional\nENABLED_DOMAINS=\n" % self.db)
         self.resolv = self.root / "resolv.conf"
-        self.resolv.write_text("nameserver 192.168.1.1\n")
+        self.resolv.write_text("nameserver 198.51.100.1\n")
         with closing(sqlite3.connect(self.db)) as c:
             c.executescript(Path("rackmarshal/db/migrations/010_cycle_health.sql").read_text().replace(
                 "INSERT INTO metadata", "-- INSERT INTO metadata").replace("VALUES ('cycle_health_schema', '1')", "").replace(
