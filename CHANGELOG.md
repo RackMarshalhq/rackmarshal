@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased (after 1.3.0)
+
+- **Plain-language notifications.** Home Assistant incident notifications now say what is wrong, whether it matters and what to do, for example "⚠️ Container web (105) is stopped (should be running)" instead of "RackMarshal Incident OPENED [PVE]" followed by raw field values; recoveries say what cleared and how long it lasted. Times use `NOTIFY_TIMEZONE` (default: local time). Set `NOTIFY_STYLE=classic` to keep the earlier text. Incidents, events and the status page are unchanged, and the classic text is sent if the new text cannot be built. See CONFIGURATION.md.
+
 ## 1.3.0rc1 — Release candidate (release gate pending)
 
 RackMarshal 1.2 was never released. 1.3 includes all of the 1.2.0 candidate work listed below.

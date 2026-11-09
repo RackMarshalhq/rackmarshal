@@ -11,9 +11,15 @@ from rackmarshal import http
 from rackmarshal.notifications import plain_language
 
 from rackmarshal.core.config import (
+    ConfigError,
     ha_credential_file,
+    load_config,
     local_ai_attach_to_notify,
     local_ai_enabled,
+)
+from rackmarshal.notifications.friendly import (
+    render_safe as friendly_text,
+    settings_from_config as friendly_settings_from_config,
 )
 
 
@@ -23,6 +29,14 @@ WORKER = "incident_notification_delivery_worker"
 
 class DeliveryError(RuntimeError):
     pass
+
+
+def friendly_settings():
+    """Plain-language notification settings; defaults if the config is unreadable."""
+    try:
+        return friendly_settings_from_config(load_config())
+    except (ConfigError, OSError):
+        return friendly_settings_from_config({})
 
 
 def utc_now():
@@ -466,6 +480,16 @@ def deliver_one(
             raise DeliveryError(
                 "unsupported notification type"
             )
+
+        # Plain-language wording (NOTIFY_STYLE); falls back to the
+        # classic text above on any error.
+        title, message = friendly_text(
+            packet,
+            row["notification_type"],
+            title,
+            message,
+            friendly_settings(),
+        )
 
         notification_id = (
             f"{notification_prefix}_"

@@ -232,6 +232,18 @@ Optional second Proxmox Backup Server datastore check (off by default). Set `BAC
 
 Mount collection can use `MOUNT_CATALOG_FILE`, `MOUNT_SSH_HOST`, `MOUNT_SSH_USER`, `MOUNT_SSH_KEY`, `MOUNT_KNOWN_HOSTS`, and `MOUNT_DELIVER_TIMEOUT_S`. A generic catalog placeholder is provided at `config/mounts.catalog.example.toml`; it intentionally contains no real topology.
 
+## Notification wording
+
+Incident notifications sent to Home Assistant use plain language by default: a title that names the problem, then **What's wrong**, **Does it matter?** and **What to do**, with the incident reference and the time it started. A recovery notification says what cleared and how long it lasted. Only the notification text changes; incidents, events and the status page keep the full details. If the text cannot be built for any reason, the classic text is sent instead.
+
+Optional settings:
+
+- `NOTIFY_STYLE`: `plain` (default) or `classic` (the earlier "RackMarshal Incident OPENED [DOMAIN]" text).
+- `NOTIFY_TIMEZONE`: IANA time zone for times in notifications, for example `America/New_York`. Default: the system's local time zone.
+- `NOTIFY_HELP_TEXT`: the sentence used when the next step is to get help. Default: "If it doesn't clear on its own, check the RackMarshal status page."
+- `NOTIFY_SERVER_NAME`: what notifications call the backup server. Default: "the backup server".
+- `NOTIFY_DISPLAY_NAMES`: names for per-person backup checks, as `key:Name` pairs separated by commas, for example `alex:Alex,sam:Sam`. Default: the key with a capital first letter.
+
 ## Local AI and evidence options
 
 The shared configuration layer currently recognizes `LOCAL_AI_ENABLED`, `LOCAL_AI_TIMEOUT_SECONDS`, and `LOCAL_AI_ATTACH_TO_NOTIFY`. Evidence export recognizes the `RACKMARSHAL_STATUS_URL`, `RACKMARSHAL_EVIDENCE_RETAIN_DAYS`, and `RACKMARSHAL_EVIDENCE_RETENTION_CLASS` environment variables.
