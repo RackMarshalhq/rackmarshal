@@ -6,6 +6,10 @@
 
 Install 1.3 on a new machine or container, set up the configuration and credentials again, and record baselines (see [CONFIGURATION.md](CONFIGURATION.md)). A new installation starts with a new history. Leave the old installation in place and running until you are satisfied with the new one; the 1.3 installer will not run on a machine that has RackMarshal on it.
 
+## Checking a future upgrade (read-only)
+
+`rackmarshal upgrade-plan --wheel rackmarshal-<version>-py3-none-any.whl --sums SHA256SUMS` shows whether a newer 1.3.x release could be applied safely. It also accepts `--sha256 <checksum>` for a checksum you copied from a different place than the download. It checks that the installed files still match the installed release (a hand patch is named), that the new file matches its checksum, that both versions are 1.3.x, and whether the database would need changing. It changes nothing, and there is no apply step yet, so 1.3 still has no in-place upgrade.
+
 ## Why there is no in-place upgrade
 
 RackMarshal 1.0.0 and 1.1.0 RC1 can record a pool that is online but reports permanent data errors as a counter change that opens no incident, and can close an open incident for that pool as recovered. They also record a missing error count as zero. Equal database schemas do not make it safe to carry that history forward unchanged, so the 1.3 tooling does not accept stable 1.0.0 as a starting point.
