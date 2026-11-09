@@ -41,4 +41,6 @@ Every named guest (`--resource lxc:<id>` or `qemu:<id>`, repeated) must have a b
 sudo python3 -I -B retire-pve-baseline.py --db /var/lib/rackmarshal/state.db --observation-id N --resource lxc:123 --approval-note "why" --backup-dir /root/baseline-backups          # plan only
 ```
 
+The same thing, without an observation number or backup directory, is `rackmarshal retire-guest 123` (plan) and `sudo rackmarshal retire-guest 123 --apply --note "why"` (change). It uses the newest recorded PVE observation, which must be under 900 seconds old; run the Proxmox check once if it says the observation is too old.
+
 Add `--apply` after reading the plan. To undo, restore the database copy the tool printed, or insert the rows again with the adoption tool while the guest exists.
