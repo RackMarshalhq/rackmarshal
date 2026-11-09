@@ -86,6 +86,24 @@ def _verification_time(upid, store):
         return None
 
 
+def _verification_store(upid):
+    """Datastore named by a well-formed verify task id, else None."""
+    if not isinstance(upid, str):
+        return None
+    parts = upid.split(":")
+    if (
+        len(parts) != 10
+        or parts[0] != "UPID"
+        or parts[6] not in ("verify", "verify_snapshot", "verificationjob")
+    ):
+        return None
+    identity = re.sub(
+        r"\\x([0-9a-fA-F]{2})", lambda m: chr(int(m.group(1), 16)), parts[7]
+    )
+    name = identity.split(":", 1)[0]
+    return name or None
+
+
 def collect_secondary(pbs_get, config, store, now=None):
     """Read-only metadata packet for the observation. Never raises."""
     packet = {
@@ -228,15 +246,22 @@ def secondary_results(packet, resources, observed_epoch, store, settings=None):
                     _change("secondary_lag:" + key, "latest primary copied in time", "behind_primary")
                 )
             verified = _verification_time(row.get("verification_upid"), store)
-            if (
-                row.get("verification_state") in (None, "")
-                and not row.get("verification_upid")
-                and observed_epoch - stamp <= lag_grace
+            state = row.get("verification_state")
+            reference = row.get("verification_upid")
+            if observed_epoch - stamp <= lag_grace and (
+                (state in (None, "") and not reference)
+                or (
+                    state == "ok"
+                    and verified is None
+                    and _verification_store(reference) not in (None, store)
+                )
             ):
-                # A copy that arrived moments ago has not been verified yet; that is the
-                # normal order of work. Only a copy with no verification record at all is
-                # tolerated, and only while it is younger than the lag grace. Any recorded
-                # state other than ok (failed, running, unknown) still reports at once.
+                # A copy that arrived moments ago has not been verified here yet; that is the
+                # normal order of work. Two shapes are tolerated, and only while the copy is
+                # younger than the lag grace: no verification record at all, and the "ok"
+                # record the copy brought from its source datastore (a verify task of another
+                # datastore). Any other state (failed, running, unknown) and any malformed
+                # reference still report at once.
                 continue
             if row.get("verification_state") != "ok" or verified is None:
                 coverage.append(
