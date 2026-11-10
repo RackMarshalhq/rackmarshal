@@ -1,6 +1,8 @@
 # Private lifecycle qualification (internal)
 
-**Update:** `scripts/lifecycle.py` no longer pins the dev2 predecessor. It accepts any 1.3.x predecessor wheel whose checksum the operator supplies with `--previous-sha256`, requires the bundle's own release to be newer and in the 1.3 series, and keeps every other refusal (schema or unit changes, custom layouts, unfinished transactions). The text below describes the original dev2/dev3 chain and is kept as written; it is still not qualified on a real machine.
+**Update:** `scripts/lifecycle.py` no longer pins the dev2 predecessor. It accepts any 1.3.x predecessor wheel whose checksum the operator supplies with `--previous-sha256`, requires the bundle's own release to be newer and in the 1.3 series, and keeps every other refusal (schema or unit changes, custom layouts, unfinished transactions). **Health proof:** `upgrade` first requires `rackmarshal doctor` to pass on the installed version. After the workloads resume it waits (`--verify-timeout`, default 1800 seconds) until every enabled domain has recorded a successful run newer than the end of acceptance, then requires a clean `rackmarshal doctor`; a domain failure or a timeout holds the workloads and rolls back automatically, keeping newer records. Rollback itself is not re-verified this way. This has only been tested with fakes, not on real systemd.
+
+The text below describes the original dev2/dev3 chain and is kept as written; it is still not qualified on a real machine.
 
 This is internal qualification tooling for a chain of private development builds. It is not an upgrade path for users; see [UPGRADE.md](../../UPGRADE.md). The text below is kept as written for the development builds it describes.
 

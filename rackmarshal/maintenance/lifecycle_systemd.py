@@ -13,9 +13,10 @@ ALLOWED = set(BASE + INSTANCES)
 
 
 class SystemdRuntime:
-    def __init__(self, marker, unit_directory, accept, readiness, owner=0, runner=None):
+    def __init__(self, marker, unit_directory, accept, readiness, owner=0, runner=None, verify=None):
         self.marker, self.unit_directory = Path(marker).absolute(), Path(unit_directory).absolute()
         self.accept_callback, self.readiness = accept, readiness
+        self.verify_callback = verify
         self.owner = owner
         self.runner = runner or self._run
         self.commands = []
@@ -133,6 +134,11 @@ class SystemdRuntime:
 
     def accept(self, transaction, journal):
         self.accept_callback(transaction,journal)
+
+    def verify(self, transaction, journal):
+        """Health proof after workloads resumed; a no-op unless a callback was supplied."""
+        if self.verify_callback is not None:
+            self.verify_callback(transaction, journal)
 
     def resume(self, transaction, snapshot, authorize):
         require(json.loads(read(self.marker,self.owner)) == {'transaction':str(Path(transaction).absolute())},'maintenance ownership differs')
