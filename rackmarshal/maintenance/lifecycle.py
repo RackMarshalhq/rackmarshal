@@ -266,6 +266,12 @@ class Lifecycle:
                 require(self.protected_hashes() == protected, 'protected files changed')
                 self.save(transaction, journal, 'ACCEPTED')
                 self.runtime.resume(transaction, journal['runtime'], lambda: self.save(transaction,journal,'RESUME_AUTHORIZED'))
+                # Optional health proof against the resumed, live system. A failure holds the
+                # workloads again and leaves RECOVERY_REQUIRED; COMMITTED is never written for it.
+                verify = getattr(self.runtime, 'verify', None)
+                if verify is not None:
+                    self.save(transaction, journal, 'VERIFYING')
+                    verify(transaction, journal)
                 self.save(transaction, journal, 'COMMITTED')
             except BaseException as exc:
                 journal['error'] = repr(exc)
@@ -285,7 +291,7 @@ class Lifecycle:
                     require(json.loads(read(path,self.owner))['phase'] in ('COMMITTED','ROLLED_BACK','REFUSED'), 'another unfinished transaction')
             journal = json.loads(read(transaction / 'transaction.json', self.owner))
             require(journal['active'] == str(self.active) and journal['database'] == str(self.database), 'transaction target differs')
-            require(journal['phase'] in ('STAGING', 'STAGED', 'GUARD_INTENT', 'GUARDED', 'QUIESCED', 'COMMITTED', 'RECOVERY_REQUIRED', 'OLD_RETAINED', 'ACTIVATED', 'ACCEPTED', 'OLD_RENAME_INTENT', 'ROLLBACK_INTENT', 'ROLLBACK_GUARD_INTENT', 'RESUME_AUTHORIZED'), 'unsupported rollback phase')
+            require(journal['phase'] in ('STAGING', 'STAGED', 'GUARD_INTENT', 'GUARDED', 'QUIESCED', 'COMMITTED', 'RECOVERY_REQUIRED', 'OLD_RETAINED', 'ACTIVATED', 'ACCEPTED', 'OLD_RENAME_INTENT', 'ROLLBACK_INTENT', 'ROLLBACK_GUARD_INTENT', 'RESUME_AUTHORIZED', 'VERIFYING'), 'unsupported rollback phase')
             previous = transaction / 'previous'
             previous_exists = previous.exists()
             if previous_exists: require(inventory(previous, self.owner) == journal['before'], 'rollback bytes corrupt')
