@@ -21,7 +21,7 @@ class IntegrationTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name).resolve()
  def test_cli_refuses_unisolated_invocation_before_mutation(self):
-  result=subprocess.run([sys.executable,'-B',str(ROOT/'scripts/lifecycle.py'),'upgrade','--previous-wheel','/nonexistent'],capture_output=True,text=True)
+  result=subprocess.run([sys.executable,'-B',str(ROOT/'scripts/lifecycle.py'),'upgrade','--previous-wheel','/nonexistent','--previous-sha256','0000000000000000000000000000000000000000000000000000000000000000'],capture_output=True,text=True)
   self.assertEqual(result.returncode,1);self.assertIn('Linux root python3 -I -B -S required',result.stderr)
  def test_final_activation_paths(self):
   target=self.root/'staging';venv.EnvBuilder(with_pip=False).create(target)
