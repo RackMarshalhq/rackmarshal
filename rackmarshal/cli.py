@@ -246,6 +246,20 @@ def _cmd_doctor(args):
     return 2 if report["failed"] else 0
 
 
+def _cmd_upgrade_plan(args):
+    from rackmarshal.maintenance.upgrade_plan import PlanError, describe, plan
+
+    try:
+        database = require(load_config(args.config), "STATE_DB")
+        site = ROOT.parent
+        result = plan(site, database, args.wheel, args.sums, args.sha256)
+    except (PlanError, ConfigError) as exc:
+        print("Refused: %s" % exc)
+        return 2
+    print(describe(result))
+    return 2 if result["status"] == "REFUSED" else 0
+
+
 def _cmd_retire_guest(args):
     from rackmarshal.maintenance.retire_guest import RetireError, describe, retire
 
@@ -262,6 +276,7 @@ def _cmd_retire_guest(args):
 
 
 COMMANDS = {
+    "upgrade-plan": _cmd_upgrade_plan,
     "doctor": _cmd_doctor,
     "retire-guest": _cmd_retire_guest,
     "validate-config": _cmd_validate_config,
@@ -294,6 +309,11 @@ def _build_parser():
     add_config_option(
         commands.add_parser("doctor", help="Read-only first-run health check in plain words")
     )
+    upgrade = commands.add_parser("upgrade-plan", help="Read-only check of whether an upgrade could be applied safely")
+    add_config_option(upgrade)
+    upgrade.add_argument("--wheel", required=True, help="the new release's rackmarshal-*.whl file")
+    upgrade.add_argument("--sums", help="the release's SHA256SUMS file")
+    upgrade.add_argument("--sha256", help="the wheel's checksum copied separately from the release page")
     retire = commands.add_parser("retire-guest", help="Forget Proxmox guests you deleted (plan first; --apply changes)")
     add_config_option(retire)
     retire.add_argument("guests", nargs="+", metavar="GUEST", help="guest number as shown in Proxmox, e.g. 123")
