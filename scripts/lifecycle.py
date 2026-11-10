@@ -1,12 +1,33 @@
 #!/usr/bin/env python3
-"""Private same-schema dev2/dev3 lifecycle. No legacy stable downgrade support."""
+"""Same-schema 1.3.x lifecycle (plan, upgrade, rollback, recover). Qualification tooling, not yet a supported upgrade path. No legacy stable (1.0/1.1) support."""
 import argparse,uuid,hashlib,importlib.util,json,os,pwd,re,sqlite3,stat,subprocess,sys,tempfile,venv
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('lifecycle_bootstrap',ROOT/'scripts/bootstrap-wheel.py')
 B=importlib.util.module_from_spec(spec);spec.loader.exec_module(B)
-DEV2='1.2.0rc6.dev2'
-DEV2_SHA='137663acf2bd799b606c2a38db15b646d1a4649417f5c5a697a306afcfe725a5'
+SERIES=(1,3)
+VERSION_PATTERN=re.compile(r'^(\d+)\.(\d+)\.(\d+)(?:rc(\d+))?$')
+
+
+def version_key(text):
+    m=VERSION_PATTERN.match(str(text));B.require(m is not None,'unsupported version format: '+str(text))
+    major,minor,patch,rc=m.groups()
+    return (int(major),int(minor),int(patch),float('inf') if rc is None else int(rc))
+
+
+def previous_identity(wheel,expected_sha256):
+    """Verify the predecessor wheel against a checksum the operator supplied; return (version, sha256)."""
+    import email.parser,io,zipfile
+    data=B.trusted_read(wheel);sha=B.digest(data)
+    B.require(re.fullmatch('[0-9a-f]{64}',expected_sha256 or '') is not None,'--previous-sha256 must be 64 lowercase hex digits')
+    B.require(sha==expected_sha256,'predecessor wheel differs from the supplied checksum')
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        metas=[n for n in archive.namelist() if n.endswith('.dist-info/METADATA') and n.count('/')==1]
+        B.require(len(metas)==1,'predecessor wheel has no single METADATA')
+        meta=email.parser.BytesParser().parsebytes(archive.read(metas[0]))
+    B.require(meta.get('Name')=='rackmarshal','predecessor is not a RackMarshal wheel')
+    version=meta.get('Version');B.require(version_key(version)[:2]==SERIES,'predecessor is outside the 1.3 series')
+    return version,sha
 ACTIVE=Path('/opt/rackmarshal/venv');STORE=Path('/opt/rackmarshal/lifecycle-transactions')
 INPUTS=Path('/opt/rackmarshal/lifecycle-inputs');DB=Path('/var/lib/rackmarshal/state.db')
 CONFIG=Path('/etc/rackmarshal/rackmarshal.conf');UNIT_DIR=Path('/etc/systemd/system')
@@ -167,12 +188,14 @@ def semantic(P,python,work):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('action',choices=['plan','upgrade','rollback','recover'])
-    ap.add_argument('--previous-wheel',required=True);ap.add_argument('--transaction');args=ap.parse_args()
+    ap.add_argument('--previous-wheel',required=True);ap.add_argument('--previous-sha256',required=True,help='checksum of the predecessor wheel, copied from the release page');ap.add_argument('--transaction');args=ap.parse_args()
     B.require(os.getuid()==os.geteuid()==0 and sys.flags.isolated and sys.flags.no_site and sys.dont_write_bytecode and sys.platform=='linux','Linux root python3 -I -B -S required')
     B.require(Path(sys.executable).resolve()==Path('/usr/bin/python3').resolve(),'use trusted system interpreter')
     manifest=validate_bundle();L,S,P=import_support()
-    previous=Path(args.previous_wheel).absolute();B.require(B.digest(B.trusted_read(previous))==DEV2_SHA,'only exact corrected dev2 predecessor is supported')
-    old_payload=B.validate_wheel(B.trusted_read(previous),'rackmarshal',DEV2)
+    previous=Path(args.previous_wheel).absolute();PREV,PREV_SHA=previous_identity(previous,args.previous_sha256)
+    B.require(version_key(B.VERSION)[:2]==SERIES,'candidate is outside the 1.3 series')
+    B.require(version_key(B.VERSION)>version_key(PREV),'candidate must be newer than the predecessor')
+    old_payload=B.validate_wheel(B.trusted_read(previous),'rackmarshal',PREV)
     new_wheel=ROOT/B.APP_NAME;new_payload=B.validate_wheel(B.trusted_read(new_wheel),'rackmarshal',B.VERSION)
     migrations=lambda p:{n:v for n,v in p.items() if n.startswith('rackmarshal/db/migrations/') and n.endswith('.sql')}
     B.require(migrations(old_payload)==migrations(new_payload),'schema-changing candidate refused')
@@ -180,22 +203,22 @@ def main():
     protected,config=protected_files(account)
     current=installed_version(ACTIVE) if ACTIVE.exists() else None
     if args.action in ('plan','upgrade'):
-        B.require(current==DEV2,'upgrade requires exact dev2; use rollback/recover for an existing transaction')
-        wheel_inventory(ACTIVE,previous,DEV2)
+        B.require(current==PREV,'installed version must equal the predecessor wheel version; use rollback/recover for an existing transaction')
+        wheel_inventory(ACTIVE,previous,PREV)
     elif ACTIVE.exists():
-        B.require(current in (DEV2,B.VERSION),'unsupported installed version')
-        wheel_inventory(ACTIVE,previous if current==DEV2 else new_wheel,current)
+        B.require(current in (PREV,B.VERSION),'unsupported installed version')
+        wheel_inventory(ACTIVE,previous if current==PREV else new_wheel,current)
     expected_old=L.inventory(ACTIVE,0) if ACTIVE.exists() else None
     schema=schema_matches(L,DB,old_payload)
-    identity={'source_commit':manifest['source_commit'],'candidate_wheel_sha256':manifest['files'][B.APP_NAME],'previous_version':DEV2,'previous_wheel_sha256':DEV2_SHA,'candidate_version':B.VERSION,'unit_policy':'unchanged-exact-payloads'}
+    identity={'source_commit':manifest['source_commit'],'candidate_wheel_sha256':manifest['files'][B.APP_NAME],'previous_version':PREV,'previous_wheel_sha256':PREV_SHA,'candidate_version':B.VERSION,'unit_policy':'unchanged-exact-payloads'}
     if args.action=='plan':
         print(json.dumps(dict(identity,result='ARTIFACT_SCHEMA_PLAN_ONLY',schema=schema['schema_sha256'],semantic_proofs='REQUIRED_AT_EXECUTION'),indent=2));return
     for path in (STORE,INPUTS):
         if not path.exists():path.mkdir(mode=0o700);L.fsync_dir(path.parent)
         L.private_dir(path,0);B.require(stat.S_IMODE(path.stat().st_mode)==0o700,'private lifecycle storage required')
     def accept(transaction,journal):
-        version=DEV2 if journal.get('rollback') else B.VERSION
-        wheel_inventory(ACTIVE,previous if version==DEV2 else new_wheel,version)
+        version=PREV if journal.get('rollback') else B.VERSION
+        wheel_inventory(ACTIVE,previous if version==PREV else new_wheel,version)
         semantic(P,ACTIVE/'bin/python',transaction/('restored-semantic-'+uuid.uuid4().hex if journal.get('rollback') else 'activated-semantic'))
         probe=subprocess.run([str(ACTIVE/'bin/python'),'-I','-B','-c','import rackmarshal.api.v1,rackmarshal.domains.zfs.integrity'],user=account.pw_uid,group=account.pw_gid,extra_groups=[],env={'PATH':'/usr/bin:/bin'},cwd='/',capture_output=True,text=True,timeout=20)
         B.require(probe.returncode==0,'service-account import failed')
@@ -222,7 +245,7 @@ def main():
         transaction=Path(args.transaction).absolute();B.require(transaction.parent==STORE,'foreign transaction')
         journal=json.loads(L.read(transaction/'transaction.json',0));B.require(journal['identity']==identity,'transaction artifacts/source differ')
         old=transaction/'previous' if (transaction/'previous').exists() else ACTIVE
-        wheel_inventory(old,previous,DEV2)
+        wheel_inventory(old,previous,PREV)
         proofdir=Path(tempfile.mkdtemp(prefix='rollback-proof-',dir=INPUTS))
         semantic(P,old/'bin/python',proofdir/'semantic')
         transaction=engine.rollback(transaction,True)

@@ -18,4 +18,4 @@ If you run 1.0.0 or 1.1.0 RC1 today, check `zpool status -v` by hand for permane
 
 ## The lifecycle script in the bundle
 
-The installer bundle contains `scripts/lifecycle.py`. It is internal qualification tooling that supports only one exact chain between two private development builds. It is not an upgrade or rollback path for any release, and the install instructions do not use it. See [Private lifecycle qualification](docs/development/PRIVATE_LIFECYCLE_QUALIFICATION.md) if you want the details.
+The installer bundle contains `scripts/lifecycle.py`. It is internal qualification tooling for same-schema 1.3.x to 1.3.y changes: the predecessor wheel must be supplied with its checksum (`--previous-sha256`), and releases with database changes, changed units or custom layouts are refused. It has not been qualified on a real machine, is not an upgrade or rollback path for any release, and the install instructions do not use it. See [Private lifecycle qualification](docs/development/PRIVATE_LIFECYCLE_QUALIFICATION.md) if you want the details.

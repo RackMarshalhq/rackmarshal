@@ -1,5 +1,7 @@
 # Private lifecycle qualification (internal)
 
+**Update:** `scripts/lifecycle.py` no longer pins the dev2 predecessor. It accepts any 1.3.x predecessor wheel whose checksum the operator supplies with `--previous-sha256`, requires the bundle's own release to be newer and in the 1.3 series, and keeps every other refusal (schema or unit changes, custom layouts, unfinished transactions). The text below describes the original dev2/dev3 chain and is kept as written; it is still not qualified on a real machine.
+
 This is internal qualification tooling for a chain of private development builds. It is not an upgrade path for users; see [UPGRADE.md](../../UPGRADE.md). The text below is kept as written for the development builds it describes.
 
 Version 1.2.0rc6.dev3 implements a restricted, same-schema private qualification path: exact corrected dev2 → dev3 → dev2 → dev3. It is not a public support promise or a completed Linux qualification. The fresh installer refuses existing installations and cannot be used to upgrade or reinstall preserved state.
