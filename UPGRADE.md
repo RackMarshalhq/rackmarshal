@@ -10,6 +10,12 @@ Install 1.3 on a new machine or container, set up the configuration and credenti
 
 `rackmarshal upgrade-plan --wheel rackmarshal-<version>-py3-none-any.whl --sums SHA256SUMS` shows whether a newer 1.3.x release could be applied safely. It also accepts `--sha256 <checksum>` for a checksum you copied from a different place than the download. It checks that the installed files still match the installed release (a hand patch is named), that the new file matches its checksum, that both versions are 1.3.x, and whether the database would need changing. It changes nothing, and there is no apply step yet, so 1.3 still has no in-place upgrade.
 
+## `rackmarshal upgrade` (not yet supported)
+
+`rackmarshal upgrade --bundle <extracted new installer> --wheel-sha256 <checksum> --previous-wheel <installed release wheel> --previous-sha256 <checksum>` runs the checks above against the wheel in the bundle and prints the exact command it would run. Only with `--apply --note "why"` (as root) does it run the bundle's lifecycle script, which takes a verified database backup, pauses the scheduled checks, switches the program folder, waits for one successful run of every enabled check plus a clean `rackmarshal doctor`, and rolls back by itself if that fails. It handles only 1.3.x to 1.3.y releases with no database change.
+
+**This has not been qualified on a real machine and is not a supported upgrade path. Do not use `--apply` on a system you depend on.** The plan form (without `--apply`) is read-only.
+
 ## Why there is no in-place upgrade
 
 RackMarshal 1.0.0 and 1.1.0 RC1 can record a pool that is online but reports permanent data errors as a counter change that opens no incident, and can close an open incident for that pool as recovered. They also record a missing error count as zero. Equal database schemas do not make it safe to carry that history forward unchanged, so the 1.3 tooling does not accept stable 1.0.0 as a starting point.
