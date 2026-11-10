@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Same-schema 1.3.x lifecycle (plan, upgrade, rollback, recover). Qualification tooling, not yet a supported upgrade path. No legacy stable (1.0/1.1) support."""
-import argparse,uuid,hashlib,importlib.util,json,os,pwd,re,sqlite3,stat,subprocess,sys,tempfile,venv
+import argparse,uuid,hashlib,importlib.util,json,os,pwd,re,sqlite3,stat,subprocess,sys,tempfile,time,venv
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('lifecycle_bootstrap',ROOT/'scripts/bootstrap-wheel.py')
@@ -186,9 +186,56 @@ def semantic(P,python,work):
     return {'receipt':str(work/'receipt.json'),'receipt_sha256':B.digest((work/'receipt.json').read_bytes()),'suite':'zfs-integrity-v1','commands':len(result['commands'])}
 
 
+class VerifyFailed(RuntimeError):
+    """The live health proof after an upgrade failed; the caller rolls back."""
+
+
+def utc_stamp():
+    from datetime import datetime,timezone
+    return datetime.now(timezone.utc).isoformat(timespec='microseconds').replace('+00:00','Z')
+
+
+def doctor_run(python,config,runner=subprocess.run):
+    """Run `rackmarshal doctor` with the given interpreter. Returns (exit status, text). Read-only."""
+    done=runner([str(python),'-I','-B','-m','rackmarshal.cli','doctor','--config',str(config)],capture_output=True,text=True,timeout=120,
+                cwd='/',env={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin','LC_ALL':'C'})
+    return done.returncode,(done.stdout or '')+(done.stderr or '')
+
+
+def wait_for_domain_runs(db,domains,since,timeout,sleep=time.sleep,clock=time.monotonic,interval=15):
+    """Wait until every enabled domain has recorded a successful run at or after `since` (UTC ISO text).
+
+    Fails at once when a domain records a failure after `since`, and on timeout.
+    """
+    deadline=clock()+timeout
+    while True:
+        pending=[]
+        connection=sqlite3.connect('file:'+str(db)+'?mode=ro',uri=True,timeout=10)
+        try:
+            rows={r[0]:r for r in connection.execute('SELECT unit_name,health_state,last_success_at,last_failure_at FROM cycle_health')}
+        finally:
+            connection.close()
+        for domain in domains:
+            row=rows.get('rackmarshal-domain@'+domain+'.service')
+            if row is not None and row[3] and row[3]>=since and (not row[2] or row[2]<row[3]):
+                raise VerifyFailed('domain '+domain+' failed after the upgrade (recorded at '+row[3]+')')
+            if row is None or row[1]!='SUCCESS' or not row[2] or row[2]<since:pending.append(domain)
+        if not pending:return
+        if clock()>=deadline:raise VerifyFailed('no successful run yet for: '+', '.join(pending)+' within '+str(timeout)+' seconds')
+        sleep(interval)
+
+
+def health_after_resume(python,config,db,domains,since,timeout,runner=subprocess.run,sleep=time.sleep,clock=time.monotonic):
+    """One successful run of every enabled check, then a clean `rackmarshal doctor`. Returns the doctor text."""
+    wait_for_domain_runs(db,domains,since,timeout,sleep,clock)
+    status,text=doctor_run(python,config,runner)
+    if status!=0:raise VerifyFailed('rackmarshal doctor reported a problem after the upgrade:\n'+text)
+    return text
+
+
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('action',choices=['plan','upgrade','rollback','recover'])
-    ap.add_argument('--previous-wheel',required=True);ap.add_argument('--previous-sha256',required=True,help='checksum of the predecessor wheel, copied from the release page');ap.add_argument('--transaction');args=ap.parse_args()
+    ap.add_argument('--previous-wheel',required=True);ap.add_argument('--previous-sha256',required=True,help='checksum of the predecessor wheel, copied from the release page');ap.add_argument('--transaction');ap.add_argument('--verify-timeout',type=int,default=1800,help='seconds to wait after the upgrade for one successful run of every enabled check');args=ap.parse_args()
     B.require(os.getuid()==os.geteuid()==0 and sys.flags.isolated and sys.flags.no_site and sys.dont_write_bytecode and sys.platform=='linux','Linux root python3 -I -B -S required')
     B.require(Path(sys.executable).resolve()==Path('/usr/bin/python3').resolve(),'use trusted system interpreter')
     manifest=validate_bundle();L,S,P=import_support()
@@ -216,6 +263,7 @@ def main():
     for path in (STORE,INPUTS):
         if not path.exists():path.mkdir(mode=0o700);L.fsync_dir(path.parent)
         L.private_dir(path,0);B.require(stat.S_IMODE(path.stat().st_mode)==0o700,'private lifecycle storage required')
+    floor={}
     def accept(transaction,journal):
         version=PREV if journal.get('rollback') else B.VERSION
         wheel_inventory(ACTIVE,previous if version==PREV else new_wheel,version)
@@ -224,9 +272,23 @@ def main():
         B.require(probe.returncode==0,'service-account import failed')
         for launcher in ('rackmarshal','rackmarshal-mcp','rackmarshal-investigate','rackmarshal-eval-investigator','rackmarshal-eval-investigator-model'):
             B.require((ACTIVE/'bin'/launcher).read_bytes().startswith(b'#!/opt/rackmarshal/venv/bin/python\n'),'entrypoint has staging path')
+        # Workloads are still guarded here, so any success recorded later comes from the accepted code.
+        floor['resume']=utc_stamp()
     def ready(name,before):status_ready(runtime,name,account.pw_uid,before)
-    runtime=S.SystemdRuntime(MARKER,UNIT_DIR,accept,ready)
+    def verify(transaction,journal):
+        domains=[d.strip() for d in config.get('ENABLED_DOMAINS','').split(',') if d.strip()]
+        text=health_after_resume(ACTIVE/'bin/python',CONFIG,DB,domains,floor['resume'],args.verify_timeout)
+        (transaction/'health-after-upgrade.txt').write_text(text)
+    runtime=S.SystemdRuntime(MARKER,UNIT_DIR,accept,ready,verify=None if args.action!='upgrade' else verify)
     engine=L.Lifecycle(ACTIVE,STORE,DB,protected,runtime,owner=0)
+    def roll_back(transaction):
+        B.require(transaction.parent==STORE,'foreign transaction')
+        journal=json.loads(L.read(transaction/'transaction.json',0));B.require(journal['identity']==identity,'transaction artifacts/source differ')
+        old=transaction/'previous' if (transaction/'previous').exists() else ACTIVE
+        wheel_inventory(old,previous,PREV)
+        proofdir=Path(tempfile.mkdtemp(prefix='rollback-proof-',dir=INPUTS))
+        semantic(P,old/'bin/python',proofdir/'semantic')
+        return engine.rollback(transaction,True)
     if args.action=='upgrade':
         # Preparation is private and non-activating; engine lock protects mutation.
         stage=B.prepare(ROOT,new_wheel,INPUTS)
@@ -239,16 +301,20 @@ def main():
                   'candidate':semantic(P,target/'bin/python',stage/'candidate-semantic')}
         B.require(L.inventory(ACTIVE,0)==expected_old,'predecessor changed during semantic proof')
         B.require(L.inventory(target,0)==expected_candidate,'candidate changed during semantic proof')
-        transaction=engine.upgrade(target,identity,expected_old,schema,True,evidence,expected_candidate)
+        status,text=doctor_run(ACTIVE/'bin/python',CONFIG)
+        B.require(status==0,'refusing to upgrade a monitor that is not healthy; fix this first:\n'+text)
+        try:
+            transaction=engine.upgrade(target,identity,expected_old,schema,True,evidence,expected_candidate)
+        except VerifyFailed as exc:
+            failed=[p for p in STORE.glob('transaction-*') if json.loads(L.read(p/'transaction.json',0))['phase']=='RECOVERY_REQUIRED']
+            B.require(len(failed)==1,'cannot identify the transaction to roll back; run rollback manually')
+            print('HEALTH CHECK FAILED, rolling back automatically: '+str(exc),file=sys.stderr)
+            transaction=roll_back(failed[0])
+            print('LIFECYCLE_TRANSACTION='+str(transaction));print('LIFECYCLE_RESULT='+json.loads(L.read(transaction/'transaction.json',0))['phase'])
+            raise SystemExit(1)
     else:
         B.require(args.transaction is not None,'transaction required')
-        transaction=Path(args.transaction).absolute();B.require(transaction.parent==STORE,'foreign transaction')
-        journal=json.loads(L.read(transaction/'transaction.json',0));B.require(journal['identity']==identity,'transaction artifacts/source differ')
-        old=transaction/'previous' if (transaction/'previous').exists() else ACTIVE
-        wheel_inventory(old,previous,PREV)
-        proofdir=Path(tempfile.mkdtemp(prefix='rollback-proof-',dir=INPUTS))
-        semantic(P,old/'bin/python',proofdir/'semantic')
-        transaction=engine.rollback(transaction,True)
+        transaction=roll_back(Path(args.transaction).absolute())
     print('LIFECYCLE_TRANSACTION='+str(transaction));print('LIFECYCLE_RESULT='+json.loads(L.read(transaction/'transaction.json',0))['phase'])
 
 if __name__=='__main__':

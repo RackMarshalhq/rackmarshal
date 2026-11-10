@@ -146,4 +146,50 @@ class TransactionTests(unittest.TestCase):
                 tx=next(p for p in self.store.glob('transaction-*') if json.loads((p/'transaction.json').read_text())['phase']!='ROLLED_BACK')
                 self.engine.rollback(tx,True)
                 self.assertEqual(inventory(self.active,os.getuid()),self.before)
+    # ---- optional health proof after the workloads resume
+    def phase(self, tx):
+        return json.loads((tx/'transaction.json').read_text())['phase']
+    def test_passing_verification_commits_after_resume(self):
+        self.rt.verify=lambda tx,journal:self.rt.calls.append('verify')
+        tx=self.apply()
+        self.assertEqual(self.phase(tx),'COMMITTED')
+        self.assertEqual(self.rt.calls[-2:],['resume','verify'])
+    def test_failed_verification_holds_and_rolls_back_keeping_newer_history(self):
+        def fail(tx,journal):
+            raise RuntimeError('health proof failed')
+        self.rt.verify=fail
+        with self.assertRaisesRegex(RuntimeError,'health proof failed'):self.apply()
+        tx=next(self.store.glob('transaction-*'))
+        self.assertEqual(self.phase(tx),'RECOVERY_REQUIRED')
+        self.assertTrue(self.rt.guarded)
+        self.assertEqual(self.rt.calls[-1],'hold')
+        with closing(sqlite3.connect(self.db)) as c, c:c.execute("INSERT INTO incidents VALUES(2,'OPEN','recorded while new code ran')")
+        self.rt.verify=lambda *a:None
+        self.engine.rollback(tx,True)
+        self.assertEqual(self.phase(tx),'ROLLED_BACK')
+        self.assertEqual((self.active/'app.py').read_text(),'old')
+        with closing(sqlite3.connect(self.db)) as c:
+            self.assertEqual(c.execute('SELECT COUNT(*) FROM incidents').fetchone()[0],2)
+    def test_interruption_during_verification_recovers_original_bytes(self):
+        self.rt.verify=lambda tx,journal:None
+        for how in ('exception','process_exit'):
+            with self.subTest(how=how):
+                if how=='exception':
+                    def interrupt(value):
+                        if value=='VERIFYING':raise KeyboardInterrupt(value)
+                    self.engine.fault=interrupt
+                    with self.assertRaises(KeyboardInterrupt):self.apply()
+                else:
+                    pid=os.fork()
+                    if pid==0:
+                        self.engine.fault=lambda p:os._exit(77) if p=='VERIFYING' else None
+                        try:self.apply()
+                        except BaseException:os._exit(78)
+                        os._exit(79)
+                    _,status=os.waitpid(pid,0);self.assertEqual(os.waitstatus_to_exitcode(status),77)
+                tx=next(p for p in self.store.glob('transaction-*') if self.phase(p)!='ROLLED_BACK')
+                self.assertEqual(self.phase(tx),'VERIFYING' if how=='process_exit' else 'RECOVERY_REQUIRED')
+                self.engine.fault=lambda p:None
+                self.engine.rollback(tx,True)
+                self.assertEqual(inventory(self.active,os.getuid()),self.before)
 if __name__=='__main__':unittest.main()
