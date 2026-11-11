@@ -66,6 +66,24 @@ class RehearsalTests(unittest.TestCase):
             self.assertEqual(names, [])
             self.assertEqual(c.execute("SELECT count(*) FROM schema_migrations").fetchone()[0], 0)
 
+    def test_apply_all_keeps_nothing_when_result_differs_from_expectation(self):
+        with closing(sqlite3.connect(self.db, isolation_level=None)) as c:
+            before = mr.schema_fingerprint(c)
+            with self.assertRaises(mr.RehearsalError):
+                mr.apply_all(c, [("010_a", "CREATE TABLE one(x);", sha("a"))], expect=("0" * 64, []))
+            self.assertEqual(mr.schema_fingerprint(c), before)
+
+    def test_keep_copy_saves_the_migrated_copy(self):
+        keep = self.db.with_name("kept.db")
+        self.rehearse_keep(keep)
+        with closing(sqlite3.connect(keep)) as c:
+            self.assertEqual(c.execute("SELECT count(*) FROM extra").fetchone()[0], 0)
+        self.assertEqual(oct(keep.stat().st_mode & 0o777), "0o600")
+
+    def rehearse_keep(self, keep):
+        s = "CREATE TABLE extra(x);"
+        return mr.rehearse(self.db, [("010_x", s, sha(s))], keep_copy=keep)
+
     def test_truncated_statement_is_refused(self):
         with self.assertRaises(mr.RehearsalError):
             list(mr.statements("CREATE TABLE t(x);\nSELECT 1 +"))

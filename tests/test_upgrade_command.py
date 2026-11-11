@@ -96,12 +96,25 @@ class UpgradeCommandTests(unittest.TestCase):
         self.assertEqual(self.calls, [])
         self.assertIn("hand patch", self.text())
 
-    def test_database_changes_are_not_applied(self):
+    def test_database_changes_are_planned_and_applied_through_the_bundle_script(self):
         self.wheel = self.make_bundle_wheel("1.3.2", {"001": MIGRATION_A, "002": b"CREATE TABLE b(x);\n"})
+        (self.bundle / "rackmarshal-1.3.1-py3-none-any.whl").unlink()
+        sha = hashlib.sha256(self.wheel.read_bytes()).hexdigest()
+        self.assertEqual(self.go(wheel_sha256=sha), 0)
+        self.assertEqual(self.calls, [])
+        self.assertIn("including its database changes", self.text())
+        self.assertEqual(self.go(apply=True, note="why", is_root=True, wheel_sha256=sha), 0)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_database_changes_that_would_lose_data_never_apply(self):
+        with closing(sqlite3.connect(self.db)) as c:
+            c.execute("CREATE TABLE a(x)"); c.execute("INSERT INTO a VALUES(1)"); c.commit()
+        self.wheel = self.make_bundle_wheel("1.3.2", {"001": MIGRATION_A, "002": b"DROP TABLE a;\n"})
         (self.bundle / "rackmarshal-1.3.1-py3-none-any.whl").unlink()
         sha = hashlib.sha256(self.wheel.read_bytes()).hexdigest()
         self.assertEqual(self.go(apply=True, note="why", is_root=True, wheel_sha256=sha), 2)
         self.assertEqual(self.calls, [])
+        self.assertIn("would disappear", self.text())
 
     def test_wrong_wheel_checksum_is_refused(self):
         with self.assertRaises(ua.upgrade_plan.PlanError):

@@ -14,7 +14,7 @@ import sqlite3
 import stat
 import tempfile
 
-from rackmarshal.maintenance import migration_rehearsal
+from rackmarshal.maintenance import migration_rehearsal  # noqa: F401  (also used by scripts/lifecycle.py)
 
 
 class Refused(RuntimeError):
@@ -282,6 +282,13 @@ class Lifecycle:
                 require(journal['backup']['snapshot']['schema_sha256'] == expected_schema['schema_sha256'] and journal['backup']['snapshot']['ledger'] == expected_schema['ledger'], 'quiesced schema changed')
                 require(self.protected_hashes() == protected, 'protected files changed')
                 require(inventory(self.active, self.owner) == before, 'code changed during preflight')
+                if migration is not None:
+                    # Rehearse once more on the quiesced backup: the exact data the real run will see.
+                    rehearsal = migration_rehearsal.rehearse(
+                        transaction / 'state-backup.sqlite', [tuple(x) for x in migration['migrations']], workdir=transaction)
+                    require(not rehearsal['problems'], 'rehearsal on quiesced data loses data: ' + '; '.join(rehearsal['problems']))
+                    require(schema_matches(rehearsal, migration['expected_schema_sha256'], migration['expected_ledger']),
+                            'rehearsal on quiesced data differs from the plan')
                 self.save(transaction, journal, 'OLD_RENAME_INTENT')
                 os.rename(self.active, transaction / 'previous'); fsync_dir(self.active.parent); fsync_dir(transaction)
                 self.save(transaction, journal, 'OLD_RETAINED')

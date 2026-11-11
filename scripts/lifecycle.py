@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Same-schema 1.3.x lifecycle (plan, upgrade, rollback, recover). Qualification tooling, not yet a supported upgrade path. No legacy stable (1.0/1.1) support."""
+"""1.3.x lifecycle (plan, upgrade, rollback, recover), including appended database changes. Qualification tooling, not yet a supported upgrade path. No legacy stable (1.0/1.1) support."""
 import argparse,uuid,hashlib,importlib.util,json,os,pwd,re,sqlite3,stat,subprocess,sys,tempfile,time,venv
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
@@ -207,9 +207,9 @@ def status_ready(runtime,name,uid,before):
             time.sleep(.2)
 
 
-def semantic(P,python,work):
+def semantic(P,python,work,extra_migrations=()):
     work.mkdir(mode=0o700)
-    result=P.proof(python,work)
+    result=P.proof(python,work,extra_migrations=extra_migrations)
     B.require(result['result']=='FIXTURE_ASSERTIONS_PASS','semantic proof failed')
     return {'receipt':str(work/'receipt.json'),'receipt_sha256':B.digest((work/'receipt.json').read_bytes()),'suite':'zfs-integrity-v1','commands':len(result['commands'])}
 
@@ -273,7 +273,13 @@ def main():
     old_payload=B.validate_wheel(B.trusted_read(previous),'rackmarshal',PREV)
     new_wheel=ROOT/B.APP_NAME;new_payload=B.validate_wheel(B.trusted_read(new_wheel),'rackmarshal',B.VERSION)
     migrations=lambda p:{n:v for n,v in p.items() if n.startswith('rackmarshal/db/migrations/') and n.endswith('.sql')}
-    B.require(migrations(old_payload)==migrations(new_payload),'schema-changing candidate refused')
+    old_m,new_m=migrations(old_payload),migrations(new_payload)
+    B.require(all(new_m.get(n)==v for n,v in old_m.items()),'candidate rewrites or drops an existing database change')
+    added=sorted((Path(n).stem for n in new_m if n not in old_m),key=L.migration_rehearsal.migration_order_key)
+    if added:
+        newest=max((L.migration_rehearsal.migration_order_key(Path(n).stem) for n in old_m),default=None)
+        B.require(all(newest is None or L.migration_rehearsal.migration_order_key(i)>newest for i in added),'new database changes must come after every existing one')
+    migration_steps=[(i,new_m['rackmarshal/db/migrations/'+i+'.sql'].decode(),B.digest(new_m['rackmarshal/db/migrations/'+i+'.sql'])) for i in added]
     account=pwd.getpwnam('rackmarshal');B.require(account.pw_shell=='/usr/sbin/nologin' and account.pw_dir=='/var/lib/rackmarshal','account identity differs')
     protected,config=protected_files(account)
     current=installed_version(ACTIVE) if ACTIVE.exists() else None
@@ -284,7 +290,11 @@ def main():
         B.require(current in (PREV,B.VERSION),'unsupported installed version')
         wheel_inventory(ACTIVE,previous if current==PREV else new_wheel,current)
     expected_old=L.inventory(ACTIVE,0) if ACTIVE.exists() else None
-    schema=schema_matches(L,DB,old_payload)
+    if args.action in ('plan','upgrade'):schema=schema_matches(L,DB,old_payload)
+    else:
+        # After a database change the live schema is the new release's; the engine checks it exactly.
+        try:schema=schema_matches(L,DB,old_payload)
+        except Exception:schema=schema_matches(L,DB,new_payload)
     identity={'source_commit':manifest['source_commit'],'candidate_wheel_sha256':manifest['files'][B.APP_NAME],'previous_version':PREV,'previous_wheel_sha256':PREV_SHA,'candidate_version':B.VERSION,'unit_policy':'unchanged-exact-payloads'}
     if args.action=='plan':
         print(json.dumps(dict(identity,result='ARTIFACT_SCHEMA_PLAN_ONLY',schema=schema['schema_sha256'],semantic_proofs='REQUIRED_AT_EXECUTION'),indent=2));return
@@ -295,7 +305,8 @@ def main():
     def accept(transaction,journal):
         version=PREV if journal.get('rollback') else B.VERSION
         wheel_inventory(ACTIVE,previous if version==PREV else new_wheel,version)
-        semantic(P,ACTIVE/'bin/python',transaction/('restored-semantic-'+uuid.uuid4().hex if journal.get('rollback') else 'activated-semantic'))
+        steps=(journal.get('migration') or {}).get('migrations') or ()
+        semantic(P,ACTIVE/'bin/python',transaction/('restored-semantic-'+uuid.uuid4().hex if journal.get('rollback') else 'activated-semantic'),steps if journal.get('rollback') else ())
         probe=subprocess.run([str(ACTIVE/'bin/python'),'-I','-B','-c','import rackmarshal.api.v1,rackmarshal.domains.zfs.integrity'],user=account.pw_uid,group=account.pw_gid,extra_groups=[],env={'PATH':'/usr/bin:/bin'},cwd='/',capture_output=True,text=True,timeout=20)
         B.require(probe.returncode==0,'service-account import failed')
         for launcher in ('rackmarshal','rackmarshal-mcp','rackmarshal-investigate','rackmarshal-eval-investigator','rackmarshal-eval-investigator-model'):
@@ -315,7 +326,7 @@ def main():
         old=transaction/'previous' if (transaction/'previous').exists() else ACTIVE
         wheel_inventory(old,previous,PREV)
         proofdir=Path(tempfile.mkdtemp(prefix='rollback-proof-',dir=INPUTS))
-        semantic(P,old/'bin/python',proofdir/'semantic')
+        semantic(P,old/'bin/python',proofdir/'semantic',(journal.get('migration') or {}).get('migrations') or ())
         return engine.rollback(transaction,True)
     if args.action=='upgrade':
         # Preparation is private and non-activating; engine lock protects mutation.
@@ -327,12 +338,25 @@ def main():
         expected_candidate=L.inventory(target,0)
         evidence={'previous':semantic(P,ACTIVE/'bin/python',stage/'previous-semantic'),
                   'candidate':semantic(P,target/'bin/python',stage/'candidate-semantic')}
+        migration=None
+        if migration_steps:
+            # The program we can go back to must run on the changed database: fixture suite and a copy of the real data.
+            evidence['previous_on_changed_schema']=semantic(P,ACTIVE/'bin/python',stage/'previous-changed-semantic',migration_steps)
+            keep=stage/'migrated-copy.sqlite'
+            rehearsal=L.migration_rehearsal.rehearse(DB,migration_steps,workdir=stage,keep_copy=keep)
+            B.require(not rehearsal['problems'],'database changes would not keep your data intact: '+'; '.join(rehearsal['problems']))
+            copy_work=stage/'previous-on-copy';copy_work.mkdir(mode=0o700)
+            copy_result=P.copy_proof(ACTIVE/'bin/python',copy_work,keep)
+            B.require(copy_result['result']=='COPY_ASSERTIONS_PASS','previous program failed on the migrated database copy')
+            evidence['previous_on_database_copy']={'receipt':str(copy_work/'receipt.json'),'receipt_sha256':B.digest((copy_work/'receipt.json').read_bytes())}
+            keep.unlink()
+            migration={'migrations':migration_steps,'expected_schema_sha256':rehearsal['schema_sha256'],'expected_ledger':rehearsal['ledger']}
         B.require(L.inventory(ACTIVE,0)==expected_old,'predecessor changed during semantic proof')
         B.require(L.inventory(target,0)==expected_candidate,'candidate changed during semantic proof')
         status,text=doctor_run(ACTIVE/'bin/python',CONFIG)
         B.require(status==0,'refusing to upgrade a monitor that is not healthy; fix this first:\n'+text)
         try:
-            transaction=engine.upgrade(target,identity,expected_old,schema,True,evidence,expected_candidate)
+            transaction=engine.upgrade(target,identity,expected_old,schema,True,evidence,expected_candidate,migration=migration)
         except VerifyFailed as exc:
             failed=failed_transactions(STORE,L)
             B.require(len(failed)==1,'cannot identify the transaction to roll back; run rollback manually')

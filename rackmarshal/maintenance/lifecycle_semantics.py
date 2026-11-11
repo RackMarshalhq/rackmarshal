@@ -39,7 +39,43 @@ elif module=='summary-proof':
     print(json.dumps(zfs_integrity_summary(db)));db.close()
 else:runpy.run_module(module,run_name='__main__')
 '''
-def proof(python,work,site=None):
+def copy_proof(python,work,database_copy,site=None):
+    """Read-only checks of a program against a COPY of the real, migrated database.
+
+    The program must open the copy, run its integrity summary, and list its migration plan
+    without choking on ledger rows it has never heard of. Nothing is written to the copy.
+    """
+    sites=list(P(python).parent.parent.glob('lib/python*/site-packages'))
+    require(len(sites)==1,'ambiguous site-packages')
+    site=P(site) if site is not None else sites[0]
+    work=P(work).resolve(); db=work/'fixture.db'
+    require(not db.exists(),'fixture must be new')
+    import shutil
+    shutil.copyfile(database_copy,db);os.chmod(db,0o600)
+    config=work/'fixture.conf'
+    config.write_text(f'STATE_DB={db}\nSITE_NAME=fixture\nSTATUS_API_LISTEN_ADDRESS=127.0.0.1\nSTATUS_API_LISTEN_PORT=9110\nZFS_SSH_HOST=invalid\nZFS_SSH_USER=fixture\nZFS_SSH_KEY=/nonexistent\nZFS_KNOWN_HOSTS=/nonexistent\n')
+    env={'PATH':'/usr/bin:/bin','LANG':'C','LC_ALL':'C','RACKMARSHAL_CONFIG':str(config),'RACKMARSHAL_STATE_DB':str(db)}
+    report={'proof_suite':'database-copy-v1','result':'IN_PROGRESS','commands':[],'python':str(python)}
+    def run(module,args=()):
+        command=[str(python),'-I','-B','-S','-c',CHILD,str(work),str(site),module,*args]
+        r=subprocess.run(command,env=env,cwd=work,text=True,capture_output=True,timeout=60)
+        report['commands'].append({'module':module,'args':list(args),'returncode':r.returncode,'stdout':r.stdout,'stderr':r.stderr})
+        (work/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
+        require(r.returncode==0,'program failed on the migrated copy: '+module+' '+r.stderr[-300:])
+        return r.stdout
+    try:
+        run('summary-proof')
+        run('rackmarshal.db.migrations.migrate',['--db',str(db),'--plan'])
+        with closing(sqlite3.connect(db.as_uri()+'?mode=ro',uri=True)) as c:
+            require(c.execute('PRAGMA integrity_check').fetchall()==[('ok',)],'migrated copy fails integrity check')
+        report['result']='COPY_ASSERTIONS_PASS'
+    except BaseException as exc:
+        report.update(result='FAIL',error=repr(exc));raise
+    finally:(work/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
+    return report
+
+
+def proof(python,work,site=None,extra_migrations=()):
     sites=list(P(python).parent.parent.glob('lib/python*/site-packages'))
     require(len(sites)==1,'ambiguous site-packages')
     site=P(site) if site is not None else sites[0]
@@ -58,6 +94,12 @@ def proof(python,work,site=None):
         return json.loads(r.stdout) if decode and expect_success else r.stdout
     try:
         run('rackmarshal.db.migrations.migrate',['--db',str(db),'--apply','--yes'],decode=False)
+        if extra_migrations:
+            # The program under test runs on the schema a later release would leave behind.
+            from rackmarshal.maintenance import migration_rehearsal
+            with closing(sqlite3.connect(db,isolation_level=None)) as c:
+                migration_rehearsal.apply_all(c,[tuple(x) for x in extra_migrations],note='proof')
+            report['extra_migrations']=[x[0] for x in extra_migrations]
         seq=0
         def payload(state,count,guid='1',missing=False):
             nonlocal seq

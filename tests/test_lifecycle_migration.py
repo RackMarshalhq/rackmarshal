@@ -160,23 +160,31 @@ class MigrationTransactionTests(unittest.TestCase):
         self.schema = database_snapshot(self.db)
         self.migration = self.describe(SQL)
 
-    def test_failing_migration_leaves_database_untouched_and_needs_recovery(self):
-        bad = self.describe("CREATE TABLE ok(x);")
+    def test_failing_migration_is_caught_on_the_backup_before_any_change(self):
         sql = "CREATE TABLE ok2(x);\nINSERT INTO nowhere VALUES(1);\n"
-        bad['migrations'] = [('002_extra', sql, hashlib.sha256(sql.encode()).hexdigest())]
-        with self.assertRaises(sqlite3.Error):
+        bad = dict(self.migration, migrations=[('002_extra', sql, hashlib.sha256(sql.encode()).hexdigest())])
+        with self.assertRaises(mr.RehearsalError):
             self.apply(bad)
         self.assertEqual(database_snapshot(self.db), self.schema)
+        self.assertEqual((self.active / 'app.py').read_text(), 'old')
         tx = self.pending()
         self.assertEqual(json.loads((tx / 'transaction.json').read_text())['phase'], 'RECOVERY_REQUIRED')
         self.engine.rollback(tx, True)
-        self.assertEqual((self.active / 'app.py').read_text(), 'old')
 
-    def test_result_that_differs_from_rehearsal_is_not_kept(self):
-        with self.assertRaises(mr.RehearsalError):
+    def test_plan_that_differs_from_quiesced_rehearsal_is_refused_before_any_change(self):
+        with self.assertRaises(Refused):
             self.apply(self.describe(SQL, wrong_expectation=True))
         self.assertEqual(database_snapshot(self.db), self.schema)
+        self.assertEqual((self.active / 'app.py').read_text(), 'old')
         self.assertEqual(self.rt.calls[-1], 'hold')
+
+    def test_migration_that_loses_rows_is_refused_on_the_quiesced_data(self):
+        sql = "DELETE FROM incidents;\n"
+        described = self.describe(sql)  # the plan was made while the data looked harmless to the planner
+        described = dict(described, migrations=[('002_extra', sql, hashlib.sha256(sql.encode()).hexdigest())])
+        with self.assertRaises(Refused):
+            self.apply(described)
+        self.assertEqual(self.incidents(), [(1, 'OPEN')])
 
     def test_failed_acceptance_after_migration_rolls_back_code_and_keeps_new_schema(self):
         self.rt.fail_accept = True
