@@ -103,8 +103,38 @@ class UpgradePlanTests(unittest.TestCase):
     def test_extra_migration_needs_database_change(self):
         wheel, sums = self.make_wheel("1.3.1", {"001": MIGRATION_A, "002": MIGRATION_B})
         result = self.plan(wheel, sums)
-        self.assertEqual(result["status"], "NEEDS_DATABASE_CHANGE")
+        self.assertEqual(result["status"], "READY_WITH_DATABASE_CHANGE")
+        self.assertEqual(result["migrations"], ["002"])
+        self.assertEqual(result["expected_ledger"][-1][0], "002")
         self.assertIn("002", up.describe(result))
+        self.assertIn("rehearsed", up.describe(result))
+        self.assertFalse(result["changes_made"])
+        with closing(sqlite3.connect(self.db)) as c:
+            names = [r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+        self.assertNotIn("b", names)  # the real database was not touched
+
+    def test_new_migration_that_drops_data_is_refused(self):
+        with closing(sqlite3.connect(self.db)) as c:
+            c.execute("CREATE TABLE a(x)")
+            c.execute("INSERT INTO a VALUES(1)")
+            c.commit()
+        wheel, sums = self.make_wheel("1.3.1", {"001": MIGRATION_A, "002": b"DROP TABLE a;\n"})
+        result = self.plan(wheel, sums)
+        self.assertEqual(result["status"], "REFUSED")
+        self.assertIn("table a would disappear", result["refusals"][0])
+
+    def test_new_migration_that_fails_is_refused(self):
+        wheel, sums = self.make_wheel("1.3.1", {"001": MIGRATION_A, "002": b"CREATE TABLE b(;\n"})
+        result = self.plan(wheel, sums)
+        self.assertEqual(result["status"], "REFUSED")
+        self.assertIn("cannot be applied safely", result["refusals"][0])
+
+    def test_new_migration_numbered_before_applied_ones_is_refused(self):
+        self.set_ledger({"001": MIGRATION_A, "003": MIGRATION_B})
+        wheel, sums = self.make_wheel("1.3.1", {"001": MIGRATION_A, "002": b"CREATE TABLE c(x);\n", "003": MIGRATION_B})
+        result = self.plan(wheel, sums)
+        self.assertEqual(result["status"], "REFUSED")
+        self.assertIn("slot in before", result["refusals"][0])
 
     def test_different_history_is_refused(self):
         self.set_ledger({"001": b"something else\n"})

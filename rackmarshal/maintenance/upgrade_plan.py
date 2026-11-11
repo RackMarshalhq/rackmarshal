@@ -21,6 +21,8 @@ import sqlite3
 from contextlib import closing
 import zipfile
 
+from rackmarshal.maintenance import migration_rehearsal as rehearsal
+
 LIMIT = 32 * 1024 * 1024
 SUPPORTED_SERIES = (1, 3)
 VERSION = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:rc(\d+))?$")
@@ -136,9 +138,11 @@ def read_candidate(wheel_path, sums_path=None, expected_sha256=None):
         if len(row) == 3 and row[1] and row[0] != record_name:
             if row[0] not in payloads or _record_hash(payloads[row[0]]) != row[1]:
                 raise PlanError("The release file's contents do not match its own RECORD (%s)." % row[0])
-    migrations = {PurePosixPath(name).stem: hashlib.sha256(body).hexdigest()
-                  for name, body in payloads.items() if name.startswith(MIGRATIONS) and name.endswith(".sql")}
-    return {"version": version, "sha256": actual, "verified_by": checked, "migrations": migrations}
+    sql = {PurePosixPath(name).stem: body for name, body in payloads.items()
+           if name.startswith(MIGRATIONS) and name.endswith(".sql")}
+    migrations = {name: hashlib.sha256(body).hexdigest() for name, body in sql.items()}
+    return {"version": version, "sha256": actual, "verified_by": checked, "migrations": migrations,
+            "migration_sql": sql}
 
 
 def ledger(database):
@@ -163,7 +167,7 @@ def compare_migrations(current, candidate):
 
 
 def plan(site_packages, database, wheel_path, sums_path=None, expected_sha256=None):
-    """Return a result dict. result['status'] is READY, NEEDS_DATABASE_CHANGE or REFUSED."""
+    """Return a result dict. result['status'] is READY, READY_WITH_DATABASE_CHANGE or REFUSED."""
     findings, refusals = [], []
     installed, differences = installed_state(site_packages)
     candidate = read_candidate(wheel_path, sums_path, expected_sha256)
@@ -185,16 +189,53 @@ def plan(site_packages, database, wheel_path, sums_path=None, expected_sha256=No
             refusals.append("The %s release is outside the 1.3 series; upgrades are only for 1.3.x to 1.3.y." % label)
     if new_v <= old_v:
         refusals.append("The new release (%s) is not newer than the installed one (%s)." % (candidate["version"], installed))
-    state, ids = compare_migrations(ledger(database), candidate["migrations"])
+    current = ledger(database)
+    state, ids = compare_migrations(current, candidate["migrations"])
+    extra = {}
     if state == "SAME":
         findings.append("The database needs no changes for this release.")
     elif state == "EXTRA":
-        findings.append("This release adds database changes (%s). The apply step does not support those yet." % ", ".join(ids))
+        extra = judge_database_changes(database, current, ids, candidate, findings, refusals)
     else:
         refusals.append("The database history differs from this release (%s). It cannot be upgraded." % ", ".join(ids))
-    status = "REFUSED" if refusals else ("NEEDS_DATABASE_CHANGE" if state == "EXTRA" else "READY")
-    return {"status": status, "installed": installed, "candidate": candidate["version"], "findings": findings,
-            "refusals": refusals, "candidate_sha256": candidate["sha256"], "changes_made": False}
+    if refusals:
+        status = "REFUSED"
+    else:
+        status = "READY_WITH_DATABASE_CHANGE" if state == "EXTRA" else "READY"
+    return dict({"status": status, "installed": installed, "candidate": candidate["version"], "findings": findings,
+                 "refusals": refusals, "candidate_sha256": candidate["sha256"], "changes_made": False}, **extra)
+
+
+def judge_database_changes(database, current, ids, candidate, findings, refusals):
+    """Rules for applying a release's new migrations. Returns the facts the apply step needs, or {}."""
+    try:
+        newest = max((rehearsal.migration_order_key(i) for i in current), default=None)
+        misplaced = [i for i in ids if newest is not None and rehearsal.migration_order_key(i) <= newest]
+    except rehearsal.RehearsalError as exc:
+        refusals.append(str(exc))
+        return {}
+    if misplaced:
+        refusals.append("The new database change(s) %s would slot in before ones you already have. "
+                        "Changes must only be added after the newest applied one." % ", ".join(misplaced))
+        return {}
+    ordered = sorted(ids, key=rehearsal.migration_order_key)
+    triples = [(i, candidate["migration_sql"][i].decode("utf-8"), candidate["migrations"][i]) for i in ordered]
+    try:
+        result = rehearsal.rehearse(database, triples)
+    except rehearsal.RehearsalError as exc:
+        refusals.append("The database changes (%s) cannot be applied safely: %s" % (", ".join(ordered), exc))
+        return {}
+    if result["problems"]:
+        refusals.append("The database changes (%s) would not keep your data intact: %s."
+                        % (", ".join(ordered), "; ".join(result["problems"])))
+        return {}
+    findings.append("This release adds database changes (%s). They were rehearsed on a private copy of your "
+                    "database: every table, column and row was kept%s."
+                    % (", ".join(ordered), "; new tables: " + ", ".join(result["added_tables"]) if result["added_tables"] else ""))
+    findings.append("Not yet checked here: that the program you have now still runs on the changed database. "
+                    "The apply step proves that before it changes anything.")
+    return {"migrations": ordered, "expected_schema_sha256": result["schema_sha256"],
+            "expected_ledger": result["ledger"]}
 
 
 def describe(result, can_apply=False):
@@ -203,7 +244,8 @@ def describe(result, can_apply=False):
     ready = ("Result: this upgrade can be applied." if can_apply else
              "Result: this upgrade could be applied. This command only checks; nothing was done.")
     verdict = {"READY": ready,
-               "NEEDS_DATABASE_CHANGE": "Result: not yet possible. This release changes the database, which the apply step will not do at first.",
+               "READY_WITH_DATABASE_CHANGE": ready.replace("could be applied", "could be applied, including its database changes")
+               if not can_apply else "Result: this upgrade can be applied, including its database changes.",
                "REFUSED": "Result: refused. See the reasons above."}[result["status"]]
     lines.append(verdict)
     lines.append("This check is read-only: nothing has been installed, changed or restarted yet." if can_apply else
