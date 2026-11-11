@@ -37,7 +37,7 @@ cd rackmarshal-installer-<version>
 ./scripts/install.sh --wheel ./rackmarshal-<version>-py3-none-any.whl
 ```
 
-Use the version in your file names, for example `rackmarshal-installer-1.3.0-rc1` and `rackmarshal-1.3.0rc1-py3-none-any.whl`.
+Use the version in your file names, for example `rackmarshal-installer-1.3.0-rc2` and `rackmarshal-1.3.0rc2-py3-none-any.whl`.
 
 Optional flags:
 
