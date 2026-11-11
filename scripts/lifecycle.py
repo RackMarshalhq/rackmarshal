@@ -66,6 +66,16 @@ def clear_bytecode(target):
             except OSError:pass
 
 
+def failed_transactions(store,L):
+    """Transactions waiting for recovery. A folder with no journal is left over from a run
+    that stopped before it wrote one; it cannot be recovered and must not block the others."""
+    found=[]
+    for path in sorted(Path(store).glob('transaction-*')):
+        journal=path/'transaction.json'
+        if journal.is_file() and json.loads(L.read(journal,0))['phase']=='RECOVERY_REQUIRED':found.append(path)
+    return found
+
+
 def wheel_inventory(target,wheel,version):
     data=B.trusted_read(wheel);payload=B.validate_wheel(data,'rackmarshal',version)
     B.validate_target(target)
@@ -324,7 +334,7 @@ def main():
         try:
             transaction=engine.upgrade(target,identity,expected_old,schema,True,evidence,expected_candidate)
         except VerifyFailed as exc:
-            failed=[p for p in STORE.glob('transaction-*') if json.loads(L.read(p/'transaction.json',0))['phase']=='RECOVERY_REQUIRED']
+            failed=failed_transactions(STORE,L)
             B.require(len(failed)==1,'cannot identify the transaction to roll back; run rollback manually')
             print('HEALTH CHECK FAILED, rolling back automatically: '+str(exc),file=sys.stderr)
             transaction=roll_back(failed[0])
