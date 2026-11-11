@@ -102,5 +102,37 @@ class BytecodeTests(unittest.TestCase):
         self.assertTrue((outside / "keep.pyc").exists())
 
 
+class RecoveryScanTests(unittest.TestCase):
+    """The automatic undo must find the failed transaction even if an earlier refused run left an empty folder."""
+
+    class FakeEngineModule:
+        @staticmethod
+        def read(path, owner):
+            return Path(path).read_text()
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.store = Path(directory.name)
+
+    def make(self, name, phase=None):
+        folder = self.store / name
+        folder.mkdir()
+        if phase:
+            (folder / "transaction.json").write_text('{"phase": "%s"}' % phase)
+
+    def test_empty_leftover_folder_is_skipped(self):
+        self.make("transaction-aaaa")
+        self.make("transaction-bbbb", "RECOVERY_REQUIRED")
+        self.make("transaction-cccc", "COMMITTED")
+        found = C.failed_transactions(self.store, self.FakeEngineModule)
+        self.assertEqual([p.name for p in found], ["transaction-bbbb"])
+
+    def test_no_failed_transaction_gives_empty_list(self):
+        self.make("transaction-aaaa")
+        self.make("transaction-cccc", "COMMITTED")
+        self.assertEqual(C.failed_transactions(self.store, self.FakeEngineModule), [])
+
+
 if __name__ == "__main__":
     unittest.main()
