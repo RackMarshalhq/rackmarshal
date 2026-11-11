@@ -8,6 +8,10 @@ This is internal qualification tooling for a chain of private development builds
 
 Version 1.2.0rc6.dev3 implements a restricted, same-schema private qualification path: exact corrected dev2 → dev3 → dev2 → dev3. It is not a public support promise or a completed Linux qualification. The fresh installer refuses existing installations and cannot be used to upgrade or reinstall preserved state.
 
+## Database changes (1.3.0rc2 onward)
+
+The engine can carry appended database changes inside an upgrade. The phases `MIGRATE_INTENT` and `MIGRATED` follow `ACTIVATED`. Evidence to collect on a disposable machine before relying on it: (1) upgrade across a real migration and confirm `COMMITTED`; (2) stop the process during `MIGRATE_INTENT` and after `MIGRATED`, then `recover`/`rollback` and confirm the old program runs with all rows intact; (3) force the health proof to fail and confirm automatic rollback keeps the changed database; (4) confirm a release that rewrites an earlier migration, or one whose migration would drop a row, is refused before anything changes. Rollback never rewinds the database: it accepts only the exact pre-upgrade layout or the exact rehearsed layout.
+
 The predecessor is rackmarshal-1.2.0rc6.dev2-py3-none-any.whl, SHA-256 `137663acf2bd799b606c2a38db15b646d1a4649417f5c5a697a306afcfe725a5`. The candidate requires a complete source-bound installer bundle, matching installed wheel bytes and RECORD, unchanged SQL migrations and ledger, exact unchanged supplied core units, standard paths, the existing service account and loopback status endpoint. Unknown/custom/optional services, altered units, incomplete evidence and unresolved transactions fail closed. No migrations, credential changes, new enablement or notification replay are performed.
 
 Stable v1.0.0 is refused: equal migration schemas do not establish semantic safety. Its positive permanent ZFS data errors can falsely recover incidents. A guarded or non-running downgrade does not satisfy the resumed rollback release gate.

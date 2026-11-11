@@ -144,10 +144,11 @@ def compare_contents(before_conn, after_conn):
     return problems
 
 
-def rehearse(database, migrations, workdir=None):
+def rehearse(database, migrations, workdir=None, keep_copy=None):
     """Apply `migrations` to a private copy of `database` and report. Never writes to `database`.
 
     Returns {"schema_sha256", "ledger", "problems": [...], "added_tables": [...]}.
+    `keep_copy` (a new file path) also saves the migrated copy there, for compatibility proofs.
     """
     source = Path(database).resolve()
     if not source.is_file():
@@ -170,6 +171,10 @@ def rehearse(database, migrations, workdir=None):
                 raise
             except sqlite3.Error as exc:
                 raise RehearsalError("The migrations do not apply to your database: %s." % exc) from exc
+            if keep_copy is not None:
+                with closing(sqlite3.connect(keep_copy)) as kept:
+                    after_conn.backup(kept)
+                os.chmod(keep_copy, 0o600)
             problems = compare_contents(before_conn, after_conn)
             added = sorted(set(table_contents(after_conn)) - set(table_contents(before_conn)))
             return {"schema_sha256": schema_fingerprint(after_conn), "ledger": ledger_of(after_conn),

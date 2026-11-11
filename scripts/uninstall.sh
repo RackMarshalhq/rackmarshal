@@ -18,6 +18,14 @@ for unit in rackmarshal-domain@.service rackmarshal-self-watch.service; do
   rm -f "/etc/systemd/system/$unit.d/20-cycle-health.conf"
   rmdir "/etc/systemd/system/$unit.d" 2>/dev/null || true
 done
+# Leftover maintenance guards from an interrupted upgrade would otherwise block a later reinstall.
+UNIT_ROOT="${RACKMARSHAL_UNIT_ROOT:-/etc/systemd/system}"
+shopt -s nullglob
+for guard in "$UNIT_ROOT"/rackmarshal-*.d/99-lifecycle-maintenance.conf; do
+  rm -f "$guard"
+  rmdir "$(dirname "$guard")" 2>/dev/null || true
+done
+shopt -u nullglob
 systemctl disable --now rackmarshal-mcp.service rackmarshal-status-acl.service rackmarshal-evidence-export.timer rackmarshal-self-watch.timer 2>/dev/null || true
 systemctl stop rackmarshal-evidence-export.service rackmarshal-self-watch.service 2>/dev/null || true
 rm -f /etc/systemd/system/rackmarshal-status-acl.service /etc/systemd/system/rackmarshal-evidence-export.service /etc/systemd/system/rackmarshal-evidence-export.timer /etc/systemd/system/rackmarshal-self-watch.service /etc/systemd/system/rackmarshal-self-watch.timer /etc/systemd/system/rackmarshal-mcp.service
