@@ -7,9 +7,13 @@ from .lifecycle import require, private_dir, read, write_json, fsync_dir
 
 BASE = ('rackmarshal-status.service', 'rackmarshal-notify.service', 'rackmarshal-notify.timer',
         'rackmarshal-domain@.service', 'rackmarshal-domain@.timer')
+# Timers every standard install has. They are paused while maintenance holds the system,
+# but only when they are actually installed.
+PERIODIC = ('rackmarshal-db-snapshot.service', 'rackmarshal-db-snapshot.timer',
+            'rackmarshal-observation-prune.service', 'rackmarshal-observation-prune.timer')
 DOMAINS = ('pve', 'zfs', 'backup', 'ha', 'hardware', 'mount')
 INSTANCES = tuple('rackmarshal-domain@' + domain + suffix for domain in DOMAINS for suffix in ('.service', '.timer'))
-ALLOWED = set(BASE + INSTANCES)
+ALLOWED = set(BASE + PERIODIC + INSTANCES)
 
 
 class SystemdRuntime:
@@ -52,6 +56,9 @@ class SystemdRuntime:
         names = {line.split()[0] for line in output.splitlines() if line.split() and line.split()[0].startswith('rackmarshal')}
         require(names <= ALLOWED, 'unsupported runtime unit')
         names |= set(BASE[:3])
+        files = self.command('list-unit-files','--all','--plain','--no-legend','--no-pager')
+        enabled = {c[0]:c[1] for line in files.splitlines() if (c:=line.split()) and c[0].startswith('rackmarshal')}
+        names |= {name for name in PERIODIC if name in enabled}
         units = {name:self.fields(name) for name in sorted(names)}
         for value in units.values():
             require(value['ActiveState'] in ('active','inactive'), 'transitional or failed unit')
@@ -59,8 +66,6 @@ class SystemdRuntime:
             require(value['UnitFileState'] in ('enabled','disabled','static'), 'unsupported enablement')
             # Wait for in-flight processing separately; never terminate it as an upgrade shortcut.
             require(not(value.get('Type') == 'oneshot' and value['ActiveState'] != 'inactive'), 'in-flight oneshot; retry after it finishes')
-        files = self.command('list-unit-files','--all','--plain','--no-legend','--no-pager')
-        enabled = {c[0]:c[1] for line in files.splitlines() if (c:=line.split()) and c[0].startswith('rackmarshal')}
         require(set(enabled) <= ALLOWED, 'unsupported installed unit')
         return {'units':units,'enablement':enabled}
 
@@ -72,7 +77,8 @@ class SystemdRuntime:
             write_json(self.marker,value)
         text = ('[Unit]\nConditionPathExists=!' + str(self.marker) + '\n').encode()
         require('\n' not in str(self.marker), 'unsafe marker path')
-        for name in BASE:
+        guarded = BASE + tuple(name for name in PERIODIC if name in snapshot['units'])
+        for name in guarded:
             directory = self.unit_directory / (name + '.d')
             if not directory.exists():
                 directory.mkdir(mode=0o755);fsync_dir(directory.parent)
@@ -88,14 +94,14 @@ class SystemdRuntime:
             d=self.unit_directory/(name+'.d')
             if d.exists():
                 private_dir(d,self.owner)
-                allowed={'99-lifecycle-maintenance.conf'} if name in BASE else set()
+                allowed={'99-lifecycle-maintenance.conf'} if name in guarded else set()
                 if name=='rackmarshal-domain@.service':allowed.add('20-cycle-health.conf')
                 require({p.name for p in d.iterdir()} <= allowed, 'unsupported unit override')
         self.command('daemon-reload')
-        for name in BASE:
+        for name in guarded:
             loaded=self.command('cat',name)
             require(text.decode().strip() in loaded,'maintenance condition not loaded')
-        for name in sorted(set(BASE[:3])|set(INSTANCES)):
+        for name in sorted(set(BASE[:3])|set(guarded[len(BASE):])|set(INSTANCES)):
             # Load each concrete instance before querying its D-Bus property.
             self.command('show',name,'-p','LoadState')
             # systemd v252 D-Bus Conditions is a(sbbsi); do not parse display text.
@@ -112,7 +118,7 @@ class SystemdRuntime:
                 entry['error']=repr(exc);raise
             loaded=self.command('show',name,'-p','DropInPaths')
             paths=loaded.strip().removeprefix('DropInPaths=').split()
-            expected={self.unit_directory/(base+'.d')/'99-lifecycle-maintenance.conf' for base in BASE}
+            expected={self.unit_directory/(base+'.d')/'99-lifecycle-maintenance.conf' for base in guarded}
             expected.add(self.unit_directory/'rackmarshal-domain@.service.d/20-cycle-health.conf')
             require(all(Path(p) in expected for p in paths),'unrecognized effective drop-in')
 

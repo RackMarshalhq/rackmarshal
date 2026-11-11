@@ -49,9 +49,27 @@ def import_support():
     return L,S,P
 
 
+def clear_bytecode(target):
+    """Delete Python's regenerable bytecode caches inside the installed package.
+
+    Running any rackmarshal command as root writes these. They are not part of the
+    release, so the exact-file check below would otherwise refuse a healthy install.
+    Only plain .pyc files in __pycache__ folders under site-packages/rackmarshal are
+    touched; anything else found there is left alone and still fails the check.
+    """
+    for site in target.glob('lib/python*/site-packages'):
+        for cache in sorted((site/'rackmarshal').rglob('__pycache__')):
+            if cache.is_symlink() or not cache.is_dir():continue
+            for entry in cache.iterdir():
+                if entry.suffix=='.pyc' and entry.is_file() and not entry.is_symlink():entry.unlink()
+            try:cache.rmdir()
+            except OSError:pass
+
+
 def wheel_inventory(target,wheel,version):
     data=B.trusted_read(wheel);payload=B.validate_wheel(data,'rackmarshal',version)
     B.validate_target(target)
+    clear_bytecode(target)
     B.verify_inventory(target,[('rackmarshal',version,payload)])
     site=next(target.glob('lib/python*/site-packages'))
     for name,value in payload.items():
