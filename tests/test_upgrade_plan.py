@@ -82,6 +82,11 @@ class UpgradePlanTests(unittest.TestCase):
         self.assertEqual(result["status"], "READY", result)
         self.assertFalse(result["changes_made"])
         self.assertIn("match release 1.3.0rc1 exactly", up.describe(result))
+        # The check-only command and the apply command must not claim the apply step is missing.
+        self.assertNotIn("not available", up.describe(result))
+        self.assertNotIn("not available", up.describe(result, can_apply=True))
+        self.assertIn("this upgrade can be applied", up.describe(result, can_apply=True))
+        self.assertIn("only checks", up.describe(result))
 
     def test_hand_patched_install_is_refused_with_the_file_name(self):
         (self.site / "rackmarshal/__init__.py").write_bytes(b"print('hand patch')\n")

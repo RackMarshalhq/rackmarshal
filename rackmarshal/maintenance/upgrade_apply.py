@@ -44,7 +44,7 @@ def run(site_packages, database, bundle, previous_wheel, previous_sha256, wheel_
     if not Path(previous_wheel).is_file():
         raise UpgradeRefused("The previous release's wheel was not found; download it from its release page.")
     result = upgrade_plan.plan(site_packages, database, wheel, None, wheel_sha256)
-    out(upgrade_plan.describe(result))
+    out(upgrade_plan.describe(result, can_apply=True))
     if result["status"] != "READY":
         return 2
     command = build_command(script, previous_wheel, previous_sha256, verify_timeout)

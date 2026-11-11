@@ -197,12 +197,15 @@ def plan(site_packages, database, wheel_path, sums_path=None, expected_sha256=No
             "refusals": refusals, "candidate_sha256": candidate["sha256"], "changes_made": False}
 
 
-def describe(result):
+def describe(result, can_apply=False):
     lines = list(result["findings"]) + ["Refused: " + text for text in result["refusals"]]
     lines.append("")
-    verdict = {"READY": "Result: this upgrade could be applied. The apply step is not available yet, so nothing was done.",
+    ready = ("Result: this upgrade can be applied." if can_apply else
+             "Result: this upgrade could be applied. This command only checks; nothing was done.")
+    verdict = {"READY": ready,
                "NEEDS_DATABASE_CHANGE": "Result: not yet possible. This release changes the database, which the apply step will not do at first.",
                "REFUSED": "Result: refused. See the reasons above."}[result["status"]]
     lines.append(verdict)
-    lines.append("This command is read-only: nothing was installed, changed or restarted.")
+    lines.append("This check is read-only: nothing has been installed, changed or restarted yet." if can_apply else
+                 "This command is read-only: nothing was installed, changed or restarted.")
     return "\n".join(lines)
