@@ -384,7 +384,7 @@
   "argv": [],
   "case": "-",
   "code": 2,
-  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,doctor,upgrade-plan,retire-guest,migrate} ...\nrackmarshal: error: the following arguments are required: cmd\n",
+  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,doctor,upgrade,upgrade-plan,retire-guest,migrate} ...\nrackmarshal: error: the following arguments are required: cmd\n",
   "stdout": ""
  },
  {
@@ -393,7 +393,7 @@
   ],
   "case": "-",
   "code": 2,
-  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,doctor,upgrade-plan,retire-guest,migrate} ...\nrackmarshal: error: argument cmd: invalid choice: 'no-such-command' (choose from 'validate-config', 'domains', 'setup-plan', 'investigator-check', 'diagnostic', 'doctor', 'upgrade-plan', 'retire-guest', 'migrate')\n",
+  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,doctor,upgrade,upgrade-plan,retire-guest,migrate} ...\nrackmarshal: error: argument cmd: invalid choice: 'no-such-command' (choose from 'validate-config', 'domains', 'setup-plan', 'investigator-check', 'diagnostic', 'doctor', 'upgrade', 'upgrade-plan', 'retire-guest', 'migrate')\n",
   "stdout": ""
  },
  {
@@ -403,7 +403,7 @@
   ],
   "case": "-",
   "code": 2,
-  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,doctor,upgrade-plan,retire-guest,migrate} ...\nrackmarshal: error: unrecognized arguments: --bogus\n",
+  "stderr": "usage: rackmarshal [-h] [--version]\n                   {validate-config,domains,setup-plan,investigator-check,diagnostic,doctor,upgrade,upgrade-plan,retire-guest,migrate} ...\nrackmarshal: error: unrecognized arguments: --bogus\n",
   "stdout": ""
  }
 ]

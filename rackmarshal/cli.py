@@ -260,6 +260,20 @@ def _cmd_upgrade_plan(args):
     return 2 if result["status"] == "REFUSED" else 0
 
 
+def _cmd_upgrade(args):
+    from rackmarshal.maintenance import upgrade_apply
+    from rackmarshal.maintenance.upgrade_plan import PlanError
+
+    try:
+        database = require(load_config(args.config), "STATE_DB")
+        return upgrade_apply.run(
+            ROOT.parent, database, args.bundle, args.previous_wheel, args.previous_sha256, args.wheel_sha256,
+            apply=args.apply, note=args.note or "", is_root=os.geteuid() == 0, verify_timeout=args.verify_timeout)
+    except (upgrade_apply.UpgradeRefused, PlanError, ConfigError) as exc:
+        print("Refused: %s" % exc)
+        return 2
+
+
 def _cmd_retire_guest(args):
     from rackmarshal.maintenance.retire_guest import RetireError, describe, retire
 
@@ -276,6 +290,7 @@ def _cmd_retire_guest(args):
 
 
 COMMANDS = {
+    "upgrade": _cmd_upgrade,
     "upgrade-plan": _cmd_upgrade_plan,
     "doctor": _cmd_doctor,
     "retire-guest": _cmd_retire_guest,
@@ -309,6 +324,15 @@ def _build_parser():
     add_config_option(
         commands.add_parser("doctor", help="Read-only first-run health check in plain words")
     )
+    full = commands.add_parser("upgrade", help="Upgrade 1.3.x to a newer 1.3.x (plan first; --apply runs it)")
+    add_config_option(full)
+    full.add_argument("--bundle", required=True, help="the extracted new installer bundle folder")
+    full.add_argument("--wheel-sha256", required=True, help="checksum of the wheel in the bundle, copied from the release page")
+    full.add_argument("--previous-wheel", required=True, help="the currently installed release's wheel file")
+    full.add_argument("--previous-sha256", required=True, help="checksum of that previous wheel")
+    full.add_argument("--verify-timeout", type=int, default=1800, help="seconds to wait for every check to succeed after the upgrade")
+    full.add_argument("--note", help="why (required with --apply)")
+    full.add_argument("--apply", action="store_true")
     upgrade = commands.add_parser("upgrade-plan", help="Read-only check of whether an upgrade could be applied safely")
     add_config_option(upgrade)
     upgrade.add_argument("--wheel", required=True, help="the new release's rackmarshal-*.whl file")
