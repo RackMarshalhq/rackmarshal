@@ -3,7 +3,7 @@
 This module never restores a live database or edits configuration. Backups and
 journals are retained. Unknown current bytes require explicit investigation.
 """
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 import fcntl
 import hashlib
 import json
@@ -13,6 +13,8 @@ import shutil
 import sqlite3
 import stat
 import tempfile
+
+from rackmarshal.maintenance import migration_rehearsal
 
 
 class Refused(RuntimeError):
@@ -148,6 +150,26 @@ def database_snapshot(path):
         connection.close()
 
 
+def ledger_pairs(value):
+    return [tuple(item) for item in value]
+
+
+def schema_matches(snapshot, expected_sha256, expected_ledger):
+    return snapshot['schema_sha256'] == expected_sha256 and ledger_pairs(snapshot['ledger']) == ledger_pairs(expected_ledger)
+
+
+def migration_plan(migration):
+    """Validate the caller's migration description and return a plain journal-safe copy."""
+    require(isinstance(migration, dict) and migration.get('migrations'), 'migration description missing')
+    steps = [[str(i), str(sql), str(sha)] for i, sql, sha in migration['migrations']]
+    for migration_id, sql, sha in steps:
+        require(digest(sql.encode()) == sha, 'migration text differs from its checksum: ' + migration_id)
+    keys = [migration_rehearsal.migration_order_key(i) for i, _, _ in steps]
+    require(keys == sorted(keys) and len(set(keys)) == len(keys), 'migrations out of order')
+    return {'migrations': steps, 'expected_schema_sha256': migration['expected_schema_sha256'],
+            'expected_ledger': ledger_pairs(migration['expected_ledger'])}
+
+
 def verified_backup(database, transaction):
     expected = database_snapshot(database)
     backup = transaction / 'state-backup.sqlite'
@@ -212,7 +234,7 @@ class Lifecycle:
         write_json(transaction / 'transaction.json', journal)
         self.fault(phase)
 
-    def upgrade(self, candidate, identity, expected_old, expected_schema, compatible, evidence=None, expected_candidate=None):
+    def upgrade(self, candidate, identity, expected_old, expected_schema, compatible, evidence=None, expected_candidate=None, migration=None):
         require(compatible is True, 'semantic compatibility unqualified')
         with self.lock():
             for path in self.store.glob('*/transaction.json'):
@@ -222,6 +244,10 @@ class Lifecycle:
             require(before == expected_old, 'legacy inventory differs')
             db = database_snapshot(self.database)
             require(db['schema_sha256'] == expected_schema['schema_sha256'] and db['ledger'] == expected_schema['ledger'], 'schema-changing upgrade refused')
+            migration = migration_plan(migration) if migration is not None else None
+            if migration is not None:
+                known = {item[0] for item in expected_schema['ledger']}
+                require(not known & {item[0] for item in migration['migrations']}, 'migration already applied')
             protected = self.protected_hashes()
             candidate = Path(candidate).absolute()
             require(not candidate.is_relative_to(self.active) and not candidate.is_relative_to(self.store), 'candidate overlaps transaction')
@@ -229,7 +255,8 @@ class Lifecycle:
             fsync_dir(self.store)
             journal = {'format': 1, 'active': str(self.active), 'database': str(self.database), 'identity': identity,
                        'before': before, 'protected': protected, 'database_before': db,
-                       'runtime': self.runtime.snapshot(), 'after': inventory(candidate, self.owner), 'evidence': evidence or {}}
+                       'runtime': self.runtime.snapshot(), 'after': inventory(candidate, self.owner), 'evidence': evidence or {},
+                       'migration': migration}
             if expected_candidate is not None:require(journal['after']==expected_candidate,'candidate changed after semantic proof')
             self.save(transaction, journal, 'STAGING')
             protected_dir=transaction/'protected';protected_dir.mkdir(mode=0o700)
@@ -261,8 +288,21 @@ class Lifecycle:
                 os.rename(transaction / 'candidate', self.active); fsync_dir(self.active.parent); fsync_dir(transaction)
                 self.save(transaction, journal, 'ACTIVATED')
                 require(inventory(self.active, self.owner) == journal['after'], 'activation differs')
+                expected_snapshot = journal['backup']['snapshot']
+                if migration is not None:
+                    # One SQLite transaction: afterwards the database is entirely old or entirely new.
+                    self.save(transaction, journal, 'MIGRATE_INTENT')
+                    with closing(sqlite3.connect(self.database, isolation_level=None, timeout=30)) as connection:
+                        connection.execute('PRAGMA foreign_keys=ON')
+                        migration_rehearsal.apply_all(connection, [tuple(x) for x in migration['migrations']],
+                                                        expect=(migration['expected_schema_sha256'], migration['expected_ledger']))
+                    expected_snapshot = database_snapshot(self.database)
+                    require(schema_matches(expected_snapshot, migration['expected_schema_sha256'], migration['expected_ledger']),
+                            'migrated database differs from the rehearsal')
+                    journal['database_migrated'] = expected_snapshot
+                    self.save(transaction, journal, 'MIGRATED')
                 self.runtime.accept(transaction, journal)
-                require(database_snapshot(self.database) == journal['backup']['snapshot'], 'live database changed during acceptance')
+                require(database_snapshot(self.database) == expected_snapshot, 'live database changed during acceptance')
                 require(self.protected_hashes() == protected, 'protected files changed')
                 self.save(transaction, journal, 'ACCEPTED')
                 self.runtime.resume(transaction, journal['runtime'], lambda: self.save(transaction,journal,'RESUME_AUTHORIZED'))
@@ -291,7 +331,12 @@ class Lifecycle:
                     require(json.loads(read(path,self.owner))['phase'] in ('COMMITTED','ROLLED_BACK','REFUSED'), 'another unfinished transaction')
             journal = json.loads(read(transaction / 'transaction.json', self.owner))
             require(journal['active'] == str(self.active) and journal['database'] == str(self.database), 'transaction target differs')
-            require(journal['phase'] in ('STAGING', 'STAGED', 'GUARD_INTENT', 'GUARDED', 'QUIESCED', 'COMMITTED', 'RECOVERY_REQUIRED', 'OLD_RETAINED', 'ACTIVATED', 'ACCEPTED', 'OLD_RENAME_INTENT', 'ROLLBACK_INTENT', 'ROLLBACK_GUARD_INTENT', 'RESUME_AUTHORIZED', 'VERIFYING'), 'unsupported rollback phase')
+            require(journal['phase'] in ('STAGING', 'STAGED', 'GUARD_INTENT', 'GUARDED', 'QUIESCED', 'COMMITTED', 'RECOVERY_REQUIRED', 'OLD_RETAINED', 'ACTIVATED', 'ACCEPTED', 'OLD_RENAME_INTENT', 'ROLLBACK_INTENT', 'ROLLBACK_GUARD_INTENT', 'RESUME_AUTHORIZED', 'VERIFYING', 'MIGRATE_INTENT', 'MIGRATED'), 'unsupported rollback phase')
+            migration = journal.get('migration')
+            def database_state_ok(snapshot):
+                if schema_matches(snapshot, journal['database_before']['schema_sha256'], journal['database_before']['ledger']):
+                    return True
+                return bool(migration) and schema_matches(snapshot, migration['expected_schema_sha256'], migration['expected_ledger'])
             previous = transaction / 'previous'
             previous_exists = previous.exists()
             if previous_exists: require(inventory(previous, self.owner) == journal['before'], 'rollback bytes corrupt')
@@ -299,15 +344,14 @@ class Lifecycle:
             if previous_exists: require(current in (None, journal['after']), 'current code conflict')
             else: require(current == journal['before'], 'old code unavailable or current code conflict')
             current_db = database_snapshot(self.database)
-            require(current_db['schema_sha256'] == journal['database_before']['schema_sha256'] and
-                    current_db['ledger'] == [tuple(x) for x in journal['database_before']['ledger']], 'rollback schema differs')
+            require(database_state_ok(current_db), 'rollback schema differs')
             require(self.protected_hashes() == journal['protected'], 'protected files conflict')
             try:
                 self.save(transaction, journal, 'ROLLBACK_GUARD_INTENT')
                 self.runtime.guard(transaction, journal['runtime'])
                 self.runtime.quiesce(journal['runtime'])
                 journal['rollback_database'] = database_snapshot(self.database)
-                require(journal['rollback_database']['schema_sha256'] == journal['database_before']['schema_sha256'] and journal['rollback_database']['ledger'] == [tuple(x) for x in journal['database_before']['ledger']], 'quiesced rollback schema changed')
+                require(database_state_ok(journal['rollback_database']), 'quiesced rollback schema changed')
                 require(self.protected_hashes() == journal['protected'], 'protected files changed during quiesce')
                 require((inventory(self.active,self.owner) if self.active.exists() else None) == current, 'code changed during quiesce')
                 self.save(transaction, journal, 'ROLLBACK_INTENT')

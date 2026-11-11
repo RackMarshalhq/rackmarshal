@@ -53,8 +53,11 @@ def _ledger_columns(conn):
     return {row[1] for row in conn.execute("PRAGMA table_info(schema_migrations)")}
 
 
-def apply_all(conn, migrations, note="applied by upgrade"):
-    """Apply (id, sql, sha256) triples in order, all in one transaction. `conn` needs isolation_level=None."""
+def apply_all(conn, migrations, note="applied by upgrade", expect=None):
+    """Apply (id, sql, sha256) triples in order, all in one transaction. `conn` needs isolation_level=None.
+
+    `expect` is an optional (schema_sha256, ledger) pair; if the result differs, nothing is kept.
+    """
     conn.execute("BEGIN IMMEDIATE")
     try:
         columns = _ledger_columns(conn)
@@ -69,6 +72,10 @@ def apply_all(conn, migrations, note="applied by upgrade"):
         violations = conn.execute("PRAGMA foreign_key_check").fetchall()
         if violations:
             raise RehearsalError("The migrations leave %d broken foreign-key link(s)." % len(violations))
+        if expect is not None:
+            wanted_schema, wanted_ledger = expect
+            if schema_fingerprint(conn) != wanted_schema or ledger_of(conn) != [tuple(x) for x in wanted_ledger]:
+                raise RehearsalError("The migrated database differs from the rehearsal.")
         conn.execute("COMMIT")
     except BaseException:
         if conn.in_transaction:
