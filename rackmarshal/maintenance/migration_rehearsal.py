@@ -8,7 +8,9 @@ leaves the database exactly as it was. (The ordinary `migrate --apply` runs each
 
 `rehearse` copies the database to a private folder, applies the migrations to the copy and checks:
 * every table that existed before still exists, with every row and every old column unchanged
-  (a migration may add tables and columns, and may rebuild a table, but must not lose data);
+  (a migration may add tables and columns, and may rebuild a table, but must not lose data).
+  Two bookkeeping tables are special: the migration history may only grow, and `metadata`
+  (version markers) may gain keys and change values but never lose a key;
 * the layout fingerprint of the result, so the real run can be compared with the rehearsal.
 """
 from contextlib import closing
@@ -37,14 +39,16 @@ def migration_order_key(migration_id):
 
 def statements(sql):
     """Split a migration file into complete SQL statements (triggers stay in one piece)."""
-    pending = ""
-    for line in sql.splitlines(keepends=True):
-        pending += line
-        if sqlite3.complete_statement(pending):
-            if pending.strip():
-                yield pending
-            pending = ""
-    leftover = [line for line in pending.splitlines() if line.strip() and not line.strip().startswith("--")]
+    start = 0
+    position = sql.find(";")
+    while position != -1:
+        piece = sql[start:position + 1]
+        if sqlite3.complete_statement(piece):
+            if piece.strip():
+                yield piece
+            start = position + 1
+        position = sql.find(";", position + 1)
+    leftover = [line for line in sql[start:].splitlines() if line.strip() and not line.strip().startswith("--")]
     if leftover:
         raise RehearsalError("A migration ends in the middle of a statement.")
 
@@ -137,6 +141,13 @@ def compare_contents(before_conn, after_conn):
             new = {tuple(r) for r in after_conn.execute("SELECT id, checksum FROM schema_migrations")}
             if not old <= new:
                 problems.append("the migration history would be altered")
+            continue
+        if table == "metadata":
+            # Version markers: migrations add keys and bump values (e.g. backup_ledger_schema), but no key may vanish.
+            old = {row[0] for row in before_conn.execute("SELECT key FROM metadata")}
+            new = {row[0] for row in after_conn.execute("SELECT key FROM metadata")}
+            if not old <= new:
+                problems.append("metadata keys %s would disappear" % ", ".join(sorted(old - new)))
             continue
         columns = info["columns"]
         if _rows_digest(before_conn, table, columns) != _rows_digest(after_conn, table, columns):

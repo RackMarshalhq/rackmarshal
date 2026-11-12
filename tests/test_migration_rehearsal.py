@@ -47,6 +47,15 @@ class RehearsalTests(unittest.TestCase):
                "DROP TABLE items_old;\n")
         self.assertEqual(self.rehearse(sql)["problems"], [])
 
+    def test_metadata_markers_may_change_but_not_vanish(self):
+        with closing(sqlite3.connect(self.db)) as c, c:
+            c.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+            c.execute("INSERT INTO metadata VALUES('old_marker','1')")
+        bump = "INSERT INTO metadata(key,value) VALUES('old_marker','2') ON CONFLICT(key) DO UPDATE SET value=excluded.value;" \
+               "INSERT INTO metadata VALUES('new_marker','1');"
+        self.assertEqual(self.rehearse(bump)["problems"], [])
+        self.assertEqual(self.rehearse("DELETE FROM metadata;")["problems"], ["metadata keys old_marker would disappear"])
+
     def test_dropping_table_columns_or_rows_is_reported(self):
         self.assertIn("table items would disappear", self.rehearse("DROP TABLE items;")["problems"])
         self.assertTrue(any("lose column" in p for p in self.rehearse(
@@ -87,6 +96,10 @@ class RehearsalTests(unittest.TestCase):
     def test_truncated_statement_is_refused(self):
         with self.assertRaises(mr.RehearsalError):
             list(mr.statements("CREATE TABLE t(x);\nSELECT 1 +"))
+
+    def test_several_statements_on_one_line_and_semicolons_in_text(self):
+        sql = "CREATE TABLE t(x); INSERT INTO t VALUES('a;b'); -- note; here\nINSERT INTO t VALUES(2);\n"
+        self.assertEqual(len(list(mr.statements(sql))), 3)
 
     def test_triggers_stay_whole_and_order_key(self):
         sql = "CREATE TABLE t(x);\nCREATE TRIGGER g AFTER INSERT ON t BEGIN SELECT 1; SELECT 2; END;\n"
