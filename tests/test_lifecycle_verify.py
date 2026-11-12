@@ -101,5 +101,31 @@ class VerifyTests(unittest.TestCase):
         self.assertEqual(ok, "all good\n")
 
 
+class PrecheckDoctorTests(unittest.TestCase):
+    def runner(self, results):
+        calls = []
+
+        def run(command, **kw):
+            calls.append(command[0])
+            code, out = results[command[0]]
+            return SimpleNamespace(returncode=code, stdout=out, stderr="")
+        return run, calls
+
+    def test_installed_release_without_doctor_is_checked_by_the_new_release(self):
+        run, calls = self.runner({"/old": (2, "error: argument cmd: invalid choice: 'doctor'"), "/new": (0, "all good")})
+        status, text = C.precheck_doctor("/old", "/new", "/conf", run)
+        self.assertEqual((status, calls), (0, ["/old", "/new"]))
+        self.assertIn("installed release has no doctor command", text)
+
+    def test_real_problem_on_installed_release_is_not_overridden(self):
+        run, calls = self.runner({"/old": (1, "[FAIL] Database"), "/new": (0, "all good")})
+        status, text = C.precheck_doctor("/old", "/new", "/conf", run)
+        self.assertEqual((status, calls), (1, ["/old"]))
+
+    def test_new_release_problem_is_reported_when_old_has_no_doctor(self):
+        run, calls = self.runner({"/old": (2, "invalid choice: 'doctor'"), "/new": (1, "[FAIL] Status page")})
+        self.assertEqual(C.precheck_doctor("/old", "/new", "/conf", run)[0], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
