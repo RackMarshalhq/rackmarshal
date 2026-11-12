@@ -261,6 +261,19 @@ def health_after_resume(python,config,db,domains,since,timeout,runner=subprocess
     return text
 
 
+def precheck_doctor(installed_python,candidate_python,config,runner=subprocess.run):
+    """Is the monitor healthy before we touch it? Returns (status, text).
+
+    Releases before 1.3.0rc2 have no `doctor` command. For those, the new release's own doctor (read-only)
+    checks the running system instead, and the text says so.
+    """
+    status,text=doctor_run(installed_python,config,runner)
+    if status!=0 and "invalid choice: 'doctor'" in text:
+        status,text=doctor_run(candidate_python,config,runner)
+        text='(the installed release has no doctor command; the new release checked the running system)\n'+text
+    return status,text
+
+
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('action',choices=['plan','upgrade','rollback','recover'])
     ap.add_argument('--previous-wheel',required=True);ap.add_argument('--previous-sha256',required=True,help='checksum of the predecessor wheel, copied from the release page');ap.add_argument('--transaction');ap.add_argument('--verify-timeout',type=int,default=1800,help='seconds to wait after the upgrade for one successful run of every enabled check');args=ap.parse_args()
@@ -353,7 +366,7 @@ def main():
             migration={'migrations':migration_steps,'expected_schema_sha256':rehearsal['schema_sha256'],'expected_ledger':rehearsal['ledger']}
         B.require(L.inventory(ACTIVE,0)==expected_old,'predecessor changed during semantic proof')
         B.require(L.inventory(target,0)==expected_candidate,'candidate changed during semantic proof')
-        status,text=doctor_run(ACTIVE/'bin/python',CONFIG)
+        status,text=precheck_doctor(ACTIVE/'bin/python',target/'bin/python',CONFIG)
         B.require(status==0,'refusing to upgrade a monitor that is not healthy; fix this first:\n'+text)
         try:
             transaction=engine.upgrade(target,identity,expected_old,schema,True,evidence,expected_candidate,migration=migration)
