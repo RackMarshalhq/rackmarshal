@@ -195,7 +195,21 @@ def touch_open(con, incident: sqlite3.Row, observation_id, row, observed_at) -> 
     )
 
 
-def recover_one(con, incident: sqlite3.Row, observation_id, observed_at, ok_row: dict | None) -> None:
+def recover_one(
+    con,
+    incident: sqlite3.Row,
+    observation_id,
+    observed_at,
+    ok_row: dict | None,
+    recovered_events: dict[str, int] | None = None,
+) -> None:
+    """Mark one incident RECOVERED.
+
+    mount_events is UNIQUE(observation_id, mount_id, outcome), so a mount with
+    several OPEN incident types gets exactly one RECOVERED event per
+    observation. ``recovered_events`` (mount_id -> event id) lets the caller
+    share that event across every incident recovered for the mount.
+    """
     row = ok_row or {
         "id": incident["mount_id"],
         "guest_kind": incident["guest_kind"],
@@ -207,7 +221,13 @@ def recover_one(con, incident: sqlite3.Row, observation_id, observed_at, ok_row:
         "state": "ok",
         "detail": "recovered",
     }
-    eid = insert_event(con, observation_id, row, "RECOVERED", observed_at)
+    mid = incident["mount_id"]
+    if recovered_events is not None and mid in recovered_events:
+        eid = recovered_events[mid]
+    else:
+        eid = insert_event(con, observation_id, row, "RECOVERED", observed_at)
+        if recovered_events is not None:
+            recovered_events[mid] = eid
     con.execute(
         """
         UPDATE mount_incidents
@@ -283,6 +303,7 @@ def process(con: sqlite3.Connection) -> dict:
             opened += 1
 
     # recover opens no longer desired
+    recovered_events: dict[str, int] = {}
     for key, inc in list(open_map.items()):
         mid, itype = key
         if mid in problems and STATE_TO_TYPE[problems[mid]["state"]] == itype:
@@ -290,7 +311,7 @@ def process(con: sqlite3.Connection) -> dict:
         # Missing/unknown telemetry is not independent positive recovery evidence.
         if mid not in ok_by_id:
             continue
-        recover_one(con, inc, oid, observed_at, ok_by_id[mid])
+        recover_one(con, inc, oid, observed_at, ok_by_id[mid], recovered_events)
         recovered += 1
 
     con.execute(
